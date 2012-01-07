@@ -1,0 +1,6 @@
+; コメントはセミコロン始まり（単に ";" で始まる検索語が無さげだから）
+
+load jiro131u/EIJI-131.DIC as e
+load jiro131u/WAEI-131.DIC as w
+load jiro131u/REIJI131.DIC as r
+load jiro131u/RYAKU131.DIC as a
