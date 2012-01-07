@@ -37,7 +37,6 @@ bool do_command(char *cmdstr);
 void do_lookup(char *needle, int needle_len=0);
 void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match);
 
-//std::vector<std::pair<FILE*,PDICIndex*> > dicts;
 std::vector<std::string> loadpaths;
 std::vector<Dict> dicts;
 std::map<std::string,std::vector<std::string> > aliases; // name -> name
@@ -48,7 +47,11 @@ std::string current_dict_name = "";
 
 void load_rc()
 {
-  FILE *fp = fopen("/Users/naochan/.pdicrc", "r");
+  char rcpath[128];
+  strncpy(rcpath, getenv("HOME"), 120);
+  strcat(rcpath, "/.pdicrc");
+
+  FILE *fp = fopen(rcpath, "r");
   if (fp != NULL) {
     char line[256];
     while (fgets(line, 256, fp)) {
