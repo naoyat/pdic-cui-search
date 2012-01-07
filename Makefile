@@ -2,7 +2,7 @@ TARGET = pdic
 
 OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o Criteria.o util.o bocu1.o main.o
 
-all: $(OBJECTS)
+$(TARGET): $(OBJECTS)
 	g++ -o $(TARGET) $(OBJECTS)
 
 
