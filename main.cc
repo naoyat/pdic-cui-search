@@ -18,6 +18,7 @@
 #define found(s,e)  ((s).find(e)!=(s).end())
 
 #define DEBUG
+//#define VERBOSE
 
 #ifdef DEBUG
 #include "cout.h"
@@ -28,15 +29,20 @@ typedef struct {
   PDICIndex *index;
 } Dict;
 
+// prototypes
 void load_rc();
+std::vector<int> resolve_aliases(const std::string& name);
+void do_use(std::string name);
+void do_lookup(char *needle, int needle_len=0);
+void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match);
+
 void dump(unsigned char *entry, unsigned char *jword);
 int do_load(const std::string& fname);
 void do_alias(const std::string& alias, const std::string& valid_name);
 void do_alias(const std::string& alias, const std::vector<std::string>& valid_names);
 bool do_command(char *cmdstr);
-void do_lookup(char *needle, int needle_len=0);
-void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match);
 
+// globals
 std::vector<std::string> loadpaths;
 std::vector<Dict> dicts;
 std::map<std::string,std::vector<std::string> > aliases; // name -> name
@@ -45,88 +51,7 @@ std::map<std::string,int> nametable; // name -> dict_id
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
 
-void load_rc()
-{
-  char rcpath[128];
-  strncpy(rcpath, getenv("HOME"), 120);
-  strcat(rcpath, "/.pdicrc");
-
-  FILE *fp = fopen(rcpath, "r");
-  if (fp != NULL) {
-    char line[256];
-    while (fgets(line, 256, fp)) {
-      int linelen = strlen(line); line[--linelen] = 0;
-      if (linelen == 0) continue;
-
-      char *rem = strchr(line, ';');
-      if (rem) { *rem = 0; linelen = (int)(rem - line); }
-
-      while (linelen > 0) {
-        if (line[linelen-1] != ' ') break;
-        line[--linelen] = 0;
-      }
-      if (linelen == 0) continue;
-
-      // printf("pdicrc> %s\n", line);
-      do_command(line);
-    }
-  } else {
-    printf(".pdicrc not found\n");
-  }
-  fclose(fp);
-}
-
-std::vector<int> resolve_aliases(const std::string& name)
-{
-  std::vector<int> dict_ids;
-  
-  if (found(nametable,name)) {
-    dict_ids.push_back( nametable[name] );
-  } else if (found(aliases,name)) {
-    std::vector<std::string> names = aliases[name];
-    traverse(names, name) {
-      std::vector<int> ids = resolve_aliases(*name);
-      dict_ids.insert(dict_ids.end(), all(ids));
-    }
-  } else {
-    printf("ERROR: '%s' not found.\n", name.c_str());
-  }
-
-  return dict_ids;
-}
-
-void do_use(std::string name)
-{
-  std::vector<int> dict_ids = resolve_aliases(name);
-  std::cout << "dict_ids to use: " << dict_ids << std::endl;
-
-  // aliases[name];
-  current_dict_ids.assign(all(dict_ids));
-  current_dict_name = name;
-}
-
-void do_lookup(char *needle, int needle_len)
-{
-  if (!needle_len) needle_len = strlen(needle);
-
-  if (current_dict_ids.size() == 0) {
-    printf("no dictionary selected\n");
-    return;
-  }
-
-  traverse(current_dict_ids, current_dict_id) {
-    Dict dict = dicts[*current_dict_id];
-    bool exact_match = true;
-    if (needle[needle_len-1] == '*') {
-      exact_match = false;
-      needle[needle_len-1] = 0;
-    }
-    //printf("lookup now \"%s\" in (%d,%s)...\n", line, current_dict_id, current_dict_name.c_str());
-    lookup(dict.fp, dict.index, (unsigned char *)needle, exact_match);
-  }
-}
-
-
+// main()
 int main(int argc, char **argv)
 {
   load_rc();
@@ -164,9 +89,86 @@ int main(int argc, char **argv)
   return 0;
 }
 
+void load_rc()
+{
+  char rcpath[128];
+  strncpy(rcpath, getenv("HOME"), 120);
+  strcat(rcpath, "/.pdicrc");
+
+  FILE *fp = fopen(rcpath, "r");
+  if (fp != NULL) {
+    char line[256];
+    while (fgets(line, 256, fp)) {
+      int linelen = strlen(line); line[--linelen] = 0;
+      if (linelen == 0) continue;
+
+      char *rem = strchr(line, ';');
+      if (rem) { *rem = 0; linelen = (int)(rem - line); }
+
+      while (linelen > 0) {
+        if (line[linelen-1] != ' ') break;
+        line[--linelen] = 0;
+      }
+      if (linelen == 0) continue;
+
+      do_command(line);
+    }
+  } else {
+    printf(".pdicrc not found\n");
+  }
+  fclose(fp);
+}
+
+std::vector<int> resolve_aliases(const std::string& name)
+{
+  std::vector<int> dict_ids;
+  
+  if (found(nametable,name)) {
+    dict_ids.push_back( nametable[name] );
+  } else if (found(aliases,name)) {
+    std::vector<std::string> names = aliases[name];
+    traverse(names, name) {
+      std::vector<int> ids = resolve_aliases(*name);
+      dict_ids.insert(dict_ids.end(), all(ids));
+    }
+  } else {
+    printf("ERROR: '%s' not found.\n", name.c_str());
+  }
+
+  return dict_ids;
+}
+
+void do_use(std::string name)
+{
+  std::vector<int> dict_ids = resolve_aliases(name);
+
+  current_dict_ids.assign(all(dict_ids));
+  current_dict_name = name;
+}
+
+void do_lookup(char *needle, int needle_len)
+{
+  if (!needle_len) needle_len = strlen(needle);
+
+  if (current_dict_ids.size() == 0) {
+    printf("no dictionary selected\n");
+    return;
+  }
+
+  traverse(current_dict_ids, current_dict_id) {
+    Dict dict = dicts[*current_dict_id];
+    bool exact_match = true;
+    if (needle[needle_len-1] == '*') {
+      exact_match = false;
+      needle[needle_len-1] = 0;
+    }
+    lookup(dict.fp, dict.index, (unsigned char *)needle, exact_match);
+  }
+}
+
+
 void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
 {
-  //printf("lookup(... %s ...)\n", (char *)needle);
   Criteria *criteria = new Criteria(needle, exact_match);
 
   int from, to, cnt;
@@ -203,10 +205,6 @@ int do_load(const std::string& fname)
       nametable[fname] = new_dict_id;
 
       dicts.push_back( (Dict){fp, new PDICIndex(fp)} );
-      //aliases[new_dict_name] = new_dict_id;
-      //if (!load_only) do_use(fname);
-      //current_dict_id = new_dict_id;
-      //current_dict_name = new_dict_name;
       return new_dict_id;
     }
   }
@@ -221,10 +219,7 @@ void do_alias(const std::string& alias, const std::string& valid_name)
 void do_alias(const std::string& alias, const std::vector<std::string>& valid_names)
 {
   aliases[alias] = valid_names;
-  //  if (found(aliases, valid_name)) {
-  //    int dict_id = aliases[valid_name];
-  //    aliases[alias] = dict_ids;
-#ifdef DEBUG
+#ifdef VERBOSE
   std::cout << "-" << alias << " -> " << join(valid_names, ", ") << std::endl;
 #endif
 }
@@ -256,9 +251,9 @@ bool do_command(char *cmdstr)
   else if (cmd[0] == "load") {
     std::string fname = cmd[1];
     int dict_id = do_load(fname);
-    // do_use(dict_id);
+
     if (dict_id >= 0) {
-#ifdef DEBUG
+#ifdef VERBOSE
       std::cout << "+" << fname << std::endl;
 #endif
       for (int i=2; i<cmd.size(); ++i) {
