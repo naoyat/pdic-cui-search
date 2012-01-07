@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
+#include <queue>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -11,6 +13,7 @@
 #include "util.h"
 #include "bocu1.h"
 #include "util_stl.h"
+#include <ctime>
 
 #define rep(var,n)  for(int var=0;var<(n);var++)
 #define traverse(c,i)  for(typeof((c).begin()) i=(c).begin(); i!=(c).end(); i++)
@@ -48,7 +51,8 @@ void do_lookup(char *needle, int needle_len=0);
 void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match);
 
 void dump(unsigned char *entry, unsigned char *jword);
-void dump_word(unsigned char *entry, unsigned char *jword);
+void dump_word(unsigned char *entry, unsigned char *);
+void count_word(unsigned char *entry, unsigned char *);
 
 int do_load(const std::string& fname);
 void do_alias(const std::string& alias, const std::string& valid_name);
@@ -214,6 +218,18 @@ void dump_word(unsigned char *entry, unsigned char *jword)
   puts((char *)entry);
 }
 
+//int _wordcount = 0;
+//std::set<std::string> _words;
+//std::priority_queue<std::string> _words;
+
+void count_word(unsigned char *entry, unsigned char *jword)
+{
+  // 1996426 words
+  // ++_wordcount; // 3.20538 sec; 1.6 usec/entry
+  // set<string>#insert(std::string((const char *)entry)); // 5.21911 sec; 2.6 usec/entry
+  // priority_queue<string>#push(std::string((const char *)entry)); // 5.5034 sec; 2.76 usec/entry
+}
+
 int do_load(const std::string& fname)
 {
   for (int i=0; i<loadpaths.size(); ++i) {
@@ -328,6 +344,17 @@ bool do_command(char *cmdstr)
           index->dump();
         } else if (what_to_dump == "words") {
           index->iterate_all_datablocks(&dump_word, NULL);
+          /*
+        } else if (what_to_dump == "count") {
+          clock_t start, end;
+          start = clock();
+          _wordcount = 0;
+          //_words.clear();
+          index->iterate_all_datablocks(&count_word, NULL);
+          end = clock();
+          //printf("%d words; %g msec.\n", (int)_words.size(), (double)(end - start)/CLOCKS_PER_SEC*1000);
+          printf("%d words; %g msec.\n", _wordcount, (double)(end - start)/CLOCKS_PER_SEC*1000);
+          */
         } else if (what_to_dump == "all") {
           index->iterate_all_datablocks(&dump, NULL);
         } else {
