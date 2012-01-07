@@ -10,7 +10,8 @@ private:
   unsigned char *index_buf;
 public:
   PDICHeader *header;
-  int nindex;
+  int _nindex;
+  bool _isBOCU1;
 
 public:
   unsigned char **entry_words;
@@ -28,6 +29,9 @@ public:
   void dump();
 private:
   int load_index(FILE *fp);
+
+public:
+  //  bool isBOCU1() { return (header->dictype() & 0x08) ? true : false; }
 };
 
 #endif

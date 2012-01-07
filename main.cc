@@ -173,7 +173,9 @@ void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
 
   int from, to, cnt;
   cnt = index->bsearch_in_index((unsigned char *)needle, exact_match, from, to);
+#ifdef VERBOSE
   printf("lookup. from %d to %d, %d/%d...\n", from, to, cnt, index->nindex);
+#endif
   for (int ix=from; ix<=to; ix++) {
     if (ix < 0) continue;
     if (ix >= index->nindex) break;

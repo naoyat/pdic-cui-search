@@ -36,7 +36,9 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
   //int needle_len = needle_bocu1 ? strlen((char *)needle_bocu1) : 0;
   
   //::dump(datablock_buf, datablock_buf_size);
-  unsigned char word_buf[1024], *top_word;
+  unsigned char word_buf[1024]; // （圧縮見出し語の伸長用）見出し語バッファ。Ver6でlword=1024なの
+  
+  unsigned char *top_word;
   int top_word_length = 0;
 
   for (int ofs=0,field_id=0; ofs<datablock_buf_size; ++field_id) {

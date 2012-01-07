@@ -40,20 +40,21 @@ PDICIndex::load_index(FILE *fp)
   index_buf = new unsigned char[index_size]; //(unsigned char *)malloc(index_size);
   if (index_buf == NULL) return 0;
 
-  this->nindex = header->nindex();
+  _nindex = header->nindex();
+  _isBOCU1 = header->isBOCU1();
   int index_blkbit = header->index_blkbit();// ? 4 : 2; // 0->2(16bit), 1->4(32bit)
 
   size_t size = fread(index_buf, index_size, 1, fp);
   if (size != 1) return 0;
 
-  entry_words = new unsigned char*[nindex];
-  entry_word_lengths = new int[nindex];
-  phys_ids = new int[nindex];
+  entry_words = new unsigned char*[_nindex];
+  entry_word_lengths = new int[_nindex];
+  phys_ids = new int[_nindex];
   //entry_words = (unsigned char **)malloc(sizeof(unsigned char *)*nindex);
   //phys_ids = (int *)malloc(sizeof(int)*nindex);
 
   int actual_nindex = 0;
-  for (int ix=0,ofs=0; ix<nindex && ofs<index_size; ++ix) {
+  for (int ix=0,ofs=0; ix<_nindex && ofs<index_size; ++ix) {
     //nindex; int ofs=0; ofs<index_size; ) {
     int phys_id;
     if (index_blkbit == 0) {
@@ -76,8 +77,6 @@ PDICIndex::load_index(FILE *fp)
     ofs += entry_word_length + 1;
     ++actual_nindex;
   }
-  
-  //printf("%d + %d, %d/%d\n", index_offset, index_size, actual_nindex, nindex);
 
   return actual_nindex;
 }
@@ -85,28 +84,23 @@ PDICIndex::load_index(FILE *fp)
 unsigned int
 PDICIndex::datablock_offset(int ix)
 {
-  if (ix < 0 || nindex <= ix) return 0;
+  if (ix < 0 || _nindex <= ix) return 0;
 
   unsigned int offset = header->header_size() + header->extheader() + header->index_size()
       + header->block_size()*phys_ids[ix];
-  /*
-  printf("Datablock Offset (ix:%d, phys:%d): H:%d + EXT:%d + IX:%d + %d*%d = %d\n",
-         ix, phys_ids[ix],
-         header->header_size(), header->extheader(), header->index_size(), header->block_size(), phys_ids[ix], offset);
-  */
+
   return offset;
 }
 
 void
 PDICIndex::dump()
 {
-  for (int ix=0; ix<nindex; ++ix) {
+  for (int ix=0; ix<_nindex; ++ix) {
     printf("%04d +%d: ", 1+ix, phys_ids[ix]);
     //    printf("["); inline_dump(entry_words[ix], entry_word_lengths[ix]); printf("] = ");
     bocu1_dump_in_utf8(entry_words[ix], entry_word_lengths[ix]);
-    printf("\n");
-
-    //    bocu1_check(entry_words[ix]);
+    newline();
+    // bocu1_check(entry_words[ix]);
   }
 }
 
@@ -117,9 +111,9 @@ PDICIndex::bsearch_in_index(unsigned char *needle_utf8, bool exact_match, int& f
 
   //bocu1_check(needle_bocu1);
   if (exact_match) {
-    from = to = bsearch_in_sorted_wordlist(entry_words, nindex, needle_bocu1);
+    from = to = bsearch_in_sorted_wordlist(entry_words, _nindex, needle_bocu1);
   } else {
-    bsearch2_in_sorted_wordlist(entry_words, nindex, needle_bocu1, false, from, to);
+    bsearch2_in_sorted_wordlist(entry_words, _nindex, needle_bocu1, false, from, to);
   }
 
   free((void *)needle_bocu1);
