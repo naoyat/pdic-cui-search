@@ -30,6 +30,10 @@ PDICDatablock::PDICDatablock(FILE *fp, PDICIndex *index, int ix)
   size = fread(_datablock_buf, _datablock_buf_size, 1, fp);
   if (size != 1) return;
 }
+PDICDatablock::~PDICDatablock()
+{
+  if (_datablock_buf) delete _datablock_buf;
+}
 
 void
 PDICDatablock::iterate(action_proc *action, Criteria *criteria)
@@ -132,8 +136,3 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
     ofs = next_ofs;
   }
 }
-PDICDatablock::~PDICDatablock()
-{
-  if (_datablock_buf) delete _datablock_buf;
-}
-

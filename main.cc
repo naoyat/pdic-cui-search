@@ -48,6 +48,8 @@ void do_lookup(char *needle, int needle_len=0);
 void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match);
 
 void dump(unsigned char *entry, unsigned char *jword);
+void dump_word(unsigned char *entry, unsigned char *jword);
+
 int do_load(const std::string& fname);
 void do_alias(const std::string& alias, const std::string& valid_name);
 void do_alias(const std::string& alias, const std::vector<std::string>& valid_names);
@@ -162,9 +164,9 @@ void do_lookup(char *needle, int needle_len)
     printf("no dictionary selected\n");
     return;
   }
-
+#ifdef VERBOSE
   std::cout << "LOOKUP: " << current_dict_name << " " << current_dict_ids << std::endl;
-
+#endif
   traverse(current_dict_ids, current_dict_id) {
     Dict *dict = dicts[*current_dict_id];
     bool exact_match = true;
@@ -184,7 +186,7 @@ void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
   Criteria *criteria = new Criteria(needle, target_code, exact_match);
 
   int from, to, cnt;
-  cnt = index->bsearch_in_index((unsigned char *)needle, exact_match, from, to);
+  cnt = index->bsearch_in_index(criteria->needle, exact_match, from, to);
 #ifdef VERBOSE
   printf("lookup. from %d to %d, %d/%d...\n", from, to, cnt, index->_nindex);
 #endif
@@ -206,6 +208,10 @@ void dump(unsigned char *entry, unsigned char *jword)
   unsigned char *jword_indented = (unsigned char *)indent((char *)"   ", (char *)jword);
   printf("%s\n", jword_indented);
   free((char *)jword_indented);
+}
+void dump_word(unsigned char *entry, unsigned char *jword)
+{
+  puts((char *)entry);
 }
 
 int do_load(const std::string& fname)
@@ -310,7 +316,9 @@ bool do_command(char *cmdstr)
     if (current_dict_ids.size() == 0) {
       printf("ERROR: no dictionary selected\n");
     } else {
+#ifdef VERBOSE
       std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
+#endif
       traverse(current_dict_ids, current_dict_id) {
         PDICIndex *index = dicts[*current_dict_id]->index;
         std::string what_to_dump = cmd[1];
@@ -318,6 +326,10 @@ bool do_command(char *cmdstr)
           index->header->dump();
         } else if (what_to_dump == "index") {
           index->dump();
+        } else if (what_to_dump == "words") {
+          index->iterate_all_datablocks(&dump_word, NULL);
+        } else if (what_to_dump == "all") {
+          index->iterate_all_datablocks(&dump, NULL);
         } else {
           printf("ERROR: I don't know how to dump '%s'...\n", what_to_dump.c_str());
         }

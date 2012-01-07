@@ -176,11 +176,13 @@ int bsearch2_in_sorted_wordlist(unsigned char **list, int list_len, unsigned cha
   int lo_max = -1, hi_min = list_len;
   int needle_len = strlen((char *)needle);
   
-  int lo = 0, hi = list_len, mid = 0, cmp;
+  int lo = 0, hi = list_len, mid = 0, cmp = 0;
   // 実際には比較は行われないが、任意の合法な needle に対し strcmp(list[hi], needle) が常に正であるような値が list[hi] に門番として入っているのを想像して下さい
   while (lo < hi) {
     // at last, needle must not be found in [lo, hi)
     mid = (lo + hi + 1) / 2; // cannot be ==lo
+    if (mid == list_len) break;
+
     //printf("[lo=%d, mid=%d, hi=%d] ", lo,mid,hi);
     if (exact_match) {
       cmp = strcmp((const char *)list[mid], (const char *)needle);

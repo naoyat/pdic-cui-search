@@ -6,9 +6,6 @@
 
 #include <cstdio>
 
-//typedef bool (criteria_proc)(unsigned char*,unsigned char*);
-typedef void (action_proc)(unsigned char*,unsigned char*);
-
 class PDICDatablock {
 private:
   //  PDICHeader *header;
@@ -23,7 +20,7 @@ public:
   ~PDICDatablock();
 
   void iterate(action_proc *action, Criteria *criteria = NULL);
-  void dump();
+  //void dump();
 };
 
 #endif

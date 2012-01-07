@@ -4,7 +4,7 @@
 #include <string>
 
 #include "bocu1.h"
-
+#include "util.h"
 
 Criteria::Criteria(unsigned char *needle_utf8, int target_code, bool exact_match)
 {
@@ -16,6 +16,7 @@ Criteria::Criteria(unsigned char *needle_utf8, int target_code, bool exact_match
     case TARGET_SHIFTJIS:
       needle = utf8_to_sjis(needle_utf8);
       needle_len = strlen((char *)needle);
+      //inline_dump(needle, needle_len); newline();
       break;
     default:
       needle_len = strlen((char *)needle_utf8);

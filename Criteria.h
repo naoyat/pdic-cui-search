@@ -9,9 +9,9 @@
 
 class Criteria
 {
+public:
   unsigned char *needle;
   int needle_len;
-
   bool exact_match;
 
 public:

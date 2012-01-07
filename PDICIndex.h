@@ -1,13 +1,20 @@
 #ifndef __PDIC_INDEX_H
 #define __PDIC_INDEX_H
 
-#include <cstdio>
 #include "PDICHeader.h"
+#include "Criteria.h"
+
+#include <cstdio>
+
+//typedef bool (criteria_proc)(unsigned char*,unsigned char*);
+typedef void (action_proc)(unsigned char*,unsigned char*);
 
 class PDICIndex {
 private:
   bool header_needs_delete;
   unsigned char *index_buf;
+  FILE *fp;
+
 public:
   PDICHeader *header;
   int _nindex;
@@ -22,11 +29,14 @@ public:
   PDICIndex(FILE *fp);
   PDICIndex(FILE *fp, PDICHeader *header);
   ~PDICIndex();
+
 public:
   unsigned int datablock_offset(int ix);
   unsigned int datablock_block_size() { return header->block_size(); }
   int bsearch_in_index(unsigned char *needle, bool exact_match, int& from, int& to);
   void dump();
+  void iterate_all_datablocks(action_proc *action, Criteria *criteria);
+
 private:
   int load_index(FILE *fp);
 

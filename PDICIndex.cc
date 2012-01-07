@@ -1,22 +1,25 @@
-#include "PDICIndex.h"
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
 #include "PDICHeader.h"
+#include "PDICIndex.h"
+#include "PDICDatablock.h"
+
 #include "util.h"
 #include "bocu1.h"
 
 PDICIndex::PDICIndex(FILE *fp)
 {
   this->header = new PDICHeader(fp);
+  this->fp = fp;
   header_needs_delete = true;
   load_index(fp);
 }
 PDICIndex::PDICIndex(FILE *fp, PDICHeader *header)
 {
   this->header = header;
+  this->fp = fp;
   header_needs_delete = false;
   load_index(fp);
 }
@@ -108,9 +111,31 @@ PDICIndex::dump()
   }
 }
 
-int
-PDICIndex::bsearch_in_index(unsigned char *needle_utf8, bool exact_match, int& from, int& to)
+void
+PDICIndex::iterate_all_datablocks(action_proc *action, Criteria *criteria)
 {
+  for (int ix=0; ix<_nindex; ++ix) {
+    /*
+    printf("%04d +%d: ", 1+ix, phys_ids[ix]);
+
+    if (_isBOCU1) {
+      bocu1_dump_in_utf8(entry_words[ix], entry_word_lengths[ix]);
+    } else {
+      printf("%*s", entry_word_lengths[ix], entry_words[ix]);
+    }
+    newline();
+    */
+
+    PDICDatablock *datablock = new PDICDatablock(fp, this, ix);
+    datablock->iterate(action, criteria);
+    delete datablock;
+  }
+}
+
+int
+PDICIndex::bsearch_in_index(unsigned char *needle, bool exact_match, int& from, int& to)
+{
+  /*
   unsigned char *needle;
   if (_isBOCU1) {
     needle = utf8_to_bocu1(needle_utf8);
@@ -118,6 +143,7 @@ PDICIndex::bsearch_in_index(unsigned char *needle_utf8, bool exact_match, int& f
   } else {
     needle = needle_utf8; // ここで辞書内部コードにあわせないと
   }
+  */
 
   if (exact_match) {
     from = to = bsearch_in_sorted_wordlist(entry_words, _nindex, needle);
@@ -125,7 +151,7 @@ PDICIndex::bsearch_in_index(unsigned char *needle_utf8, bool exact_match, int& f
     bsearch2_in_sorted_wordlist(entry_words, _nindex, needle, false, from, to);
   }
 
-  if (needle != needle_utf8) free((void *)needle);
+  //  if (needle != needle_utf8) free((void *)needle);
   
   return to - from + 1;
 }
