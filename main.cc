@@ -1,3 +1,7 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -6,67 +10,127 @@
 #include "PDICDatablock.h"
 #include "util.h"
 #include "bocu1.h"
+#include "util_stl.h"
 
-#include <string>
-#include <vector>
-#include <map>
-//using namespace std;
+#define rep(var,n)  for(int var=0;var<(n);var++)
+#define traverse(c,i)  for(typeof((c).begin()) i=(c).begin(); i!=(c).end(); i++)
+#define all(c)  (c).begin(),(c).end()
+#define found(s,e)  ((s).find(e)!=(s).end())
 
-void dump(unsigned char *entry, unsigned char *jword)
+#define DEBUG
+
+#ifdef DEBUG
+#include "cout.h"
+#endif
+
+typedef struct {
+  FILE *fp;
+  PDICIndex *index;
+} Dict;
+
+void load_rc();
+void dump(unsigned char *entry, unsigned char *jword);
+int do_load(const std::string& fname);
+void do_alias(const std::string& alias, const std::string& valid_name);
+void do_alias(const std::string& alias, const std::vector<std::string>& valid_names);
+bool do_command(char *cmdstr);
+void do_lookup(char *needle, int needle_len=0);
+void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match);
+
+//std::vector<std::pair<FILE*,PDICIndex*> > dicts;
+std::vector<std::string> loadpaths;
+std::vector<Dict> dicts;
+std::map<std::string,std::vector<std::string> > aliases; // name -> name
+std::map<std::string,int> nametable; // name -> dict_id
+
+std::vector<int> current_dict_ids;
+std::string current_dict_name = "";
+
+void load_rc()
 {
-  printf("%s\n", entry);
+  FILE *fp = fopen("/Users/naochan/.pdicrc", "r");
+  if (fp != NULL) {
+    char line[256];
+    while (fgets(line, 256, fp)) {
+      int linelen = strlen(line); line[--linelen] = 0;
+      if (linelen == 0) continue;
 
-  unsigned char *jword_indented = (unsigned char *)indent((char *)"   ", (char *)jword);
-  printf("%s\n", jword_indented);
-  free((char *)jword_indented);
-}
+      char *rem = strchr(line, ';');
+      if (rem) { *rem = 0; linelen = (int)(rem - line); }
 
-void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
-{
-  int from, to, cnt;
-  cnt = index->bsearch_in_index((unsigned char *)needle, exact_match, from, to);
-  //printf("bsearch \"%s\": %d [%d..%d]\n", needle, cnt, from, to);
-  // for (int ix=from-1; ix<=to+1; ix++) {
+      while (linelen > 0) {
+        if (line[linelen-1] != ' ') break;
+        line[--linelen] = 0;
+      }
+      if (linelen == 0) continue;
 
-  Criteria *criteria = new Criteria(needle, exact_match);
-  
-  for (int ix=from; ix<=to; ix++) {
-    if (ix < 0) continue;
-    if (ix >= index->nindex) break;
-
-    //unsigned char *entry_word = bocu1_to_utf8(index->entry_words[ix]);
-    //printf(" %c %d:\"%s\".\n", (from <= ix && ix <= to ? '=' : 'x'), ix, entry_word);
-    //free(entry_word);
-
-    PDICDatablock* datablock = new PDICDatablock(fp, index, ix);
-    //datablock->iterate(&needle_bocu1, exact_match, &dump);
-    datablock->iterate(&dump, criteria);
-    delete datablock;
+      // printf("pdicrc> %s\n", line);
+      do_command(line);
+    }
+  } else {
+    printf(".pdicrc not found\n");
   }
-  newline();
+  fclose(fp);
 }
+
+std::vector<int> resolve_aliases(const std::string& name)
+{
+  std::vector<int> dict_ids;
+  
+  if (found(nametable,name)) {
+    dict_ids.push_back( nametable[name] );
+  } else if (found(aliases,name)) {
+    std::vector<std::string> names = aliases[name];
+    traverse(names, name) {
+      std::vector<int> ids = resolve_aliases(*name);
+      dict_ids.insert(dict_ids.end(), all(ids));
+    }
+  } else {
+    printf("ERROR: '%s' not found.\n", name.c_str());
+  }
+
+  return dict_ids;
+}
+
+void do_use(std::string name)
+{
+  std::vector<int> dict_ids = resolve_aliases(name);
+  std::cout << "dict_ids to use: " << dict_ids << std::endl;
+
+  // aliases[name];
+  current_dict_ids.assign(all(dict_ids));
+  current_dict_name = name;
+}
+
+void do_lookup(char *needle, int needle_len)
+{
+  if (!needle_len) needle_len = strlen(needle);
+
+  if (current_dict_ids.size() == 0) {
+    printf("no dictionary selected\n");
+    return;
+  }
+
+  traverse(current_dict_ids, current_dict_id) {
+    Dict dict = dicts[*current_dict_id];
+    bool exact_match = true;
+    if (needle[needle_len-1] == '*') {
+      exact_match = false;
+      needle[needle_len-1] = 0;
+    }
+    //printf("lookup now \"%s\" in (%d,%s)...\n", line, current_dict_id, current_dict_name.c_str());
+    lookup(dict.fp, dict.index, (unsigned char *)needle, exact_match);
+  }
+}
+
 
 int main(int argc, char **argv)
 {
-  std::vector<std::pair<FILE*,PDICIndex*> > dicts;
-  int current_dict_id = -1;
-  std::string current_dict_name;
-
-  std::map<std::string,int> names; // name -> dict_id
-
-  if (argc == 2) {
-    char *fname = argv[1];
-
-    FILE *fp = fopen(fname, "r");
-    if (fp != NULL) {
-      int new_dict_id = 0;
-      std::string new_dict_name = fname;
-      dicts.push_back( std::make_pair(fp, new PDICIndex(fp)) );
-      names[new_dict_name] = new_dict_id;
-
-      current_dict_id = new_dict_id;
-      current_dict_name = fname;
-    }
+  load_rc();
+  
+  if (argc >= 2) {
+    std::string fname = argv[1];
+    do_load(fname);
   }
 
   // REPL
@@ -78,66 +142,162 @@ int main(int argc, char **argv)
     if (linelen == 0) continue;
 
     switch (line[0]) {
-      case '.': { // command mode
-        char *cmd = line+1;
-        if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "bye") == 0) {
-          printf("bye.\n"); looping = false; break;
-        }
-        else if (strncmp(cmd, "load ", 5) == 0) {
-          char *path = cmd + 5;
-          printf("loading %s... \n", path);
-          FILE *fp = fopen(path, "r");
-          if (fp != NULL) {
-            int new_dict_id = dicts.size();
-            std::string new_dict_name = path;
-            dicts.push_back( std::make_pair(fp, new PDICIndex(fp)) );
-            names[new_dict_name] = new_dict_id;
+      case '.': // command mode
+        looping = do_command(line+1);
+        break;
 
-            current_dict_id = new_dict_id;
-            current_dict_name = new_dict_name;
-          }
-        }
-        else if (strncmp(cmd, "dump ", 5) == 0) {
-          if (current_dict_id >= 0) {
-            PDICIndex *index = dicts[current_dict_id].second;
-            char *what_to_dump = cmd + 5;
-            if (strcmp(what_to_dump, "header") == 0) {
-              index->header->dump();
-            } else if (strcmp(what_to_dump, "index") == 0) {
-              index->dump();
-            } else {
-              printf("I don't know how to dump '%s'...\n", what_to_dump);
-            }
-          } else if (current_dict_id < 0) {
-            printf("no dictionary selected\n");
-          }
-        } else {
-          printf("UNKNOWN COMMAND, '%s' %d\n", line, linelen);
-        }
-      } break;
-
-      default: {
-        if (current_dict_id >= 0) {
-          std::pair<FILE*,PDICIndex*> dict = dicts[current_dict_id];
-          bool exact_match = true;
-          if (line[linelen-1] == '*') {
-            exact_match = false;
-            line[linelen-1] = 0;
-          }
-          //printf("lookup now \"%s\" in (%d,%s)...\n", line, current_dict_id, current_dict_name.c_str());
-          lookup(dict.first, dict.second, (unsigned char *)line, exact_match);
-        } else {
-          printf("no dictionary selected\n");
-        }
-      } break;
+      default:
+        do_lookup(line);
+        newline();
+        break;
     }
   }
 
-  for (int dict_id=0; dict_id<dicts.size(); dict_id++) {
-    std::pair<FILE*,PDICIndex*> dict = dicts[dict_id];
-    fclose(dict.first);
-    delete dict.second;
+  traverse(dicts, dict) {
+    fclose(dict->fp);
+    delete dict->index;
   }
-  
+
   return 0;
 }
+
+void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
+{
+  //printf("lookup(... %s ...)\n", (char *)needle);
+  Criteria *criteria = new Criteria(needle, exact_match);
+
+  int from, to, cnt;
+  cnt = index->bsearch_in_index((unsigned char *)needle, exact_match, from, to);
+  for (int ix=from; ix<=to; ix++) {
+    if (ix < 0) continue;
+    if (ix >= index->nindex) break;
+
+    PDICDatablock* datablock = new PDICDatablock(fp, index, ix);
+    datablock->iterate(&dump, criteria);
+    delete datablock;
+  }
+}
+
+void dump(unsigned char *entry, unsigned char *jword)
+{
+  printf("%s\n", entry);
+
+  unsigned char *jword_indented = (unsigned char *)indent((char *)"   ", (char *)jword);
+  printf("%s\n", jword_indented);
+  free((char *)jword_indented);
+}
+
+int do_load(const std::string& fname)
+{
+  for (int i=0; i<loadpaths.size(); ++i) {
+    std::string path = loadpaths[i] + "/" + fname;
+
+    FILE *fp = fopen(path.c_str(), "r");
+    if (fp != NULL) {
+      dicts.push_back( (Dict){fp, new PDICIndex(fp)} );
+
+      int new_dict_id = dicts.size();
+      nametable[fname] = new_dict_id;
+
+      dicts.push_back( (Dict){fp, new PDICIndex(fp)} );
+      //aliases[new_dict_name] = new_dict_id;
+      //if (!load_only) do_use(fname);
+      //current_dict_id = new_dict_id;
+      //current_dict_name = new_dict_name;
+      return new_dict_id;
+    }
+  }
+  return -1;
+}
+
+void do_alias(const std::string& alias, const std::string& valid_name)
+{
+  std::vector<std::string> names(1, valid_name);
+  do_alias(alias, names);
+}
+void do_alias(const std::string& alias, const std::vector<std::string>& valid_names)
+{
+  aliases[alias] = valid_names;
+  //  if (found(aliases, valid_name)) {
+  //    int dict_id = aliases[valid_name];
+  //    aliases[alias] = dict_ids;
+#ifdef DEBUG
+  std::cout << "-" << alias << " -> " << join(valid_names, ", ") << std::endl;
+#endif
+}
+
+bool do_command(char *cmdstr)
+{
+  std::vector<std::string> cmd = split(cmdstr);
+
+  if (cmd[0] == "quit" || cmd[0] == "bye") {
+    printf("bye.\n");
+    return false;
+  }
+  else if (cmd[0] == "add") {
+    if (cmd.size() == 3 && cmd[1] == "loadpath") {
+      loadpaths.push_back(cmd[2]);
+    } else {
+      printf("ERROR: add command supports only 'add loadpath <path>'.\n");
+    }
+  }
+  else if (cmd[0] == "group") {
+    std::string groupname = cmd[1];
+    std::vector<std::string> names;
+    for (int i=2; i<cmd.size(); ++i) {
+      if (cmd[i] == "=") continue;
+      else names.push_back(cmd[i]);
+    }
+    do_alias(groupname, names);
+  }
+  else if (cmd[0] == "load") {
+    std::string fname = cmd[1];
+    int dict_id = do_load(fname);
+    // do_use(dict_id);
+    if (dict_id >= 0) {
+#ifdef DEBUG
+      std::cout << "+" << fname << std::endl;
+#endif
+      for (int i=2; i<cmd.size(); ++i) {
+        do_alias(cmd[i], fname);
+      }
+    } else {
+      printf("ERROR: file %s not found in loadpaths\n", cmd[1].c_str());
+    }
+  }
+  else if (cmd[0] == "use") {
+    std::string name = cmd[1];
+    if (found(aliases, name)) {
+      do_use(name);
+    } else {
+      printf("ERROR: '%s' not found.\n", name.c_str());
+    }
+  }
+  else if (cmd[0] == "dump") {
+    if (current_dict_ids.size() == 0) {
+      printf("ERROR: no dictionary selected\n");
+    } else {
+      traverse(current_dict_ids, current_dict_id) {
+        PDICIndex *index = dicts[*current_dict_id].index;
+        std::string what_to_dump = cmd[1];
+        if (what_to_dump == "header") {
+          index->header->dump();
+        } else if (what_to_dump == "index") {
+          index->dump();
+        } else {
+          printf("ERROR: I don't know how to dump '%s'...\n", what_to_dump.c_str());
+        }
+      }
+    }
+  }
+  else if (cmd[0] == "lookup") {
+    do_lookup(cmdstr + 7);
+    newline();
+  }
+  else {
+    printf("ERROR: unknown command, '%s'\n", cmd[0].c_str());
+  }
+
+  return true;
+}
+

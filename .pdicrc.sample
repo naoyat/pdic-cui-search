@@ -1,6 +1,16 @@
 ; コメントはセミコロン始まり（単に ";" で始まる検索語が無さげだから）
+; コマンドを普通に並べるだけ。REPLからコマンド入力する時のように先頭に . を追加する必要はない。
 
-load jiro131u/EIJI-131.DIC as e
-load jiro131u/WAEI-131.DIC as w
-load jiro131u/REIJI131.DIC as r
-load jiro131u/RYAKU131.DIC as a
+add loadpath .
+add loadpath jiro131u
+
+load EIJI-131.DIC eijiro e
+load WAEI-131.DIC waeijiro w
+load REIJI131.DIC reijiro r
+load RYAKU131.DIC ryakujiro a
+
+group all = eijiro waeijiro reijiro ryakujiro
+
+use all
+lookup japan
+lookup 日本

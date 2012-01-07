@@ -1,6 +1,6 @@
 TARGET = pdic
 
-OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o Criteria.o util.o bocu1.o main.o
+OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o Criteria.o util.o util_stl.o bocu1.o main.o
 
 $(TARGET): $(OBJECTS)
 	g++ -o $(TARGET) $(OBJECTS)
@@ -24,6 +24,9 @@ main.o: main.cc # PDICHeader.h PDICIndex.h
 
 util.o: util.cc util.h
 	g++ -c util.cc
+
+util_stl.o: util_stl.cc util.h
+	g++ -c util_stl.cc
 
 bocu1.o: bocu1.cc bocu1.h
 	g++ -c bocu1.cc
