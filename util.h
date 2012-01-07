@@ -29,4 +29,11 @@ inline void newline() { putchar('\n'); }
 
 char *indent(char *spacer, char *str);
 
+char *_iconv(const char *src, size_t src_size, const char *src_code, char *dest, size_t dest_size, const char *dest_code);
+
+unsigned char *sjis_to_utf8(unsigned char *src_sjis, int size=0);
+unsigned char *utf8_to_sjis(unsigned char *src_utf8, int size=0);
+
+unsigned char *cstr(unsigned char *data, int length=0);
+
 #endif

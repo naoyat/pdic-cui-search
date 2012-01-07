@@ -24,10 +24,21 @@
 #include "cout.h"
 #endif
 
-typedef struct {
+class Dict {
+ public:
   FILE *fp;
   PDICIndex *index;
-} Dict;
+  std::string path, name;
+ public:
+  Dict(FILE *fp, const std::string& name, const std::string& path) {
+    this->fp = fp;
+    this->index = new PDICIndex(fp);
+    this->name = name;
+    this->path = path;
+  }
+  ~Dict() { fclose(fp); delete index; }
+  std::string info() { return name + " " + path; }
+};
 
 // prototypes
 void load_rc();
@@ -44,14 +55,14 @@ bool do_command(char *cmdstr);
 
 // globals
 std::vector<std::string> loadpaths;
-std::vector<Dict> dicts;
+std::vector<Dict*> dicts;
 std::map<std::string,std::vector<std::string> > aliases; // name -> name
 std::map<std::string,int> nametable; // name -> dict_id
 
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
 
-// main()
+
 int main(int argc, char **argv)
 {
   load_rc();
@@ -81,10 +92,7 @@ int main(int argc, char **argv)
     }
   }
 
-  traverse(dicts, dict) {
-    fclose(dict->fp);
-    delete dict->index;
-  }
+  traverse(dicts, dict) delete *dict;
 
   return 0;
 }
@@ -155,33 +163,38 @@ void do_lookup(char *needle, int needle_len)
     return;
   }
 
+  std::cout << "LOOKUP: " << current_dict_name << " " << current_dict_ids << std::endl;
+
   traverse(current_dict_ids, current_dict_id) {
-    Dict dict = dicts[*current_dict_id];
+    Dict *dict = dicts[*current_dict_id];
     bool exact_match = true;
     if (needle[needle_len-1] == '*') {
       exact_match = false;
       needle[needle_len-1] = 0;
     }
-    lookup(dict.fp, dict.index, (unsigned char *)needle, exact_match);
+    lookup(dict->fp, dict->index, (unsigned char *)needle, exact_match);
   }
 }
 
 
 void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
 {
-  Criteria *criteria = new Criteria(needle, exact_match);
+  int target_code = index->isBOCU1() ? TARGET_BOCU1 : TARGET_SHIFTJIS;
+  
+  Criteria *criteria = new Criteria(needle, target_code, exact_match);
 
   int from, to, cnt;
   cnt = index->bsearch_in_index((unsigned char *)needle, exact_match, from, to);
 #ifdef VERBOSE
-  printf("lookup. from %d to %d, %d/%d...\n", from, to, cnt, index->nindex);
+  printf("lookup. from %d to %d, %d/%d...\n", from, to, cnt, index->_nindex);
 #endif
   for (int ix=from; ix<=to; ix++) {
     if (ix < 0) continue;
-    if (ix >= index->nindex) break;
+    if (ix >= index->_nindex) break;
 
     PDICDatablock* datablock = new PDICDatablock(fp, index, ix);
     datablock->iterate(&dump, criteria);
+    //datablock->iterate(&dump, NULL);
     delete datablock;
   }
 }
@@ -202,12 +215,14 @@ int do_load(const std::string& fname)
 
     FILE *fp = fopen(path.c_str(), "r");
     if (fp != NULL) {
-      dicts.push_back( (Dict){fp, new PDICIndex(fp)} );
-
       int new_dict_id = dicts.size();
+
+      dicts.push_back( new Dict(fp, fname, path) );
       nametable[fname] = new_dict_id;
 
-      dicts.push_back( (Dict){fp, new PDICIndex(fp)} );
+      //#ifdef VERBOSE
+      printf("loading %s... => { name: %s, dict_id: %d }\n", path.c_str(), fname.c_str(), new_dict_id);
+      //#endif
       return new_dict_id;
     }
   }
@@ -274,12 +289,30 @@ bool do_command(char *cmdstr)
       printf("ERROR: '%s' not found.\n", name.c_str());
     }
   }
+  else if (cmd[0] == "list") {
+    set<int> dict_ids(all(current_dict_ids));
+    for (int dict_id=0; dict_id<dicts.size(); ++dict_id) {
+      printf("%2d%c %s\n", dict_id, (found(dict_ids,dict_id) ? '*' : ':'), dicts[dict_id]->info().c_str());
+    }
+  }
+  else if (cmd[0] == "aliases") {
+    traverse(aliases, alias) {
+      std::cout << alias->first << ": " << join(alias->second, ", ") << std::endl;
+    }
+    /*
+    traverse(nametable, name) {
+      int dict_id = name->second;
+      std::cout << name->first << ": " << dict_id << " " << dicts[dict_id]->info() << std::endl;
+    }
+    */
+  }
   else if (cmd[0] == "dump") {
     if (current_dict_ids.size() == 0) {
       printf("ERROR: no dictionary selected\n");
     } else {
+      std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
       traverse(current_dict_ids, current_dict_id) {
-        PDICIndex *index = dicts[*current_dict_id].index;
+        PDICIndex *index = dicts[*current_dict_id]->index;
         std::string what_to_dump = cmd[1];
         if (what_to_dump == "header") {
           index->header->dump();

@@ -97,25 +97,35 @@ PDICIndex::dump()
 {
   for (int ix=0; ix<_nindex; ++ix) {
     printf("%04d +%d: ", 1+ix, phys_ids[ix]);
-    //    printf("["); inline_dump(entry_words[ix], entry_word_lengths[ix]); printf("] = ");
-    bocu1_dump_in_utf8(entry_words[ix], entry_word_lengths[ix]);
-    newline();
+
+    if (_isBOCU1) {
+      bocu1_dump_in_utf8(entry_words[ix], entry_word_lengths[ix]);
     // bocu1_check(entry_words[ix]);
+    } else {
+      printf("%*s", entry_word_lengths[ix], entry_words[ix]);
+    }
+    newline();
   }
 }
 
 int
 PDICIndex::bsearch_in_index(unsigned char *needle_utf8, bool exact_match, int& from, int& to)
 {
-  unsigned char *needle_bocu1 = utf8_to_bocu1(needle_utf8);
-
-  //bocu1_check(needle_bocu1);
-  if (exact_match) {
-    from = to = bsearch_in_sorted_wordlist(entry_words, _nindex, needle_bocu1);
+  unsigned char *needle;
+  if (_isBOCU1) {
+    needle = utf8_to_bocu1(needle_utf8);
+    //bocu1_check(needle);
   } else {
-    bsearch2_in_sorted_wordlist(entry_words, _nindex, needle_bocu1, false, from, to);
+    needle = needle_utf8; // ここで辞書内部コードにあわせないと
   }
 
-  free((void *)needle_bocu1);
+  if (exact_match) {
+    from = to = bsearch_in_sorted_wordlist(entry_words, _nindex, needle);
+  } else {
+    bsearch2_in_sorted_wordlist(entry_words, _nindex, needle, false, from, to);
+  }
+
+  if (needle != needle_utf8) free((void *)needle);
+  
   return to - from + 1;
 }

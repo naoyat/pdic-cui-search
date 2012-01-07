@@ -259,9 +259,12 @@ public:
   }
 
 public:
+  bool isAligned() {
+    return _major_version >= HYPER5;
+  }
   // BOCU-1辞書か？
   bool isBOCU1() {
-    return _major_version >= 5 && dictype() & 0x08;
+    return _major_version >= HYPER5 && dictype() & 0x08;
   }
 };
 

@@ -12,10 +12,11 @@ typedef void (action_proc)(unsigned char*,unsigned char*);
 class PDICDatablock {
 private:
   //  PDICHeader *header;
-  PDICIndex *index;
-  unsigned char *datablock_buf;
-  int datablock_buf_size;
-  bool is_4_byte;
+  PDICIndex *_index;
+  unsigned char *_datablock_buf;
+  int _datablock_buf_size;
+  bool _is4byte;
+  bool _isAligned;
 
 public:
   PDICDatablock(FILE *fp, PDICIndex *index, int ix);

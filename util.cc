@@ -4,8 +4,11 @@
 #include "util.h"
 //#include "bocu1.h"
 
+#include <iconv.h>
+
 void dump(unsigned char *data, int size)
 {
+  if (!data) return;
   if (!size) size = strlen((char *)data);
 
   for (int i=0; i<size; i+=16) {
@@ -22,9 +25,9 @@ void dump(unsigned char *data, int size)
     printf("\n");
   }
 }
-
 void inline_dump(unsigned char *data, int size)
 {
+  if (!data) return;
   if (!size) size = strlen((char *)data);
 
   printf("%02x", data[0]);
@@ -32,11 +35,15 @@ void inline_dump(unsigned char *data, int size)
 }
 void inline_dump16(unsigned short *data16, int size)
 {
+  if (!data16) return;
+
   printf("%04x", data16[0]);
   for (int i=1; i<size; ++i) printf(" %04x", data16[i]);
 }
 void inline_dump16_in_utf8(unsigned short *data16, int size)
 {
+  if (!data16) return;
+
   int dest_size;
   unsigned char *utf8str = encode_utf8(data16, size, dest_size);
   if (!utf8str) return;
@@ -239,4 +246,48 @@ char *indent(char *spacer, char *src)
   return indented;
 }
 
+unsigned char *cstr(unsigned char *data, int length)
+{
+  if (!length) length = strlen((char *)data);
 
+  unsigned char *buf = (unsigned char *)malloc(length + 1);
+  memcpy(buf, data, length); data[length] = 0;
+  return buf;
+}
+
+char *_iconv(const char *src, size_t src_size, const char *src_code, char *dest, size_t dest_size, const char *dest_code)
+{
+  iconv_t icd = iconv_open(dest_code, src_code);
+
+  size_t n_src = src_size, n_dest = dest_size;
+  char *p_src = (char *)src, *p_dest = (char *)dest;
+  while (n_src > 0) {
+    iconv(icd, &p_src, &n_src, &p_dest, &n_dest);
+  }
+  *p_dest = 0;
+
+  int actual_size = (int)(p_dest - (char *)dest);
+
+  char *newp = (char *)realloc((void *)dest, actual_size);
+  return newp ? newp : dest;
+}
+
+unsigned char *sjis_to_utf8(unsigned char *src, int src_size)
+{
+  if (!src_size) src_size = strlen((char *)src);
+
+  size_t dest_size = src_size * 2;
+  unsigned char *dest = (unsigned char *)malloc(dest_size + 1);
+
+  return (unsigned char *)_iconv((const char *)src, src_size, "Shift_JIS", (char *)dest, dest_size, "UTF-8");
+}
+
+unsigned char *utf8_to_sjis(unsigned char *src, int src_size)
+{
+  if (!src_size) src_size = strlen((char *)src);
+
+  size_t dest_size = src_size * 2;
+  unsigned char *dest = (unsigned char *)malloc(dest_size + 1);
+
+  return (unsigned char *)_iconv((const char *)src, src_size, "UTF-8", (char *)dest, dest_size, "Shift_JIS");
+}
