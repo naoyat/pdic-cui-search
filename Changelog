@@ -1,0 +1,16 @@
+PDIC CUI search ざっくりとした更新履歴
+
+(c) 2012 by naoya_t
+
+Jan 7, 2012
+- ~/.pdicrc ファイルがあれば読む
+- 別名(alias)を付与
+- 辞書グループ(group)串刺し検索
+
+Jan 6, 2012
+- 作り始め
+- written in GNU G++
+- とりあえず Mac OS X 上でしか見てない
+- とりあえず英辞郎131しか見てない
+- とりあえず PDIC ver 6.10 しか見てない
+

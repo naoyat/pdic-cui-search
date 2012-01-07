@@ -1,8 +1,6 @@
-PDIC CUI search
+PDIC CUI search - PDICを検索とか（ほげほげとか）する簡易CUIツール
+であります
 
-(c)2012 by naoya_t
+(c) 2012 by naoya_t
 
-- written in GNU G++
-- とりあえず Mac OS X 上でしか見てない
-- とりあえず英辞郎131しか見てない
-- とりあえず ver 6.10 しか見てない
+辞書は付属していません。

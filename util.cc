@@ -142,16 +142,7 @@ int bsearch_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char
   // i*が0個 →needleより小さい最後のiを返す
   // i*が1個 →そのi*を返す
   // i*が複数個（これはこの関数では想定していない）→i*のどれかを返す
-  /*
-  if (true) {
-    int lo_, hi_, cnt_;
-    cnt_ = bsearch2_in_sorted_wordlist(list, list_len, needle, true, lo_, hi_);
-    printf("bsearch2: %d [%d..%d]\n", cnt_, lo_, hi_);
-    cnt_ = bsearch2_in_sorted_wordlist(list, list_len, needle, false, lo_, hi_);
-    printf("bsearch2: %d [%d..%d]\n", cnt_, lo_, hi_);
-  }
-  */
-  
+
   int lo = 0, hi = list_len;
   // 実際には比較は行われないが、任意の合法な needle に対し strcmp(list[hi], needle) が常に正であるような値が list[hi] に門番として入っているのを想像して下さい
   while (lo+2 <= hi) {
@@ -194,7 +185,6 @@ int bsearch2_in_sorted_wordlist(unsigned char **list, int list_len, unsigned cha
 
     if (cmp >= 0) hi = mid-1; // [lo, mid-1)
     else {
-      //if (lo == mid) break;
       lo = mid; // (mid, hi)
     }
   }
