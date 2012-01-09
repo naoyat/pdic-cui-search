@@ -1,8 +1,11 @@
+#include "dump.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "dump.h"
+
 #include "util.h"
+#include "bocu1.h"
 
 void dump(unsigned char *data, int size)
 {
@@ -52,3 +55,27 @@ void inline_dump16_in_utf8(unsigned short *data16, int size)
   free((void *)utf8str);
 }
 
+
+void bocu1_dump(unsigned char *bocu1_encoded_data, int size)
+{
+  if (!size) size = strlen((char *)bocu1_encoded_data);
+
+  int codepoints_len;
+  unichar* codepoints = decode_bocu1(bocu1_encoded_data, size, codepoints_len);
+  if (codepoints) {
+    inline_dump16(codepoints, size);
+    free((void *)codepoints);
+  }
+}
+
+void bocu1_dump_in_utf8(unsigned char *bocu1_encoded_data, int size)
+{
+  if (!size) size = strlen((char *)bocu1_encoded_data);
+
+  int codepoints_len;
+  unichar* codepoints = decode_bocu1(bocu1_encoded_data, size, codepoints_len);
+  if (codepoints) {
+    inline_dump16_in_utf8(codepoints, size);
+    free((void *)codepoints);
+  }
+}

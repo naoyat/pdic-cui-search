@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstring>
 #include "util.h"
+#include "dump.h"
 
 int decode_trail[256] = {
    -1,   0,   1,   2,   3,   4,   5,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
@@ -241,29 +242,6 @@ unsigned char *bocu1_to_utf8(unsigned char *src_bocu1, int src_size)
   return dest_utf8;
 }
 
-void bocu1_dump(unsigned char *bocu1_encoded_data, int size)
-{
-  if (!size) size = strlen((char *)bocu1_encoded_data);
-
-  int codepoints_len;
-  unichar* codepoints = decode_bocu1(bocu1_encoded_data, size, codepoints_len);
-  if (codepoints) {
-    inline_dump16(codepoints, size);
-    free((void *)codepoints);
-  }
-}
-
-void bocu1_dump_in_utf8(unsigned char *bocu1_encoded_data, int size)
-{
-  if (!size) size = strlen((char *)bocu1_encoded_data);
-
-  int codepoints_len;
-  unichar* codepoints = decode_bocu1(bocu1_encoded_data, size, codepoints_len);
-  if (codepoints) {
-    inline_dump16_in_utf8(codepoints, size);
-    free((void *)codepoints);
-  }
-}
 
 
 
