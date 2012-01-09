@@ -11,8 +11,9 @@
 #include "PDICIndex.h"
 #include "PDICDatablock.h"
 #include "util.h"
-#include "bocu1.h"
 #include "util_stl.h"
+#include "bocu1.h"
+#include "dump.h"
 #include <ctime>
 
 #define rep(var,n)  for(int var=0;var<(n);var++)

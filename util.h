@@ -3,11 +3,6 @@
 
 #include <cstdio>
 
-typedef unsigned short unichar;
-
-bool surrogate(int codepoint, int *upper, int *lower);
-int unsurrogate(int upper, int lower);
-
 inline int byteval(unsigned char *data) { return *(char *)data; }
 inline int shortval(unsigned char *data) { return *(short *)data; }
 inline int longval(unsigned char *data) { return *(long *)data; }
@@ -17,18 +12,10 @@ inline unsigned int ushortval(unsigned char *data) { return *(unsigned short *)d
 inline unsigned int ulongval(unsigned char *data) { return *(unsigned long *)data; }
 inline unsigned long long ulonglongval(unsigned char *data) { return *(unsigned long long *)data; }
 
-unsigned char *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size);
-unichar *decode_utf8(unsigned char *src_utf8, int src_size, int& dest_size);
-
 int bsearch_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char *needle);
 int bsearch2_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char *needle, bool exact_match, int& lo, int& hi);
 
 char *indent(char *spacer, char *str);
-
-char *_iconv(const char *src, size_t src_size, const char *src_code, char *dest, size_t dest_size, const char *dest_code);
-
-unsigned char *sjis_to_utf8(unsigned char *src_sjis, int size=0);
-unsigned char *utf8_to_sjis(unsigned char *src_utf8, int size=0);
 
 unsigned char *cstr(unsigned char *data, int length=0);
 

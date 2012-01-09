@@ -1,5 +1,6 @@
 #include "PDICHeader.h"
-//#include "util.h"
+
+#include "dump.h"
 
 PDICHeader::PDICHeader(FILE *fp)
 {

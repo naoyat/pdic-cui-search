@@ -1,7 +1,7 @@
 #ifndef __BOCU1_H
 #define __BOCU1_H
 
-#include "util.h"
+#include "utf8.h"
 
 // codepoints <=> bocu1
 unsigned char *encode_bocu1(unichar *src_codepoint, int src_len, int& dest_size);

@@ -3,7 +3,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "util.h"
+
+#include "utf8.h"
 #include "dump.h"
 
 int decode_trail[256] = {

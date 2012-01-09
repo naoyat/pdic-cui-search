@@ -6,7 +6,7 @@
 #include "PDICIndex.h"
 #include "PDICDatablock.h"
 
-#include "util.h"
+#include "dump.h"
 #include "bocu1.h"
 
 PDICIndex::PDICIndex(FILE *fp)
