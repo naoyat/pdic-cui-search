@@ -21,7 +21,7 @@
 #define found(s,e)  ((s).find(e)!=(s).end())
 
 #define DEBUG
-//#define VERBOSE
+#define VERBOSE
 
 #ifdef DEBUG
 #include "cout.h"
@@ -276,39 +276,51 @@ bool do_command(char *cmdstr)
     if (cmd.size() == 3 && cmd[1] == "loadpath") {
       loadpaths.push_back(cmd[2]);
     } else {
-      printf("ERROR: add command supports only 'add loadpath <path>'.\n");
+      printf("[command] add loadpath <path>\n");
     }
   }
-  else if (cmd[0] == "group") {
-    std::string groupname = cmd[1];
-    std::vector<std::string> names;
-    for (int i=2; i<cmd.size(); ++i) {
-      if (cmd[i] == "=") continue;
-      else names.push_back(cmd[i]);
+  else if (cmd[0] == "group" && cmd.size() >= 2) {
+    if (cmd.size() >= 2) {
+      std::string groupname = cmd[1];
+      std::vector<std::string> names;
+      for (int i=2; i<cmd.size(); ++i) {
+        if (cmd[i] == "=") continue;
+        else names.push_back(cmd[i]);
+      }
+      do_alias(groupname, names);
+    } else {
+      printf("[command] group <groupname> = <name_1> <name_2> ... <name_n>\n");
     }
-    do_alias(groupname, names);
   }
   else if (cmd[0] == "load") {
-    std::string fname = cmd[1];
-    int dict_id = do_load(fname);
-
-    if (dict_id >= 0) {
+    if (cmd.size() >= 2) {
+      std::string fname = cmd[1];
+      int dict_id = do_load(fname);
+      
+      if (dict_id >= 0) {
 #ifdef VERBOSE
-      std::cout << "+" << fname << std::endl;
+        std::cout << "+" << fname << std::endl;
 #endif
-      for (int i=2; i<cmd.size(); ++i) {
-        do_alias(cmd[i], fname);
+        for (int i=2; i<cmd.size(); ++i) {
+          do_alias(cmd[i], fname);
+        }
+      } else {
+        printf("ERROR: file %s not found in loadpaths\n", cmd[1].c_str());
       }
     } else {
-      printf("ERROR: file %s not found in loadpaths\n", cmd[1].c_str());
+      printf("[command] load <fname>\n");
     }
   }
   else if (cmd[0] == "use") {
-    std::string name = cmd[1];
-    if (found(aliases, name)) {
-      do_use(name);
+    if (cmd.size() >= 2) {
+      std::string name = cmd[1];
+      if (found(aliases, name)) {
+        do_use(name);
+      } else {
+        printf("ERROR: '%s' not found.\n", name.c_str());
+      }
     } else {
-      printf("ERROR: '%s' not found.\n", name.c_str());
+      printf("[command] use <name>\n");
     }
   }
   else if (cmd[0] == "list") {
@@ -329,38 +341,42 @@ bool do_command(char *cmdstr)
     */
   }
   else if (cmd[0] == "dump") {
-    if (current_dict_ids.size() == 0) {
-      printf("ERROR: no dictionary selected\n");
-    } else {
+    if (cmd.size() >= 2) {
+      if (current_dict_ids.size() == 0) {
+        printf("ERROR: no dictionary selected\n");
+      } else {
 #ifdef VERBOSE
-      std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
+        std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
 #endif
-      traverse(current_dict_ids, current_dict_id) {
-        PDICIndex *index = dicts[*current_dict_id]->index;
-        std::string what_to_dump = cmd[1];
-        if (what_to_dump == "header") {
-          index->header->dump();
-        } else if (what_to_dump == "index") {
-          index->dump();
-        } else if (what_to_dump == "words") {
-          index->iterate_all_datablocks(&dump_word, NULL);
-          /*
-        } else if (what_to_dump == "count") {
-          clock_t start, end;
-          start = clock();
-          _wordcount = 0;
-          //_words.clear();
-          index->iterate_all_datablocks(&count_word, NULL);
-          end = clock();
-          //printf("%d words; %g msec.\n", (int)_words.size(), (double)(end - start)/CLOCKS_PER_SEC*1000);
-          printf("%d words; %g msec.\n", _wordcount, (double)(end - start)/CLOCKS_PER_SEC*1000);
-          */
-        } else if (what_to_dump == "all") {
-          index->iterate_all_datablocks(&dump, NULL);
-        } else {
-          printf("ERROR: I don't know how to dump '%s'...\n", what_to_dump.c_str());
+        traverse(current_dict_ids, current_dict_id) {
+          PDICIndex *index = dicts[*current_dict_id]->index;
+          std::string what_to_dump = cmd[1];
+          if (what_to_dump == "header") {
+            index->header->dump();
+          } else if (what_to_dump == "index") {
+            index->dump();
+          } else if (what_to_dump == "words") {
+            index->iterate_all_datablocks(&dump_word, NULL);
+            /*
+              } else if (what_to_dump == "count") {
+              clock_t start, end;
+              start = clock();
+              _wordcount = 0;
+              //_words.clear();
+              index->iterate_all_datablocks(&count_word, NULL);
+              end = clock();
+              //printf("%d words; %g msec.\n", (int)_words.size(), (double)(end - start)/CLOCKS_PER_SEC*1000);
+              printf("%d words; %g msec.\n", _wordcount, (double)(end - start)/CLOCKS_PER_SEC*1000);
+            */
+          } else if (what_to_dump == "all") {
+            index->iterate_all_datablocks(&dump, NULL);
+          } else {
+            printf("ERROR: I don't know how to dump '%s'...\n", what_to_dump.c_str());
+          }
         }
       }
+    } else {
+      printf("[command] dump {header|index|words|all}\n");
     }
   }
   else if (cmd[0] == "lookup") {
