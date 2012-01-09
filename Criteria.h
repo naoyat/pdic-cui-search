@@ -1,5 +1,5 @@
-#ifndef __CRITERIA_H
-#define __CRITERIA_H
+#ifndef CRITERIA_H
+#define CRITERIA_H
 
 #define TARGET_ASCII     0
 #define TARGET_LATIN1    1

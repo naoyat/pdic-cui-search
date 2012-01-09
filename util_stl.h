@@ -1,5 +1,5 @@
-#ifndef __UTIL_STL_H
-#define __UTIL_STL_H
+#ifndef UTIL_STL_H
+#define UTIL_STL_H
 
 #include <string>
 #include <vector>

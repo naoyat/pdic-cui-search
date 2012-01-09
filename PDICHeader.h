@@ -1,5 +1,5 @@
-#ifndef __PDIC_HEADER_H
-#define __PDIC_HEADER_H
+#ifndef PDIC_HEADER_H
+#define PDIC_HEADER_H
 
 #include <cstdio>
 #include "util.h"

@@ -1,5 +1,5 @@
-#ifndef __UTF8_H
-#define __UTF8_H
+#ifndef UTF8_H
+#define UTF8_H
 
 #include <cstdio>
 

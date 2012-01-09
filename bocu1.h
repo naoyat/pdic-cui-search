@@ -1,5 +1,5 @@
-#ifndef __BOCU1_H
-#define __BOCU1_H
+#ifndef BOCU1_H
+#define BOCU1_H
 
 #include "utf8.h"
 

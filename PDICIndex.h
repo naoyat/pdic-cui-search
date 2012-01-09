@@ -1,5 +1,5 @@
-#ifndef __PDIC_INDEX_H
-#define __PDIC_INDEX_H
+#ifndef PDIC_INDEX_H
+#define PDIC_INDEX_H
 
 #include "PDICHeader.h"
 #include "Criteria.h"

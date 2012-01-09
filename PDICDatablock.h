@@ -1,5 +1,5 @@
-#ifndef __PDIC_DATABLOCK_H
-#define __PDIC_DATABLOCK_H
+#ifndef PDIC_DATABLOCK_H
+#define PDIC_DATABLOCK_H
 
 #include "PDICIndex.h"
 #include "Criteria.h"
