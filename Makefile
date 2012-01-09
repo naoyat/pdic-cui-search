@@ -1,40 +1,39 @@
+.SUFFIXES:
+.SUFFIXES: .cc .o
+
 CPP = g++
 CPPFLAGS = -O2
 
-TARGET = pdic
-OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o Criteria.o util.o util_stl.o bocu1.o main.o
-
-$(TARGET): $(OBJECTS)
-	$(CPP) $(CPPFLAGS) -o $(TARGET) $(OBJECTS) -liconv
+.cc.o: $*.h
+	$(CPP) $(CPPFLAGS) -c $*.cc
 
 
-run: $(TARGET)
-	./$(TARGET)
+OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o Criteria.o util.o util_stl.o bocu1.o
 
+TEST_OBJECTS = util_gtest.o util.o \
+	PDICIndex_gtest.o
 
-main.o: main.cc # PDICHeader.h PDICIndex.h
-	$(CPP) $(CPPFLAGS) -c main.cc
+pdic: main.o $(OBJECTS)
+	$(CPP) $(CPPFLAGS) -o pdic main.o $(OBJECTS) -liconv
 
-util.o: util.cc util.h
-	$(CPP) $(CPPFLAGS) -c util.cc
+pdic_gtest: gtest_main.o $(TEST_OBJECTS)
+	$(CPP) $(CPPFLAGS) -o pdic_gtest gtest_main.o $(TEST_OBJECTS) -lgtest -liconv
 
-util_stl.o: util_stl.cc util.h
-	$(CPP) $(CPPFLAGS) -c util_stl.cc
+run: pdic
+	./pdic
 
-bocu1.o: bocu1.cc bocu1.h
-	$(CPP) $(CPPFLAGS) -c bocu1.cc
-
-PDICHeader.o: PDICHeader.cc PDICHeader.h #util.h bocu1.h
-	$(CPP) $(CPPFLAGS) -c PDICHeader.cc
-
-PDICIndex.o: PDICIndex.cc PDICIndex.h PDICHeader.h #util.h bocu1.h
-	$(CPP) $(CPPFLAGS) -c PDICIndex.cc
-
-PDICDatablock.o: PDICDatablock.cc PDICDatablock.h #PDICHeader.h util.h bocu1.h
-	$(CPP) $(CPPFLAGS) -c PDICDatablock.cc
-
-Criteria.o: Criteria.cc Criteria.h
-	$(CPP) $(CPPFLAGS) -c Criteria.cc
+test: pdic_gtest
+	./pdic_gtest
 
 clean:
-	rm -f $(TARGET) $(OBJECTS) *~
+	rm -f $(TARGET) gtest *.o *~
+
+util.o: util.cc util.h
+util_stl.o: util_stl.cc util.h
+bocu1.o: bocu1.cc bocu1.h
+PDICHeader.o: PDICHeader.cc PDICHeader.h #util.h bocu1.h
+PDICIndex.o: PDICIndex.cc PDICIndex.h PDICHeader.h #util.h bocu1.h
+PDICDatablock.o: PDICDatablock.cc PDICDatablock.h #PDICHeader.h util.h bocu1.h
+Criteria.o: Criteria.cc Criteria.h
+# main.o: main.cc
+# gtest_main.o: gtest_main.cc
