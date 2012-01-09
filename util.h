@@ -12,9 +12,6 @@ inline unsigned int ushortval(unsigned char *data) { return *(unsigned short *)d
 inline unsigned int ulongval(unsigned char *data) { return *(unsigned long *)data; }
 inline unsigned long long ulonglongval(unsigned char *data) { return *(unsigned long long *)data; }
 
-int bsearch_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char *needle);
-int bsearch2_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char *needle, bool exact_match, int& lo, int& hi);
-
 char *indent(char *spacer, char *str);
 
 unsigned char *cstr(unsigned char *data, int length=0);
