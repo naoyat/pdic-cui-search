@@ -54,7 +54,7 @@ void dump(unsigned char *entry, unsigned char *jword);
 void dump_word(unsigned char *entry, unsigned char *);
 void count_word(unsigned char *entry, unsigned char *);
 
-int do_load(const std::string& fname);
+int do_load(const std::string& filename);
 void do_alias(const std::string& alias, const std::string& valid_name);
 void do_alias(const std::string& alias, const std::vector<std::string>& valid_names);
 bool do_command(char *cmdstr);
@@ -74,8 +74,8 @@ int main(int argc, char **argv)
   load_rc();
   
   if (argc >= 2) {
-    std::string fname = argv[1];
-    do_load(fname);
+    std::string filename = argv[1];
+    do_load(filename);
   }
 
   // REPL
@@ -230,20 +230,20 @@ void count_word(unsigned char *entry, unsigned char *jword)
   // priority_queue<string>#push(std::string((const char *)entry)); // 5.5034 sec; 2.76 usec/entry
 }
 
-int do_load(const std::string& fname)
+int do_load(const std::string& filename)
 {
   for (int i=0; i<loadpaths.size(); ++i) {
-    std::string path = loadpaths[i] + "/" + fname;
+    std::string path = loadpaths[i] + "/" + filename;
 
     FILE *fp = fopen(path.c_str(), "r");
     if (fp != NULL) {
       int new_dict_id = dicts.size();
 
-      dicts.push_back( new Dict(fp, fname, path) );
-      nametable[fname] = new_dict_id;
+      dicts.push_back( new Dict(fp, filename, path) );
+      nametable[filename] = new_dict_id;
 
       //#ifdef VERBOSE
-      printf("loading %s... => { name: %s, dict_id: %d }\n", path.c_str(), fname.c_str(), new_dict_id);
+      printf("loading %s... => { name: %s, dict_id: %d }\n", path.c_str(), filename.c_str(), new_dict_id);
       //#endif
       return new_dict_id;
     }
@@ -294,21 +294,21 @@ bool do_command(char *cmdstr)
   }
   else if (cmd[0] == "load") {
     if (cmd.size() >= 2) {
-      std::string fname = cmd[1];
-      int dict_id = do_load(fname);
+      std::string filename = cmd[1];
+      int dict_id = do_load(filename);
       
       if (dict_id >= 0) {
 #ifdef VERBOSE
-        std::cout << "+" << fname << std::endl;
+        std::cout << "+" << filename << std::endl;
 #endif
         for (int i=2; i<cmd.size(); ++i) {
-          do_alias(cmd[i], fname);
+          do_alias(cmd[i], filename);
         }
       } else {
         printf("ERROR: file %s not found in loadpaths\n", cmd[1].c_str());
       }
     } else {
-      printf("[command] load <fname>\n");
+      printf("[command] load <filename>\n");
     }
   }
   else if (cmd[0] == "use") {
