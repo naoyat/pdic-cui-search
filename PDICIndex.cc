@@ -8,6 +8,7 @@
 
 #include "dump.h"
 #include "bocu1.h"
+#include "bsearch.h"
 
 PDICIndex::PDICIndex(FILE *fp)
 {
