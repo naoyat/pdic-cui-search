@@ -5,6 +5,9 @@
 
 typedef unsigned short unichar;
 
+bool surrogate(int codepoint, int *upper, int *lower);
+int unsurrogate(int upper, int lower);
+
 void dump(unsigned char *data, int size=0);
 void inline_dump(unsigned char *data, int size=0);
 void inline_dump16(unsigned short *data, int size);

@@ -6,6 +6,26 @@
 
 #include <iconv.h>
 
+bool surrogate(int codepoint, int *upper, int *lower)
+{
+  if (0x10000 <= codepoint && codepoint < 0x110000) {
+    int x = codepoint - 65536;
+    *upper = 0xd800 + (x / 1024);
+    *lower = 0xdc00 + (x % 1024);
+    //printf("surrogate(%x) -> %04x:%04x\n", *upper, *lower);
+    return true;
+  } else {
+    *upper = *lower = -1;
+    return false;
+  }
+}
+
+int unsurrogate(int upper, int lower)
+{
+  if (upper < 0xd800 || 0xdbff < upper || lower < 0xdc00 || 0xdfff < lower) return -1;
+  return 0x10000 + (((upper - 0xd800) << 10) | (lower - 0xdc00));
+}
+
 void dump(unsigned char *data, int size)
 {
   if (!data) return;
@@ -25,6 +45,7 @@ void dump(unsigned char *data, int size)
     printf("\n");
   }
 }
+
 void inline_dump(unsigned char *data, int size)
 {
   if (!data) return;
@@ -33,6 +54,7 @@ void inline_dump(unsigned char *data, int size)
   printf("%02x", data[0]);
   for (int i=1; i<size; ++i) printf(" %02x", data[i]);
 }
+
 void inline_dump16(unsigned short *data16, int size)
 {
   if (!data16) return;
@@ -40,6 +62,7 @@ void inline_dump16(unsigned short *data16, int size)
   printf("%04x", data16[0]);
   for (int i=1; i<size; ++i) printf(" %04x", data16[i]);
 }
+
 void inline_dump16_in_utf8(unsigned short *data16, int size)
 {
   if (!data16) return;
@@ -59,7 +82,15 @@ unsigned char *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
     if (codepoint == 0) break;
     else if (codepoint <= 0x7f) dest_size += 1;
     else if (codepoint <= 0x07ff) dest_size += 2;
-    else /* if (src_codepoint[i] <= 0xffff) */ dest_size += 3;
+    else /* if (src_codepoint[i] <= 0xffff) */ {
+      if (0xd800 <= codepoint && codepoint <= 0xdbff) {
+        //int upper = codepoint - 0xd800;
+        //int lower = src_codepoint[++i] - 0xdc00;
+        dest_size += 4;
+      } else {
+        dest_size += 3;
+      }
+    }
   }
 
   unsigned char *dest = (unsigned char *)malloc(dest_size + 1);
@@ -76,9 +107,28 @@ unsigned char *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
       dest[j++] = 0xc0 | (codepoint >> 6);
       dest[j++] = 0x80 | (codepoint & 0x3f);
     } else { //if (codepoint <= 0xffff) {
-      dest[j++] = 0xe0 | (codepoint >> 12);
-      dest[j++] = 0x80 | ((codepoint >> 6) & 0x3f);
-      dest[j++] = 0x80 | (codepoint & 0x3f);
+      if (0xd800 <= codepoint && codepoint <= 0xdbff) {
+        int next_code = src_codepoint[++i];
+        if (0xdc00 <= next_code && next_code <= 0xdfff) {
+          int upper = codepoint - 0xd800;
+          int lower = next_code - 0xdc00;
+          codepoint = 0x10000 + ((upper << 10) | lower);
+          dest[j++] = 0xf0 | (codepoint >> 18);
+          dest[j++] = 0x80 | ((codepoint >> 12) & 0x3f);
+          dest[j++] = 0x80 | ((codepoint >> 6) & 0x3f);
+          dest[j++] = 0x80 | (codepoint & 0x3f);
+        } else {
+          // illegal
+          --i;
+          dest[j++] = 0xe0 | (codepoint >> 12);
+          dest[j++] = 0x80 | ((codepoint >> 6) & 0x3f);
+          dest[j++] = 0x80 | (codepoint & 0x3f);
+        }
+      } else {
+        dest[j++] = 0xe0 | (codepoint >> 12);
+        dest[j++] = 0x80 | ((codepoint >> 6) & 0x3f);
+        dest[j++] = 0x80 | (codepoint & 0x3f);
+      }
     }
   }
   dest[j] = 0;
@@ -95,23 +145,28 @@ unichar *decode_utf8(unsigned char *src_utf8, int src_size, int& dest_size)
     int a = src_utf8[i++];
     int codepoint;
     if (a <= 0x7f) {
+      // U+00 .. U+7F
       codepoint = a;
     } else if (a <= 0xdf) {
+      // U+0080 .. U+07FF
       a &= 0x1f;
       int b = src_utf8[i++] & 0x3f;
       codepoint = (a << 6) | b;
     } else if (a <= 0xef) {
+      // U+0800 .. U+FFFF
       a &= 0x0f;
       int b = src_utf8[i++] & 0x3f;
       int c = src_utf8[i++] & 0x3f;
       codepoint = (a << 12) | (b << 6) | c;
     } else if (a <= 0xf7) {
+      // U+01000 .. U+1FFFFF
       a &= 0x07;
       int b = src_utf8[i++] & 0x3f;
       int c = src_utf8[i++] & 0x3f;
       int d = src_utf8[i++] & 0x3f;
       codepoint = (a << 18) | (b << 12) | (c << 6) | d;
     } else if (a <= 0xfb) {
+      // U+00200000 .. U+03FFFFFF
       a &= 0x03;
       int b = src_utf8[i++] & 0x3f;
       int c = src_utf8[i++] & 0x3f;
@@ -119,6 +174,7 @@ unichar *decode_utf8(unsigned char *src_utf8, int src_size, int& dest_size)
       int e = src_utf8[i++] & 0x3f;
       codepoint = (a << 24) | (b << 18) | (c << 12) | (d << 6) | e;
     } else if (a <= 0xfd) {
+      // U+04000000 .. U+7FFFFFFF
       a &= 0x01;
       int b = src_utf8[i++] & 0x3f;
       int c = src_utf8[i++] & 0x3f;
@@ -129,8 +185,18 @@ unichar *decode_utf8(unsigned char *src_utf8, int src_size, int& dest_size)
     } else {
       // BOM, EOM
     }
-    
-    dest[dest_size++] = codepoint; // 0xffffを超えたときに困るけど後でね
+
+    if (codepoint < 0x10000) {
+      dest[dest_size++] = codepoint;
+    } else if (codepoint < 0x110000) {
+      int upper, lower;
+      surrogate(codepoint, &upper, &lower);
+      //printf("{%x -> %04x:%04x}", codepoint, upper, lower);
+      dest[dest_size++] = upper;
+      dest[dest_size++] = lower;
+    } else {
+      // simply ignore
+    }
   }
 
   dest[dest_size] = 0;
