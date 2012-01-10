@@ -2,7 +2,7 @@
 .SUFFIXES: .cc .o
 
 CPP = g++
-CPPFLAGS = -O2
+CPPFLAGS = -O3
 
 .cc.o: $*.h
 	$(CPP) $(CPPFLAGS) -c $*.cc
