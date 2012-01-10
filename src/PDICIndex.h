@@ -4,6 +4,7 @@
 #include "PDICHeader.h"
 #include "Criteria.h"
 
+#include <utility>
 #include <cstdio>
 
 class PDICIndex {
@@ -18,7 +19,8 @@ public:
   bool _isBOCU1;
 
 public:
-  unsigned char **entry_words;
+  //unsigned char **entry_words;
+  int* entry_word_offsets;
   int* entry_word_lengths;
   int* phys_ids;
   
@@ -28,9 +30,10 @@ public:
   ~PDICIndex();
 
 public:
+  unsigned char *entry_word(int ix) { return index_buf + entry_word_offsets[ix]; }
   unsigned int datablock_offset(int ix);
   unsigned int datablock_block_size() { return header->block_size(); }
-  int bsearch_in_index(unsigned char *needle, bool exact_match, int& from, int& to);
+  std::pair<int,int> bsearch_in_index(unsigned char *needle, bool exact_match);
   void dump();
   void iterate_all_datablocks(action_proc *action, Criteria *criteria);
 

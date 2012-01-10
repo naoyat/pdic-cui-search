@@ -1,7 +1,9 @@
 #ifndef BSEARCH_H
 #define BSEARCH_H
 
-int bsearch_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char *needle);
-int bsearch2_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char *needle, bool exact_match, int& lo, int& hi);
+#include <utility>
+
+int bsearch_in_sorted_wordlist(unsigned char *buf, int *offset_list, int list_len, unsigned char *needle);
+std::pair<int,int> bsearch2_in_sorted_wordlist(unsigned char *buf, int *offset_list, int list_len, unsigned char *needle, bool exact_match);
 
 #endif

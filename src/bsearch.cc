@@ -1,10 +1,12 @@
 #include "bsearch.h"
 
 #include <cstring>
+#include "util.h"
 
 // 交点１箇所を仮定したもの
-int bsearch_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char *needle)
+int bsearch_in_sorted_wordlist(unsigned char *buf, int *offset_list, int list_len, unsigned char *needle)
 {
+  //  int needle_len = strlen((char *)needle);
   // list が辞書順にソート済みであり、
   // strcmp(list[i], needle) == 0 となる i（これをi*としよう）が高々１つしかない
   // ことを想定している
@@ -18,7 +20,7 @@ int bsearch_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char
   while (lo+2 <= hi) {
     // needle must be found in [lo, hi)
     int mid = (lo + hi) / 2; // cannot be ==lo
-    int cmp = strcmp((const char *)list[mid], (const char *)needle);
+    int cmp = ustrcmp(buf + offset_list[mid], needle);
     //putchar('.'); // 比較した回数だけ表示
     //printf("[%d, %d, %d) ", lo, mid, hi);
     //printf(" comparing ["); bocu1_dump_in_utf8(list[mid]); printf("]");
@@ -33,7 +35,7 @@ int bsearch_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char
   return lo;
 }
 
-int bsearch2_in_sorted_wordlist(unsigned char **list, int list_len, unsigned char *needle, bool exact_match, int& oLo, int& oHi)
+std::pair<int,int> bsearch2_in_sorted_wordlist(unsigned char *buf, int *offset_list, int list_len, unsigned char *needle, bool exact_match)
 {
   //strcmp(list[i], needle) == 0 となる i（これをi*としよう）が２つ以上あるかもしれないリストの探索
   int lo_max = -1, hi_min = list_len;
@@ -48,10 +50,10 @@ int bsearch2_in_sorted_wordlist(unsigned char **list, int list_len, unsigned cha
 
     //printf("[lo=%d, mid=%d, hi=%d] ", lo,mid,hi);
     if (exact_match) {
-      cmp = strcmp((const char *)list[mid], (const char *)needle);
+      cmp = ustrcmp(buf + offset_list[mid], needle);
       //putchar('L'); // 比較した回数だけ表示
     } else {
-      cmp = strncmp((const char *)list[mid], (const char *)needle, needle_len);
+      cmp = ustrncmp(buf + offset_list[mid], needle, needle_len);
       //putchar('l'); // 比較した回数だけ表示
     }
 
@@ -68,10 +70,10 @@ int bsearch2_in_sorted_wordlist(unsigned char **list, int list_len, unsigned cha
     // needle must not be found in [lo, hi)
     mid = (lo + hi) / 2; // cannot be ==lo
     if (exact_match) {
-      cmp = strcmp((const char *)list[mid], (const char *)needle);
+      cmp = ustrcmp(buf + offset_list[mid], needle);
       //putchar('H'); // 比較した回数だけ表示
     } else {
-      cmp = strncmp((const char *)list[mid], (const char *)needle, needle_len);
+      cmp = ustrncmp(buf + offset_list[mid], needle, needle_len);
       //putchar('h'); // 比較した回数だけ表示
     }
 
@@ -84,9 +86,7 @@ int bsearch2_in_sorted_wordlist(unsigned char **list, int list_len, unsigned cha
 
   //putchar('\n');
 
-  oLo = lo_max, oHi = hi_min-1;
   // list[lo+1]==needleだとしても、list[lo]のブロックにneedleにひっかかる物があるかもしれないので、
   // lo++とかはしないでおく
-
-  return oHi - oLo + 1;
+  return std::make_pair(lo_max, hi_min-1);
 }

@@ -29,7 +29,7 @@ PDICIndex::~PDICIndex()
   if (index_buf) delete index_buf;
 
   if (header_needs_delete) delete header;
-  delete entry_words;
+  delete entry_word_offsets;
   delete entry_word_lengths;
   delete phys_ids;
 }
@@ -51,7 +51,7 @@ PDICIndex::load_index(FILE *fp)
   size_t size = fread(index_buf, index_size, 1, fp);
   if (size != 1) return 0;
 
-  entry_words = new unsigned char*[_nindex];
+  entry_word_offsets = new int[_nindex];
   entry_word_lengths = new int[_nindex];
   phys_ids = new int[_nindex];
   //entry_words = (unsigned char **)malloc(sizeof(unsigned char *)*nindex);
@@ -75,7 +75,7 @@ PDICIndex::load_index(FILE *fp)
     if (phys_ids[ix] == 0 && entry_word_length == 0) break;
 
     phys_ids[ix] = phys_id;
-    entry_words[ix] = entry_word;
+    entry_word_offsets[ix] = ofs; // entry_word;
     entry_word_lengths[ix] = entry_word_length;
 
     ofs += entry_word_length + 1;
@@ -103,10 +103,10 @@ PDICIndex::dump()
     printf("%04d +%d: ", 1+ix, phys_ids[ix]);
 
     if (_isBOCU1) {
-      bocu1_dump_in_utf8(entry_words[ix], entry_word_lengths[ix]);
+      bocu1_dump_in_utf8(entry_word(ix), entry_word_lengths[ix]);
     // bocu1_check(entry_words[ix]);
     } else {
-      printf("%*s", entry_word_lengths[ix], entry_words[ix]);
+      printf("%*s", entry_word_lengths[ix], entry_word(ix));
     }
     newline();
   }
@@ -133,26 +133,13 @@ PDICIndex::iterate_all_datablocks(action_proc *action, Criteria *criteria)
   }
 }
 
-int
-PDICIndex::bsearch_in_index(unsigned char *needle, bool exact_match, int& from, int& to)
+std::pair<int,int>
+PDICIndex::bsearch_in_index(unsigned char *needle, bool exact_match)
 {
-  /*
-  unsigned char *needle;
-  if (_isBOCU1) {
-    needle = utf8_to_bocu1(needle_utf8);
-    //bocu1_check(needle);
-  } else {
-    needle = needle_utf8; // ここで辞書内部コードにあわせないと
-  }
-  */
-
   if (exact_match) {
-    from = to = bsearch_in_sorted_wordlist(entry_words, _nindex, needle);
+    int from_to = bsearch_in_sorted_wordlist(index_buf, entry_word_offsets, _nindex, needle);
+    return std::make_pair(from_to, from_to);
   } else {
-    bsearch2_in_sorted_wordlist(entry_words, _nindex, needle, false, from, to);
+    return bsearch2_in_sorted_wordlist(index_buf, entry_word_offsets, _nindex, needle, false);
   }
-
-  //  if (needle != needle_utf8) free((void *)needle);
-  
-  return to - from + 1;
 }
