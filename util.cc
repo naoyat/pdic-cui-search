@@ -23,11 +23,19 @@ char *indent(char *spacer, char *src)
   return indented;
 }
 
+void *clone(void *data, size_t size)
+{
+  void *buf = malloc(size);
+  memcpy(buf, data, size);
+  return buf;
+}
+
 unsigned char *cstr(unsigned char *data, int length)
 {
   if (!length) length = strlen((char *)data);
 
-  unsigned char *buf = (unsigned char *)malloc(length + 1);
-  memcpy(buf, data, length); data[length] = 0;
-  return buf;
+  void *newstr = clone((void *)data, length+1);
+  data[length] = 0;
+
+  return (unsigned char *)newstr;
 }

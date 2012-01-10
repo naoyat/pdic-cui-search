@@ -14,6 +14,7 @@ inline unsigned long long ulonglongval(unsigned char *data) { return *(unsigned 
 
 char *indent(char *spacer, char *str);
 
+void *clone(void *data, size_t size);
 unsigned char *cstr(unsigned char *data, int length=0);
 
 #endif

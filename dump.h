@@ -4,6 +4,9 @@
 #include <cstdio>
 #include "util.h"
 
+char *inline_dump_str(unsigned char *data, int size=0);
+char *inline_dump16_str(unsigned short *data, int size);
+
 void dump(unsigned char *data, int size=0);
 void inline_dump(unsigned char *data, int size=0);
 void inline_dump16(unsigned short *data, int size);

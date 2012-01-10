@@ -27,21 +27,47 @@ void dump(unsigned char *data, int size)
   }
 }
 
+char *inline_dump_str(unsigned char *data, int size)
+{
+  if (!data) return NULL;
+  if (!size) size = strlen((char *)data);
+
+  char *output = (char *)malloc(size*3), *p = output;
+
+  sprintf(p, "%02x", data[0]); p += 2;
+  for (int i=1; i<size; ++i) { sprintf(p, " %02x", data[i]); p += 3; }
+
+  return output;
+}
+
+char *inline_dump16_str(unsigned short *data16, int size)
+{
+  if (!data16) return NULL;
+
+  char *output = (char *)malloc(size*5), *p = output;
+
+  sprintf(p, "%04x", data16[0]); p += 4;
+  for (int i=1; i<size; ++i) { sprintf(p, " %04x", data16[i]); p += 5; }
+
+  return output;
+}
+
 void inline_dump(unsigned char *data, int size)
 {
   if (!data) return;
-  if (!size) size = strlen((char *)data);
 
-  printf("%02x", data[0]);
-  for (int i=1; i<size; ++i) printf(" %02x", data[i]);
+  char *str = inline_dump_str(data, size);
+  printf("%s", str);
+  free((void *)str);
 }
 
 void inline_dump16(unsigned short *data16, int size)
 {
   if (!data16) return;
 
-  printf("%04x", data16[0]);
-  for (int i=1; i<size; ++i) printf(" %04x", data16[i]);
+  char *str = inline_dump16_str(data16, size);
+  printf("%s", str);
+  free((void *)str);
 }
 
 void inline_dump16_in_utf8(unsigned short *data16, int size)

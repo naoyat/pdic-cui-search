@@ -6,9 +6,6 @@
 
 #include <cstdio>
 
-//typedef bool (criteria_proc)(unsigned char*,unsigned char*);
-typedef void (action_proc)(unsigned char*,unsigned char*);
-
 class PDICIndex {
 private:
   bool header_needs_delete;

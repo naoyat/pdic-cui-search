@@ -1,7 +1,10 @@
 #include "PDICDatablock.h"
 #include "PDICHeader.h"
+#include "PDICDatafield.h"
+
 #include "util.h"
 #include "bocu1.h"
+#include "charcode.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -38,18 +41,18 @@ PDICDatablock::~PDICDatablock()
 void
 PDICDatablock::iterate(action_proc *action, Criteria *criteria)
 {
-  unsigned char word_buf[1024]; // （圧縮見出し語の伸長用）見出し語バッファ。Ver6でlword=1024なの
+  unsigned char entry_word[1024]; // （圧縮見出し語の伸長用）見出し語バッファ。Ver6でlword=1024なの
   
-  unsigned char *top_word;
-  int top_word_length = 0;
+  //  unsigned char *top_word;
+  //  int top_word_length = 0;
 
   for (int ofs=0,field_id=0; ofs<_datablock_buf_size; ++field_id) {
     bool matched = false;
 
     // +0
     int field_length, compress_length, entry_word_attrib, next_ofs;
-    unsigned char *entry_word;
-    int entry_word_datalength;
+    unsigned char *entry_word_compressed;
+    int entry_word_compressed_size;
 
     if (_is4byte) {
       field_length = longval(_datablock_buf + ofs); ofs += 4;
@@ -59,36 +62,37 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
     }
 
     if (_isAligned) {
-      compress_length = ubyteval(_datablock_buf + ofs++);
-      entry_word_attrib = ubyteval(_datablock_buf + ofs++);
+      compress_length = _datablock_buf[ofs++];
+      entry_word_attrib = _datablock_buf[ofs++];
       next_ofs = ofs + field_length;
 
-      entry_word = _datablock_buf + ofs;
-      entry_word_datalength = strlen((char *)entry_word);
-      ofs += entry_word_datalength + 1;
+      entry_word_compressed = _datablock_buf + ofs;
+      entry_word_compressed_size = strlen((char *)entry_word_compressed);
+      ofs += entry_word_compressed_size + 1;
     } else {
-      compress_length = ubyteval(_datablock_buf + ofs++);
+      compress_length = _datablock_buf[ofs++];
       next_ofs = ofs + field_length;
 
-      entry_word = _datablock_buf + ofs;
-      entry_word_datalength = strlen((char *)entry_word);
-      ofs += entry_word_datalength + 1;
+      entry_word_compressed = _datablock_buf + ofs;
+      entry_word_compressed_size = strlen((char *)entry_word_compressed);
+      ofs += entry_word_compressed_size + 1;
 
-      entry_word_attrib = ubyteval(_datablock_buf + ofs++);
+      entry_word_attrib = _datablock_buf[ofs++];
     }
 
-    if (field_id == 0) {
-      top_word = entry_word; // データブロックの最初の単語(の先頭位置)を保持
-      top_word_length = entry_word_datalength;
-      
-      memcpy(word_buf, entry_word, entry_word_datalength+1);
-    }
-    else {
-      //if (compress_length > 0) memcpy(word_buf, top_word, top_word_length+1);
-      memcpy(word_buf + compress_length, entry_word, entry_word_datalength+1);
-    }
+    // uchar* entry_word, int entry_word_attrib, uchar* data, int datasize
+    memcpy(entry_word + compress_length, entry_word_compressed, entry_word_compressed_size+1);
 
-    unsigned char *tabsep_at = (unsigned char *)strchr((char *)word_buf, '\t');
+    PDICDatafield datafield(entry_word,
+                            compress_length + entry_word_compressed_size, // entry_word_size
+                            entry_word_attrib,
+                            _index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS,
+                            _datablock_buf + ofs, // data
+                            next_ofs - ofs // datasize
+                            );
+
+    /*
+    unsigned char *tabsep_at = (unsigned char *)strchr((char *)word_uncompress_buf, '\t');
     unsigned char *word_body;
     int entry_len;
     if (tabsep_at) {
@@ -98,24 +102,16 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
       word_body = word_buf;
       entry_len = compress_length + entry_word_datalength;
     }
-
+    */
     if (criteria) {
-      matched = criteria->match(word_buf, entry_len);
+      matched = criteria->match(&datafield);
     } else {
       matched = true;
     }
 
-    unsigned char *jword = _datablock_buf + ofs;
-    int jword_datalength = 0;
-    if (entry_word_attrib & 0x10) {
-      jword_datalength = strlen((char *)jword);
-      //printf("\n <%d: %d %d %02x>", field_id,  field_length, compress_length, entry_word_attrib);
-      ofs += jword_datalength + 1;
-    } else {
-      jword_datalength = next_ofs - ofs;
-    }
-
     if (matched) {
+      (*action)(&datafield);
+      /*
       unsigned char *entry_utf8, *jword_utf8;
       if (_index->isBOCU1()) {
         entry_utf8 = bocu1_to_utf8(word_body);
@@ -127,9 +123,11 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
       }
       
       (*action)(entry_utf8, jword_utf8);
+      (*action)(word_buf, _utf8, jword_utf8);
       
       free((void *)entry_utf8);
       free((void *)jword_utf8);
+      */
     }
     
     if (_is4byte) break;
