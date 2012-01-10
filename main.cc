@@ -16,28 +16,7 @@
 #include "bocu1.h"
 #include "dump.h"
 #include "charcode.h"
-
-#include <ctime>
-#include <sys/time.h>
-timeval _timeval_start;
-clock_t _clock_start;
-void TIME_RESET() {
-  _clock_start = clock();
-  gettimeofday(&_timeval_start, NULL);
-}
-std::pair<int,int> TIME_USEC() {
-  int timeval_usec, clock_usec;
-  timeval timeval_end;
-  gettimeofday(&timeval_end, NULL);
-  clock_t clock_end = clock();
-  timeval_usec = (timeval_end.tv_sec - _timeval_start.tv_sec)*1000000 + (timeval_end.tv_usec - _timeval_start.tv_usec);
-  if (CLOCKS_PER_SEC == 1000000)
-    clock_usec = clock_end - _clock_start;
-  else
-    clock_usec = (int)((long long)(clock_end - _clock_start) * 1000000 / CLOCKS_PER_SEC);
-
-  return std::make_pair(timeval_usec, clock_usec);
-}
+#include "timeutil.h"
 
 #define rep(var,n)  for(int var=0;var<(n);var++)
 #define traverse(c,i)  for(typeof((c).begin()) i=(c).begin(); i!=(c).end(); i++)
@@ -405,7 +384,7 @@ int _wordsize_sum = 0;
 
 int calculate_space_for_index(PDICIndex *index)
 {
-  TIME_RESET();
+  time_reset();
 
   _wordcount = 0;
   _wordsize_sum = 0;
@@ -413,7 +392,7 @@ int calculate_space_for_index(PDICIndex *index)
   
   index->iterate_all_datablocks(&count_word, NULL);
 
-  std::pair<int,int> time = TIME_USEC();
+  std::pair<int,int> time = time_usec();
   
   printf("%d words, %d bytes; %.2f b/w; real:%d process:%d.\n", _wordcount, _wordsize_sum, (double)_wordsize_sum/_wordcount, time.first, time.second);
 

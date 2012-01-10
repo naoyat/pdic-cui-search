@@ -9,7 +9,7 @@ CPPFLAGS = -O2
 
 
 OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o \
-          bsearch.o util.o util_stl.o dump.o utf8.o bocu1.o
+          bsearch.o util.o util_stl.o timeutil.o dump.o utf8.o bocu1.o
 
 TEST_OBJECTS = util_gtest.o util.o \
 	PDICIndex_gtest.o
@@ -31,6 +31,7 @@ clean:
 
 util.o: util.cc util.h
 util_stl.o: util_stl.cc util.h
+timeutil.o: timeutil.cc timeutil.h
 bsearch.o: bsearch.cc bsearch.h
 dump.o: dump.cc dump.h
 utf8.o: utf8.cc utf8.h
