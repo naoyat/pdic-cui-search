@@ -10,11 +10,34 @@
 #include "PDICHeader.h"
 #include "PDICIndex.h"
 #include "PDICDatablock.h"
+#include "PDICDatafield.h"
 #include "util.h"
 #include "util_stl.h"
 #include "bocu1.h"
 #include "dump.h"
+#include "charcode.h"
+
 #include <ctime>
+#include <sys/time.h>
+timeval _timeval_start;
+clock_t _clock_start;
+void TIME_RESET() {
+  _clock_start = clock();
+  gettimeofday(&_timeval_start, NULL);
+}
+std::pair<int,int> TIME_USEC() {
+  int timeval_usec, clock_usec;
+  timeval timeval_end;
+  gettimeofday(&timeval_end, NULL);
+  clock_t clock_end = clock();
+  timeval_usec = (timeval_end.tv_sec - _timeval_start.tv_sec)*1000000 + (timeval_end.tv_usec - _timeval_start.tv_usec);
+  if (CLOCKS_PER_SEC == 1000000)
+    clock_usec = clock_end - _clock_start;
+  else
+    clock_usec = (int)((long long)(clock_end - _clock_start) * 1000000 / CLOCKS_PER_SEC);
+
+  return std::make_pair(timeval_usec, clock_usec);
+}
 
 #define rep(var,n)  for(int var=0;var<(n);var++)
 #define traverse(c,i)  for(typeof((c).begin()) i=(c).begin(); i!=(c).end(); i++)
@@ -51,9 +74,10 @@ void do_use(std::string name);
 void do_lookup(char *needle, int needle_len=0);
 void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match);
 
-void dump(unsigned char *entry, unsigned char *jword);
-void dump_word(unsigned char *entry, unsigned char *);
-void count_word(unsigned char *entry, unsigned char *);
+void dump(PDICDatafield *datafield);
+void dump_word(PDICDatafield *datafield);
+void count_word(PDICDatafield *datafield);
+int calculate_space_for_index(PDICIndex *index);
 
 int do_load(const std::string& filename);
 void do_alias(const std::string& alias, const std::string& valid_name);
@@ -186,9 +210,9 @@ void do_lookup(char *needle, int needle_len)
 
 void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
 {
-  int target_code = index->isBOCU1() ? TARGET_BOCU1 : TARGET_SHIFTJIS;
+  int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
   
-  Criteria *criteria = new Criteria(needle, target_code, exact_match);
+  Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
 
   int from, to, cnt;
   cnt = index->bsearch_in_index(criteria->needle, exact_match, from, to);
@@ -206,30 +230,20 @@ void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
   }
 }
 
-void dump(unsigned char *entry, unsigned char *jword)
+void dump(PDICDatafield *datafield)//unsigned char *entry, unsigned char *jword)
 {
-  printf("%s\n", entry);
+  puts((char *)datafield->entry_word_utf8());
 
-  unsigned char *jword_indented = (unsigned char *)indent((char *)"   ", (char *)jword);
-  printf("%s\n", jword_indented);
+  unsigned char *jword_indented = (unsigned char *)indent((char *)"   ", (char *)datafield->jword_utf8());
+  puts((char *)jword_indented);
   free((char *)jword_indented);
 }
-void dump_word(unsigned char *entry, unsigned char *jword)
+void dump_word(PDICDatafield *datafield)
 {
-  puts((char *)entry);
+  puts((char *)datafield->entry_word_utf8());
+  //puts((char *)entry);
 }
 
-//int _wordcount = 0;
-//std::set<std::string> _words;
-//std::priority_queue<std::string> _words;
-
-void count_word(unsigned char *entry, unsigned char *jword)
-{
-  // 1996426 words
-  // ++_wordcount; // 3.20538 sec; 1.6 usec/entry
-  // set<string>#insert(std::string((const char *)entry)); // 5.21911 sec; 2.6 usec/entry
-  // priority_queue<string>#push(std::string((const char *)entry)); // 5.5034 sec; 2.76 usec/entry
-}
 
 int do_load(const std::string& filename)
 {
@@ -358,17 +372,9 @@ bool do_command(char *cmdstr)
             index->dump();
           } else if (what_to_dump == "words") {
             index->iterate_all_datablocks(&dump_word, NULL);
-            /*
-              } else if (what_to_dump == "count") {
-              clock_t start, end;
-              start = clock();
-              _wordcount = 0;
-              //_words.clear();
-              index->iterate_all_datablocks(&count_word, NULL);
-              end = clock();
-              //printf("%d words; %g msec.\n", (int)_words.size(), (double)(end - start)/CLOCKS_PER_SEC*1000);
-              printf("%d words; %g msec.\n", _wordcount, (double)(end - start)/CLOCKS_PER_SEC*1000);
-            */
+          } else if (what_to_dump == "count") {
+            printf("[%d]", *current_dict_id);
+            calculate_space_for_index(index);
           } else if (what_to_dump == "all") {
             index->iterate_all_datablocks(&dump, NULL);
           } else {
@@ -389,5 +395,40 @@ bool do_command(char *cmdstr)
   }
 
   return true;
+}
+
+
+int _wordcount = 0;
+int _wordsize_sum = 0;
+//std::set<std::string> _words;
+//std::priority_queue<std::string> _words;
+
+int calculate_space_for_index(PDICIndex *index)
+{
+  TIME_RESET();
+
+  _wordcount = 0;
+  _wordsize_sum = 0;
+  //_words.clear();
+  
+  index->iterate_all_datablocks(&count_word, NULL);
+
+  std::pair<int,int> time = TIME_USEC();
+  
+  printf("%d words, %d bytes; %.2f b/w; real:%d process:%d.\n", _wordcount, _wordsize_sum, (double)_wordsize_sum/_wordcount, time.first, time.second);
+
+  return _wordsize_sum;
+}
+
+void count_word(PDICDatafield *datafield)
+{
+  // Eijiro131: 1996426 words
+  // set<string>: 5.2sec (= 2.6 usec/entry)
+  // priority_queue<string>: 5.5sec (= 2.76 usec/entry)
+  // e,jともにutf8文字列を用意: 3205 ms (= 1.6 usec/entry)
+  // memcpyあり: 250 ms (= 0.125 usec/entry)
+  // memcpyなし: 147 ms
+  ++_wordcount;
+  _wordsize_sum += (datafield->entry_index_size + 1);
 }
 
