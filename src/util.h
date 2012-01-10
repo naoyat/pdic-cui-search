@@ -2,6 +2,7 @@
 #define UTIL_H
 
 #include <cstdio>
+#include <cstring>
 
 inline int byteval(unsigned char *data) { return *(char *)data; }
 inline int shortval(unsigned char *data) { return *(short *)data; }
@@ -16,5 +17,8 @@ char *indent(char *spacer, char *str);
 
 void *clone(void *data, size_t size);
 unsigned char *cstr(unsigned char *data, int length=0);
+
+int ustrcmp(unsigned char *s1, unsigned char *s2);
+inline int ustrncmp(unsigned char *s1, unsigned char *s2, size_t n) { return memcmp(s1,s2,n); }
 
 #endif

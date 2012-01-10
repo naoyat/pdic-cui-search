@@ -39,3 +39,12 @@ unsigned char *cstr(unsigned char *data, int length)
 
   return (unsigned char *)newstr;
 }
+
+int ustrcmp(unsigned char *s1, unsigned char *s2)
+{
+  unsigned char *p1 = s1, *p2 = s2;
+  while ((*p1) && (*p1 == *p2)) { ++p1; ++p2; }
+  if (*p1 > *p2) return 1;
+  else if (*p1 < *p2) return -1;
+  else return 0;
+}
