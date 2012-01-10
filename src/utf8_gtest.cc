@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "util.h"
+#include "utf8.h"
 
-TEST(util, surrogate) {
+TEST(utf8, surrogate) {
   int upper, lower;
 
   EXPECT_EQ(false, surrogate(0x0, &upper, &lower));
@@ -30,7 +30,8 @@ TEST(util, surrogate) {
   EXPECT_EQ(-1, upper);
   EXPECT_EQ(-1, lower);
 }
-TEST(util, unsurrogate) {
+
+TEST(utf8, unsurrogate) {
   EXPECT_EQ(0x010000, unsurrogate(0xD800, 0xDC00));
   EXPECT_EQ(0x0103FF, unsurrogate(0xD800, 0xDFFF));
   EXPECT_EQ(0x010400, unsurrogate(0xD801, 0xDC00));
@@ -43,7 +44,7 @@ TEST(util, unsurrogate) {
   EXPECT_EQ(-1, unsurrogate(0xD800, 0xE000));
 }
 
-TEST(util, decode_utf8) {
+TEST(utf8, decode_utf8) {
   int dest_len;
   unichar *dest;
   int expected_codepoint, upper, lower;
@@ -139,7 +140,7 @@ TEST(util, decode_utf8) {
   free(dest);
 }
 
-TEST(util, encode_utf8) {
+TEST(utf8, encode_utf8) {
   unichar src[2];
   int dest_size;
 

@@ -11,7 +11,7 @@ CPPFLAGS = -O2
 OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o \
           bsearch.o util.o util_stl.o timeutil.o dump.o utf8.o bocu1.o
 
-TEST_OBJECTS = util_gtest.o util.o \
+TEST_OBJECTS = utf8_gtest.o utf8.o \
 	PDICIndex_gtest.o
 
 pdic: main.o $(OBJECTS)
