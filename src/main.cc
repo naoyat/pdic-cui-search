@@ -72,7 +72,6 @@ std::map<std::string,int> nametable; // name -> dict_id
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
 
-
 int main(int argc, char **argv)
 {
   load_rc();
@@ -186,7 +185,6 @@ void do_lookup(char *needle, int needle_len)
   }
 }
 
-
 void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
 {
   int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
@@ -222,7 +220,6 @@ void dump_word(PDICDatafield *datafield)
   puts((char *)datafield->entry_word_utf8());
   //puts((char *)entry);
 }
-
 
 int do_load(const std::string& filename)
 {
@@ -376,7 +373,6 @@ bool do_command(char *cmdstr)
   return true;
 }
 
-
 int _wordcount = 0;
 int _wordsize_sum = 0;
 //std::set<std::string> _words;
@@ -389,11 +385,11 @@ int calculate_space_for_index(PDICIndex *index)
   _wordcount = 0;
   _wordsize_sum = 0;
   //_words.clear();
-  
+
   index->iterate_all_datablocks(&count_word, NULL);
 
   std::pair<int,int> time = time_usec();
-  
+
   printf("%d words, %d bytes; %.2f b/w; real:%d process:%d.\n", _wordcount, _wordsize_sum, (double)_wordsize_sum/_wordcount, time.first, time.second);
 
   return _wordsize_sum;
