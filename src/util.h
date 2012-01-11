@@ -20,9 +20,11 @@ char *indent(char *spacer, char *str);
 void *clone(void *data, size_t size);
 byte *cstr(byte *data, int length=0);
 
-int bstrcmp(byte *s1, byte *s2);
-inline int bstrncmp(byte *s1, byte *s2, size_t n) { return memcmp(s1,s2,n); }
+// byte版 str(n)cmp
+int bstrcmp(byte *s1, byte *s2, int minimum_charcode=0x20);
+int bstrncmp(byte *s1, byte *s2, size_t n, int minimum_charcode=0x20);
 
+// ポインタ版 bstr(n)cmp
 int pbstrcmp(const void *s1, const void *s2);
 int pbstrncmp(const void *s1, const void *s2, size_t n);
 
