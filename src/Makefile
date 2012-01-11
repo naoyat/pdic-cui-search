@@ -2,16 +2,16 @@
 .SUFFIXES: .cc .o
 
 CPP = g++
-CPPFLAGS = -O3 -DDEBUG -DVERBOSE
+CPPFLAGS = -O3 -DDEBUG
 
 .cc.o: $*.h
 	$(CPP) $(CPPFLAGS) -c $*.cc
 
 
 OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o Dict.o \
-		cout.o util.o util_stl.o timeutil.o dump.o utf8.o bocu1.o filemem.o search.o
+		bocu1.o cout.o dump.o filemem.o search.o shell.o timeutil.o utf8.o util.o util_stl.o
 
-TEST_OBJECTS = PDICIndex_gtest.o filemem_gtest.o search_gtest.o utf8_gtest.o util_gtest.o
+TEST_OBJECTS = PDICIndex_gtest.o filemem_gtest.o search_gtest.o shell_gtest.o utf8_gtest.o util_gtest.o
 TEST_DATA = filemem_gtest.dat
 TEST_OUTPUTS = filemem_gtest.savemem
 
@@ -25,7 +25,7 @@ pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 	$(CPP) $(CPPFLAGS) -DTEST -c search.cc
 	$(CPP) $(CPPFLAGS) -DTEST -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv
 
-run: pdic
+shell: pdic
 	./pdic
 
 test: pdic_gtest
@@ -46,15 +46,18 @@ cout.o: cout.cc cout.h
 dump.o: dump.cc dump.h  bocu1.h dump.h types.h util.h
 filemem.o: filemem.cc filemem.h  types.h util_stl.h
 search.o: search.cc search.h  util.h
+shell.o: shell.cc shell.h  Criteria.h Dict.h PDICDatablock.h PDICDatafield.h PDICHeader.h PDICIndex.h \
+		bocu1.h charcode.h cout.h dump.h search.h timeutil.h util.h util_stl.h
 timeutil.o: timeutil.cc timeutil.h
 utf8.o: utf8.cc utf8.h  types.h
 util.o: util.cc util.h  types.h
 util_stl.o: util_stl.cc util_stl.h
 
-main.o: main.cc  Criteria.h Dict.h PDICDatablock.h PDICDatafield.h PDICHeader.h PDICIndex.h \
-		bocu1.h charcode.h cout.h dump.h search.h timeutil.h util.h util_stl.h
+main.o: main.cc shell.h
+gtest_main.o: gtest_main.cc
 
 filemem_gtest.o: filemem_gtest.cc filemem.h dump.h
 search_gtest.o: search_gtest.cc  search.h util.h
+shell_gtest.o: shell_gtest.cc  shell.h
 utf8_gtest.o: utf8_gtest.cc  types.h utf8.h
 util_gtest.o: util_gtest.cc  types.h util.h
