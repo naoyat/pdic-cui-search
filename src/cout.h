@@ -1,3 +1,6 @@
+#ifndef COUT_H
+#define COUT_H
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -8,32 +11,12 @@
 #include <stack>
 #include <map>
 #include <set>
-using namespace std;
 
-string pluralize_if_plural(const string &singular_form, int number)
-{
-  return singular_form + (number >= 2 ? "s" : "");
-}
-string number_with_unit(int number, const string &unit_str)
-{
-  stringstream ss;
-  // ss << number << " " << unit_str << (number >= 2 ? "s" : "");
-  ss << number << " " << pluralize_if_plural(unit_str,number);
-  return ss.str();
-}
+std::string pluralize_if_plural(const std::string &singular_form, int number);
+std::string number_with_unit(int number, const std::string &unit_str);
+std::ostream& operator<<(std::ostream &s, std::vector<std::string> v);
 
-ostream& operator<<(ostream &s, vector<string> v)
-{
-  int cnt = v.size();
-  s << "[ ";
-  for (int i=0; i<cnt; i++) {
-	if (i > 0) s << ", ";
-	s << '"' << v[i] << '"';
-  }
-  return s << " ]  // " << number_with_unit(cnt,"item");
-}
-
-template <typename T> ostream& operator<<(ostream &s, vector<T> v)
+template <typename T> std::ostream& operator<<(std::ostream &s, std::vector<T> v)
 {
   int cnt = v.size();
   s << "[ ";
@@ -44,7 +27,7 @@ template <typename T> ostream& operator<<(ostream &s, vector<T> v)
   return s << " ]  // " << number_with_unit(cnt,"item");
 }
 
-template <typename T> ostream& operator<<(ostream &s, list<T> ls)
+template <typename T> std::ostream& operator<<(std::ostream &s, std::list<T> ls)
 {
   int cnt = 0;
   s << "( ";
@@ -56,7 +39,7 @@ template <typename T> ostream& operator<<(ostream &s, list<T> ls)
   return s << " )  // " << number_with_unit(cnt,"item");
 }
 
-template <typename T> ostream& operator<<(ostream &s, deque<T> st)
+template <typename T> std::ostream& operator<<(std::ostream &s, std::deque<T> st)
 {
   int cnt = st.size();
   s << "[ ";
@@ -67,7 +50,7 @@ template <typename T> ostream& operator<<(ostream &s, deque<T> st)
   return s << " ]  // " << number_with_unit(cnt,"item");
 }
 
-template <typename T1, typename T2> ostream& operator<<(ostream &s, map<T1,T2> m)
+template <typename T1, typename T2> std::ostream& operator<<(std::ostream &s, std::map<T1,T2> m)
 {
   int cnt = m.size();
   s << "{ ";
@@ -78,7 +61,7 @@ template <typename T1, typename T2> ostream& operator<<(ostream &s, map<T1,T2> m
   return s << " }  // " << number_with_unit(cnt,"item");
 }
 
-template <typename T> ostream& operator<<(ostream &s, set<T> st)
+template <typename T> std::ostream& operator<<(std::ostream &s, std::set<T> st)
 {
   int cnt = st.size();
   s << "[ ";
@@ -89,25 +72,9 @@ template <typename T> ostream& operator<<(ostream &s, set<T> st)
   return s << " ]  // " << number_with_unit(cnt,"item");
 }
 
-template <typename T1, typename T2> ostream& operator<<(ostream &s, pair<T1,T2> p)
+template <typename T1, typename T2> std::ostream& operator<<(std::ostream &s, std::pair<T1,T2> p)
 {
   return s << "(" << p.first << "," << p.second << ")";
 }
 
-/////
-/*
-clock_t start;
-void timer_clear()
-{
-  start = clock();
-}
-char *timer()
-{
-  clock_t end = clock();
-  double interval = (double)(end - start)/CLOCKS_PER_SEC;
-  
-  char *ret = NULL;
-  asprintf(&ret, " (%g msec)", interval*1000);
-  return ret;
-}
-*/
+#endif
