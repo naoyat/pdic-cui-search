@@ -9,7 +9,6 @@
 
 #include "dump.h"
 #include "bocu1.h"
-#include "bsearch.h"
 
 PDICIndex::PDICIndex(FILE *fp)
 {
@@ -131,16 +130,5 @@ PDICIndex::iterate_all_datablocks(action_proc *action, Criteria *criteria)
     PDICDatablock *datablock = new PDICDatablock(fp, this, ix);
     datablock->iterate(action, criteria);
     delete datablock;
-  }
-}
-
-std::pair<int,int>
-PDICIndex::bsearch_in_index(unsigned char *needle, bool exact_match)
-{
-  if (exact_match) {
-    int from_to = bsearch_in_sorted_wordlist(index_buf, entry_word_offsets, _nindex, needle);
-    return std::make_pair(from_to, from_to);
-  } else {
-    return bsearch2_in_sorted_wordlist(index_buf, entry_word_offsets, _nindex, needle, false);
   }
 }

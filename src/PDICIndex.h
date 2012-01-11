@@ -7,6 +7,8 @@ class Criteria;
 #include <utility>
 #include <cstdio>
 
+#include "search.h"
+
 class PDICIndex {
 private:
   bool header_needs_delete;
@@ -33,7 +35,9 @@ public:
   unsigned char *entry_word(int ix) { return index_buf + entry_word_offsets[ix]; }
   unsigned int datablock_offset(int ix);
   unsigned int datablock_block_size() { return header->block_size(); }
-  std::pair<int,int> bsearch_in_index(unsigned char *needle, bool exact_match);
+  search_result_t bsearch_in_index(unsigned char *needle, bool exact_match) {
+    return search(index_buf, entry_word_offsets, _nindex, needle, exact_match);
+  }
   void dump();
   void iterate_all_datablocks(action_proc *action, Criteria *criteria);
 

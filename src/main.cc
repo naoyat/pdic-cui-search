@@ -204,8 +204,17 @@ void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
   
   Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
 
-  std::pair<int,int> range = index->bsearch_in_index(criteria->needle, exact_match);
-  int from = range.first, to = range.second;
+  search_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
+  int from, to;
+  if (result.first) {
+    from = result.second.first;
+    to = result.second.second;
+  } else {
+    from = result.second.first; if (from < 0) goto not_found;
+    to = from;
+  }
+  if (from > 0) --from;
+
 #ifdef VERBOSE
   printf("lookup. from %d to %d, %d/%d...\n", from, to, to-from+1, index->_nindex);
 #endif
@@ -218,6 +227,8 @@ void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
     //datablock->iterate(&dump, NULL);
     delete datablock;
   }
+not_found:
+  ;
 }
 
 void dump(PDICDatafield *datafield)//unsigned char *entry, unsigned char *jword)
