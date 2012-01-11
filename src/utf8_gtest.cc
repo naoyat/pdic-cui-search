@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
+
 #include "utf8.h"
+#include "types.h"
 
 TEST(utf8, surrogate) {
   int upper, lower;
@@ -50,49 +52,49 @@ TEST(utf8, decode_utf8) {
   int expected_codepoint, upper, lower;
 
   // U+0000
-  dest = decode_utf8((unsigned char *)"\x00", 1, dest_len);
+  dest = decode_utf8((byte *)"\x00", 1, dest_len);
   expected_codepoint = 0;
   EXPECT_EQ(1, dest_len);
   EXPECT_EQ(expected_codepoint, dest[0]);
   free(dest);
 
   // U+007F
-  dest = decode_utf8((unsigned char *)"\x7f", 1, dest_len);
+  dest = decode_utf8((byte *)"\x7f", 1, dest_len);
   expected_codepoint = 0x7f;
   EXPECT_EQ(1, dest_len);
   EXPECT_EQ(expected_codepoint, dest[0]);
   free(dest);
 
   // U+0080
-  dest = decode_utf8((unsigned char *)"\xc2\x80", 2, dest_len);
+  dest = decode_utf8((byte *)"\xc2\x80", 2, dest_len);
   expected_codepoint = 0x0080;
   EXPECT_EQ(1, dest_len);
   EXPECT_EQ(expected_codepoint, dest[0]);
   free(dest);
 
   // U+07FF
-  dest = decode_utf8((unsigned char *)"\xdf\xbf", 2, dest_len);
+  dest = decode_utf8((byte *)"\xdf\xbf", 2, dest_len);
   expected_codepoint = 0x07ff;
   EXPECT_EQ(1, dest_len);
   EXPECT_EQ(expected_codepoint, dest[0]);
   free(dest);
 
   // U+0800
-  dest = decode_utf8((unsigned char *)"\xe0\xa0\x80", 3, dest_len);
+  dest = decode_utf8((byte *)"\xe0\xa0\x80", 3, dest_len);
   expected_codepoint = 0x0800;
   EXPECT_EQ(1, dest_len);
   EXPECT_EQ(expected_codepoint, dest[0]);
   free(dest);
 
   // U+0FFFF
-  dest = decode_utf8((unsigned char *)"\xef\xbf\xbf", 3, dest_len);
+  dest = decode_utf8((byte *)"\xef\xbf\xbf", 3, dest_len);
   expected_codepoint = 0xffff;
   EXPECT_EQ(1, dest_len);
   EXPECT_EQ(expected_codepoint, dest[0]);
   free(dest);
 
   // U+010000
-  dest = decode_utf8((unsigned char *)"\xf0\x90\x80\x80", 4, dest_len);
+  dest = decode_utf8((byte *)"\xf0\x90\x80\x80", 4, dest_len);
   expected_codepoint = 0x10000;
   surrogate(expected_codepoint, &upper, &lower);
   EXPECT_EQ(2, dest_len);
@@ -101,7 +103,7 @@ TEST(utf8, decode_utf8) {
   free(dest);
 
   // U+10FFFF
-  dest = decode_utf8((unsigned char *)"\xf4\x8f\xbf\xbf", 4, dest_len);
+  dest = decode_utf8((byte *)"\xf4\x8f\xbf\xbf", 4, dest_len);
   expected_codepoint = 0x10ffff;
   surrogate(expected_codepoint, &upper, &lower);
   EXPECT_EQ(2, dest_len);
@@ -110,32 +112,32 @@ TEST(utf8, decode_utf8) {
   free(dest);
 
   // U+110000
-  dest = decode_utf8((unsigned char *)"\xf4\x90\x80\x80", 4, dest_len);
+  dest = decode_utf8((byte *)"\xf4\x90\x80\x80", 4, dest_len);
   EXPECT_EQ(0, dest_len);
   free(dest);
 
   // U+1FFFFF
-  dest = decode_utf8((unsigned char *)"\xf7\xbf\xbf\xbf", 4, dest_len);
+  dest = decode_utf8((byte *)"\xf7\xbf\xbf\xbf", 4, dest_len);
   EXPECT_EQ(0, dest_len);
   free(dest);
 
   // U+200000
-  dest = decode_utf8((unsigned char *)"\xf8\x88\x80\xa0\x80", 5, dest_len);
+  dest = decode_utf8((byte *)"\xf8\x88\x80\xa0\x80", 5, dest_len);
   EXPECT_EQ(0, dest_len);
   free(dest);
 
   // U+03FFFFFF
-  dest = decode_utf8((unsigned char *)"\xfb\xbf\xbf\xbf\xbf", 5, dest_len);
+  dest = decode_utf8((byte *)"\xfb\xbf\xbf\xbf\xbf", 5, dest_len);
   EXPECT_EQ(0, dest_len);
   free(dest);
 
   // U+04000000
-  dest = decode_utf8((unsigned char *)"\xfc\x84\x80\x80\xa0\x80", 6, dest_len);
+  dest = decode_utf8((byte *)"\xfc\x84\x80\x80\xa0\x80", 6, dest_len);
   EXPECT_EQ(0, dest_len);
   free(dest);
 
   // U+7FFFFFFF
-  dest = decode_utf8((unsigned char *)"\xfd\xbf\xbf\xbf\xbf\xbf", 6, dest_len);
+  dest = decode_utf8((byte *)"\xfd\xbf\xbf\xbf\xbf\xbf", 6, dest_len);
   EXPECT_EQ(0, dest_len);
   free(dest);
 }

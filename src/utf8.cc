@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iconv.h>
+#include "types.h"
 
 bool surrogate(int codepoint, int *upper, int *lower)
 {
@@ -25,7 +26,7 @@ int unsurrogate(int upper, int lower)
 }
 
 
-unsigned char *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
+byte *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
 {
   dest_size = 0;
   for (int i=0; i<src_size; i++) {
@@ -44,7 +45,7 @@ unsigned char *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
     }
   }
 
-  unsigned char *dest = (unsigned char *)malloc(dest_size + 1);
+  byte *dest = (byte *)malloc(dest_size + 1);
   if (!dest) return NULL;
 
   int j=0;
@@ -85,7 +86,7 @@ unsigned char *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
   dest[j] = 0;
   return dest;
 }
-unichar *decode_utf8(unsigned char *src_utf8, int src_size, int& dest_size)
+unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_size)
 {
   dest_size = 0;
 
@@ -174,22 +175,22 @@ char *_iconv(const char *src, size_t src_size, const char *src_code, char *dest,
   return newp ? newp : dest;
 }
 
-unsigned char *sjis_to_utf8(unsigned char *src, int src_size)
+byte *sjis_to_utf8(byte *src, int src_size)
 {
   if (!src_size) src_size = strlen((char *)src);
 
   size_t dest_size = src_size * 2;
-  unsigned char *dest = (unsigned char *)malloc(dest_size + 1);
+  byte *dest = (byte *)malloc(dest_size + 1);
 
-  return (unsigned char *)_iconv((const char *)src, src_size, "Shift_JIS", (char *)dest, dest_size, "UTF-8");
+  return (byte *)_iconv((const char *)src, src_size, "Shift_JIS", (char *)dest, dest_size, "UTF-8");
 }
 
-unsigned char *utf8_to_sjis(unsigned char *src, int src_size)
+byte *utf8_to_sjis(byte *src, int src_size)
 {
   if (!src_size) src_size = strlen((char *)src);
 
   size_t dest_size = src_size * 2;
-  unsigned char *dest = (unsigned char *)malloc(dest_size + 1);
+  byte *dest = (byte *)malloc(dest_size + 1);
 
-  return (unsigned char *)_iconv((const char *)src, src_size, "UTF-8", (char *)dest, dest_size, "Shift_JIS");
+  return (byte *)_iconv((const char *)src, src_size, "UTF-8", (char *)dest, dest_size, "Shift_JIS");
 }

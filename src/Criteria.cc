@@ -6,9 +6,10 @@
 #include "bocu1.h"
 #include "util.h"
 #include "dump.h"
+#include "types.h"
 #include "charcode.h"
 
-Criteria::Criteria(unsigned char *needle_utf8, int target_charcode, bool exact_match)
+Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match)
 {
   switch (target_charcode) {
     case CHARCODE_BOCU1:

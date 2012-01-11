@@ -62,9 +62,9 @@ PDICIndex::load_index(FILE *fp)
     //nindex; int ofs=0; ofs<index_size; ) {
     int phys_id;
     if (index_blkbit == 0) {
-      phys_id = shortval(index_buf + ofs); ofs += 2;
+      phys_id = s16val(index_buf + ofs); ofs += 2;
     } else {
-      phys_id = longval(index_buf + ofs); ofs += 4;
+      phys_id = s32val(index_buf + ofs); ofs += 4;
     }
     
     if (ofs >= index_size) break;

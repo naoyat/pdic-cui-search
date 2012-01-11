@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "types.h"
+
 char *indent(char *spacer, char *src)
 {
   int len_before = strlen(src);
@@ -30,21 +32,30 @@ void *clone(void *data, size_t size)
   return buf;
 }
 
-unsigned char *cstr(unsigned char *data, int length)
+byte *cstr(byte *data, int length)
 {
   if (!length) length = strlen((char *)data);
 
   void *newstr = clone((void *)data, length+1);
   data[length] = 0;
 
-  return (unsigned char *)newstr;
+  return (byte *)newstr;
 }
 
-int ustrcmp(unsigned char *s1, unsigned char *s2)
+int bstrcmp(byte *s1, byte *s2)
 {
-  unsigned char *p1 = s1, *p2 = s2;
+  byte *p1 = s1, *p2 = s2;
   while ((*p1) && (*p1 == *p2)) { ++p1; ++p2; }
   if (*p1 > *p2) return 1;
   else if (*p1 < *p2) return -1;
   else return 0;
+}
+
+int pbstrcmp(const void *s1, const void *s2)
+{
+  return bstrcmp(*(byte **)s1, *(byte **)s2);
+}
+int pbsrncmp(const void *s1, const void *s2, size_t n)
+{
+  return bstrncmp(*(byte **)s1, *(byte **)s2, n);
 }

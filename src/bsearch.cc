@@ -20,7 +20,7 @@ int bsearch_in_sorted_wordlist(unsigned char *buf, int *offset_list, int list_le
   while (lo+2 <= hi) {
     // needle must be found in [lo, hi)
     int mid = (lo + hi) / 2; // cannot be ==lo
-    int cmp = ustrcmp(buf + offset_list[mid], needle);
+    int cmp = bstrcmp(buf + offset_list[mid], needle);
     //putchar('.'); // 比較した回数だけ表示
     //printf("[%d, %d, %d) ", lo, mid, hi);
     //printf(" comparing ["); bocu1_dump_in_utf8(list[mid]); printf("]");
@@ -50,10 +50,10 @@ std::pair<int,int> bsearch2_in_sorted_wordlist(unsigned char *buf, int *offset_l
 
     //printf("[lo=%d, mid=%d, hi=%d] ", lo,mid,hi);
     if (exact_match) {
-      cmp = ustrcmp(buf + offset_list[mid], needle);
+      cmp = bstrcmp(buf + offset_list[mid], needle);
       //putchar('L'); // 比較した回数だけ表示
     } else {
-      cmp = ustrncmp(buf + offset_list[mid], needle, needle_len);
+      cmp = bstrncmp(buf + offset_list[mid], needle, needle_len);
       //putchar('l'); // 比較した回数だけ表示
     }
 
@@ -70,10 +70,10 @@ std::pair<int,int> bsearch2_in_sorted_wordlist(unsigned char *buf, int *offset_l
     // needle must not be found in [lo, hi)
     mid = (lo + hi) / 2; // cannot be ==lo
     if (exact_match) {
-      cmp = ustrcmp(buf + offset_list[mid], needle);
+      cmp = bstrcmp(buf + offset_list[mid], needle);
       //putchar('H'); // 比較した回数だけ表示
     } else {
-      cmp = ustrncmp(buf + offset_list[mid], needle, needle_len);
+      cmp = bstrncmp(buf + offset_list[mid], needle, needle_len);
       //putchar('h'); // 比較した回数だけ表示
     }
 

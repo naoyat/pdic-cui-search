@@ -47,10 +47,10 @@ int encode_trail[243] = {
   253, 254, 255
 };
 
-unsigned char *encode_bocu1(unichar *src_codepoint, int src_len, int& dest_size)
+byte *encode_bocu1(unichar *src_codepoint, int src_len, int& dest_size)
 {
   dest_size = 0;
-  unsigned char* dest = (unsigned char *)malloc(4*src_len+1);
+  byte* dest = (byte *)malloc(4*src_len+1);
 
   for (int i=0,pc=0x40; i<src_len; ) {
     int code = src_codepoint[i++], diff = code - pc;
@@ -125,16 +125,16 @@ unsigned char *encode_bocu1(unichar *src_codepoint, int src_len, int& dest_size)
   }
   dest[dest_size] = 0;
 
-  unsigned char *newp = (unsigned char *)realloc((void *)dest, dest_size+1);
+  byte *newp = (byte *)realloc((void *)dest, dest_size+1);
   return newp ? newp : dest;
 }
 
-unichar *decode_bocu1(unsigned char *src_bocu1, int src_size, int& dest_size)
+unichar *decode_bocu1(byte *src_bocu1, int src_size, int& dest_size)
 {
   dest_size = 0;
   unichar* dest = (unichar *)malloc(sizeof(unichar)*(src_size+1));
   for (int i=0,pc=0x40,lead=0,tr=0,diff=0; i<src_size; ) {
-    lead = (unsigned char)src_bocu1[i++];
+    lead = (byte)src_bocu1[i++];
     if (lead <= 0x20) {
       // code = lead
     }
@@ -215,7 +215,7 @@ unichar *decode_bocu1(unsigned char *src_bocu1, int src_size, int& dest_size)
   return newp ? newp : dest;
 }
 
-unsigned char *utf8_to_bocu1(unsigned char *src_utf8, int src_size)
+byte *utf8_to_bocu1(byte *src_utf8, int src_size)
 {
   if (!src_size) src_size = strlen((char *)src_utf8);
                      
@@ -223,13 +223,13 @@ unsigned char *utf8_to_bocu1(unsigned char *src_utf8, int src_size)
   unichar* codepoints = decode_utf8(src_utf8, src_size, codepoints_len);
 
   int dest_size;
-  unsigned char* dest_bocu1 = encode_bocu1(codepoints, codepoints_len, dest_size);
+  byte* dest_bocu1 = encode_bocu1(codepoints, codepoints_len, dest_size);
 
   free((void *)codepoints);
   return dest_bocu1;
 }
 
-unsigned char *bocu1_to_utf8(unsigned char *src_bocu1, int src_size)
+byte *bocu1_to_utf8(byte *src_bocu1, int src_size)
 {
   if (!src_size) src_size = strlen((char *)src_bocu1);
 
@@ -237,7 +237,7 @@ unsigned char *bocu1_to_utf8(unsigned char *src_bocu1, int src_size)
   unichar* codepoints = decode_bocu1(src_bocu1, src_size, codepoints_len);
 
   int dest_size;
-  unsigned char* dest_utf8 = encode_utf8(codepoints, codepoints_len, dest_size);
+  byte* dest_utf8 = encode_utf8(codepoints, codepoints_len, dest_size);
 
   free((void *)codepoints);
   return dest_utf8;
@@ -246,7 +246,7 @@ unsigned char *bocu1_to_utf8(unsigned char *src_bocu1, int src_size)
 
 
 
-void bocu1_check(unsigned char *bocu1_encoded_data, int size)
+void bocu1_check(byte *bocu1_encoded_data, int size)
 {
   if (!size) size = strlen((char *)bocu1_encoded_data);
 
@@ -257,7 +257,7 @@ void bocu1_check(unsigned char *bocu1_encoded_data, int size)
   printf("\n => {"); inline_dump16(codepoints1, codepoints1_len); printf("} => \n");
 
   int utf8_len;
-  unsigned char *utf8str = encode_utf8(codepoints1, codepoints1_len, utf8_len);
+  byte *utf8str = encode_utf8(codepoints1, codepoints1_len, utf8_len);
   printf(" => \"%s\" [", utf8str); inline_dump(utf8str, utf8_len); printf("]");
 
   int codepoints2_len;
@@ -265,7 +265,7 @@ void bocu1_check(unsigned char *bocu1_encoded_data, int size)
   printf(" => {"); inline_dump16(codepoints2, codepoints2_len); printf("}");
 
   int bocu1_len;
-  unsigned char *bocu1str = encode_bocu1(codepoints2, codepoints2_len, bocu1_len);
+  byte *bocu1str = encode_bocu1(codepoints2, codepoints2_len, bocu1_len);
   printf("["); inline_dump(bocu1str, bocu1_len); printf("]");
 
   if (codepoints2_len == codepoints1_len && memcmp((char *)codepoints1, (char *)codepoints2, sizeof(unichar)*codepoints1_len) == 0)

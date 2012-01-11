@@ -1,11 +1,13 @@
 #ifndef FILEMEM_H
 #define FILEMEM_H
 
-int savemem(const char *path, unsigned char *data, int data_size, int mode=0600); // メモリイメージをそのまま保存
-unsigned char *loadmem(const char *path);
-bool unloadmem(unsigned char *ptr);
+#include "types.h"
 
-int mem_fd(unsigned char *ptr);
-int mem_size(unsigned char *ptr);
+int savemem(const char *path, byte *data, int data_size, int mode=0600); // メモリイメージをそのまま保存
+byte *loadmem(const char *path);
+bool unloadmem(byte *ptr);
+
+int mem_fd(byte *ptr);
+int mem_size(byte *ptr);
 
 #endif

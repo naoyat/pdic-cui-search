@@ -7,7 +7,7 @@
 #include "util.h"
 #include "bocu1.h"
 
-void dump(unsigned char *data, int size)
+void dump(byte *data, int size)
 {
   if (!data) return;
   if (!size) size = strlen((char *)data);
@@ -27,7 +27,7 @@ void dump(unsigned char *data, int size)
   }
 }
 
-char *inline_dump_str(unsigned char *data, int size)
+char *inline_dump_str(byte *data, int size)
 {
   if (!data) return NULL;
   if (!size) size = strlen((char *)data);
@@ -40,7 +40,7 @@ char *inline_dump_str(unsigned char *data, int size)
   return output;
 }
 
-char *inline_dump16_str(unsigned short *data16, int size)
+char *inline_dump16_str(unichar *data16, int size)
 {
   if (!data16) return NULL;
 
@@ -52,7 +52,7 @@ char *inline_dump16_str(unsigned short *data16, int size)
   return output;
 }
 
-void inline_dump(unsigned char *data, int size)
+void inline_dump(byte *data, int size)
 {
   if (!data) return;
 
@@ -75,14 +75,14 @@ void inline_dump16_in_utf8(unsigned short *data16, int size)
   if (!data16) return;
 
   int dest_size;
-  unsigned char *utf8str = encode_utf8(data16, size, dest_size);
+  byte *utf8str = encode_utf8(data16, size, dest_size);
   if (!utf8str) return;
   printf("%*s", dest_size, utf8str);
   free((void *)utf8str);
 }
 
 
-void bocu1_dump(unsigned char *bocu1_encoded_data, int size)
+void bocu1_dump(byte *bocu1_encoded_data, int size)
 {
   if (!size) size = strlen((char *)bocu1_encoded_data);
 
@@ -94,7 +94,7 @@ void bocu1_dump(unsigned char *bocu1_encoded_data, int size)
   }
 }
 
-void bocu1_dump_in_utf8(unsigned char *bocu1_encoded_data, int size)
+void bocu1_dump_in_utf8(byte *bocu1_encoded_data, int size)
 {
   if (!size) size = strlen((char *)bocu1_encoded_data);
 

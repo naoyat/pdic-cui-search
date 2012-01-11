@@ -21,7 +21,7 @@ PDICDatablock::PDICDatablock(FILE *fp, PDICIndex *index, int ix)
   fseek(fp, datablock_offset, SEEK_SET);
   unsigned char blocks_buf[2];
   size_t size = fread(blocks_buf, 2, 1, fp);
-  int using_blocks_count = ushortval(blocks_buf);
+  int using_blocks_count = u16val(blocks_buf);
   _is4byte = using_blocks_count & 0x8000; using_blocks_count &= 0x7fff;
 
   _datablock_buf_size = block_size * using_blocks_count - 2;
@@ -55,9 +55,9 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
     int entry_word_compressed_size;
 
     if (_is4byte) {
-      field_length = longval(_datablock_buf + ofs); ofs += 4;
+      field_length = s32val(_datablock_buf + ofs); ofs += 4;
     } else {
-      field_length = shortval(_datablock_buf + ofs); ofs += 2;
+      field_length = s16val(_datablock_buf + ofs); ofs += 2;
       if (field_length == 0) break;
     }
 
@@ -80,7 +80,7 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
       entry_word_attrib = _datablock_buf[ofs++];
     }
 
-    // uchar* entry_word, int entry_word_attrib, uchar* data, int datasize
+    // byte* entry_word, int entry_word_attrib, byte* data, int datasize
     memcpy(entry_word + compress_length, entry_word_compressed, entry_word_compressed_size+1);
 
     PDICDatafield datafield(entry_word,

@@ -6,7 +6,7 @@ PDICHeader::PDICHeader(FILE *fp)
 {
   rewind(fp);
   fread(this->buf, 1024, 1, fp);
-  _version = ushortval(buf + OFS_VERSION);
+  _version = u16val(buf + OFS_VERSION);
   _major_version = _version >> 8;
   _minor_version = _version & 0x00ff;
 }

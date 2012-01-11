@@ -4,7 +4,6 @@
 #include <string>
 #include <utility>
 
-//#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -14,7 +13,7 @@
 std::map<void*,std::pair<int,int> > mmap_info;
 
 // メモリイメージをそのまま保存
-int savemem(const char *path, unsigned char *data, int data_size, int mode)
+int savemem(const char *path, byte *data, int data_size, int mode)
 {
   int fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, mode);
   if (fd == -1) return NULL;
@@ -25,7 +24,7 @@ int savemem(const char *path, unsigned char *data, int data_size, int mode)
   return (int)saved_size;
 }
 
-unsigned char *loadmem(const char *path)
+byte *loadmem(const char *path)
 {
   int fd = open(path, O_RDONLY);
   if (fd == -1) return NULL;
@@ -40,10 +39,10 @@ unsigned char *loadmem(const char *path)
   if (ptr == MAP_FAILED) { close(fd); return NULL; }
 
   mmap_info[ptr] = std::make_pair(fd, size);
-  return (unsigned char *)ptr;
+  return (byte *)ptr;
 }
 
-bool unloadmem(unsigned char *ptr)
+bool unloadmem(byte *ptr)
 {
   if (!found(mmap_info, (void *)ptr)) return false;
 
@@ -57,7 +56,7 @@ bool unloadmem(unsigned char *ptr)
   return true;
 }
 
-int mem_fd(unsigned char *ptr)
+int mem_fd(byte *ptr)
 {
   if (!found(mmap_info, (void *)ptr)) return -1;
 
@@ -65,7 +64,7 @@ int mem_fd(unsigned char *ptr)
   int fd = info.first/*, size = info.second*/;
   return fd;
 }
-int mem_size(unsigned char *ptr)
+int mem_size(byte *ptr)
 {
   if (!found(mmap_info, (void *)ptr)) return -1;
 
