@@ -113,22 +113,9 @@ PDICIndex::dump()
 }
 
 void
-PDICIndex::iterate_all_datablocks(action_proc *action, Criteria *criteria)
+PDICIndex::iterate_datablock(int ix, action_proc *action, Criteria *criteria)
 {
-  for (int ix=0; ix<_nindex; ++ix) {
-    /*
-    printf("%04d +%d: ", 1+ix, phys_ids[ix]);
-
-    if (_isBOCU1) {
-      bocu1_dump_in_utf8(entry_words[ix], entry_word_lengths[ix]);
-    } else {
-      printf("%*s", entry_word_lengths[ix], entry_words[ix]);
-    }
-    newline();
-    */
-
-    PDICDatablock *datablock = new PDICDatablock(fp, this, ix);
-    datablock->iterate(action, criteria);
-    delete datablock;
-  }
+  PDICDatablock *datablock = new PDICDatablock(fp, this, ix);
+  datablock->iterate(action, criteria);
+  delete datablock;
 }

@@ -39,7 +39,10 @@ public:
     return search(index_buf, entry_word_offsets, _nindex, needle, exact_match);
   }
   void dump();
-  void iterate_all_datablocks(action_proc *action, Criteria *criteria);
+  void iterate_datablock(int ix, action_proc *action, Criteria *criteria);
+  void iterate_all_datablocks(action_proc *action, Criteria *criteria) {
+    for (int ix=0; ix<_nindex; ++ix) this->iterate_datablock(ix, action, criteria);
+  }
 
 private:
   int load_index(FILE *fp);
