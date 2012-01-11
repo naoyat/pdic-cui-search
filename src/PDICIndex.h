@@ -1,8 +1,8 @@
 #ifndef PDIC_INDEX_H
 #define PDIC_INDEX_H
 
-#include "PDICHeader.h"
-#include "Criteria.h"
+class PDICHeader;
+class Criteria;
 
 #include <utility>
 #include <cstdio>

@@ -31,6 +31,4 @@ class PDICDatafield {
   unsigned char *jword_utf8();
 };
 
-typedef void (action_proc)(PDICDatafield*);
-
 #endif

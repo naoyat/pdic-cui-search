@@ -2,7 +2,7 @@
 #define PDIC_HEADER_H
 
 #include <cstdio>
-#include "util.h"
+#include "util.h" // sNNval(), uNNval()
 
 #define OLDDIC  1 // PDIC ver 1.x : OLDDIC
 #define NEWDIC1 2 // PDIC ver 2.x : NEWDIC1

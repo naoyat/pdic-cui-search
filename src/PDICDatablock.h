@@ -1,10 +1,11 @@
 #ifndef PDIC_DATABLOCK_H
 #define PDIC_DATABLOCK_H
 
-#include "PDICIndex.h"
-#include "Criteria.h"
-
 #include <cstdio>
+#include "types.h"
+
+class Criteria;
+class PDICIndex;
 
 class PDICDatablock {
 private:

@@ -1,7 +1,7 @@
 #ifndef CRITERIA_H
 #define CRITERIA_H
 
-#include "PDICDatafield.h"
+class PDICDatafield;
 
 class Criteria
 {
@@ -20,4 +20,3 @@ public:
 };
 
 #endif
-
