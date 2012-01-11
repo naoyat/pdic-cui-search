@@ -4,44 +4,28 @@
 #include <map>
 #include <set>
 #include <queue>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "PDICHeader.h"
-#include "PDICIndex.h"
+
+#include "Criteria.h"
+#include "Dict.h"
 #include "PDICDatablock.h"
 #include "PDICDatafield.h"
-#include "Criteria.h"
+#include "PDICHeader.h"
+#include "PDICIndex.h"
+#include "bocu1.h"
+#include "charcode.h"
+#include "dump.h"
+#include "search.h"
+#include "timeutil.h"
 #include "util.h"
 #include "util_stl.h"
-#include "bocu1.h"
-#include "dump.h"
-#include "charcode.h"
-#include "timeutil.h"
-#include "search.h"
-
-#define DEBUG
-#define VERBOSE
 
 #ifdef DEBUG
 #include "cout.h"
 #endif
-
-class Dict {
- public:
-  FILE *fp;
-  PDICIndex *index;
-  std::string path, name;
- public:
-  Dict(FILE *fp, const std::string& name, const std::string& path) {
-    this->fp = fp;
-    this->index = new PDICIndex(fp);
-    this->name = name;
-    this->path = path;
-  }
-  ~Dict() { fclose(fp); delete index; }
-  std::string info() { return name + " " + path; }
-};
 
 //
 // globals
@@ -57,6 +41,8 @@ std::string current_dict_name = "";
 // prototypes
 //
 void load_rc();
+
+int do_makeindex(const std::string& filename);
 
 /// shell commands
 bool do_command(char *cmdstr);
@@ -78,11 +64,8 @@ void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
 void dump(PDICDatafield *datafield); // CALLBACK
 void dump_word(PDICDatafield *datafield); // CALLBACK
 void count_word(PDICDatafield *datafield); // CALLBACK
-void stock_entry_words(PDICDatafield *datafield); // CALLBACK
 // - dev
 int calculate_space_for_index(PDICIndex *index);
-int make_index(PDICIndex *index);
-
 
 
 int main(int argc, char **argv)
@@ -201,7 +184,7 @@ void do_lookup(char *needle, int needle_len)
 void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
 {
   int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
-  
+
   Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
 
   search_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
@@ -213,12 +196,12 @@ void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
     from = result.second.first; if (from < 0) goto not_found;
     to = from;
   }
-  if (from > 0) --from;
 
 #ifdef VERBOSE
   printf("lookup. from %d to %d, %d/%d...\n", from, to, to-from+1, index->_nindex);
 #endif
-  for (int ix=from; ix<=to; ix++) {
+  for (int ix=from-1; ix<=to; ix++) {
+    printf("  [%d]\n", ix);
     if (ix < 0) continue;
     if (ix >= index->_nindex) break;
 
@@ -252,14 +235,14 @@ int do_load(const std::string& filename)
 
     FILE *fp = fopen(path.c_str(), "r");
     if (fp != NULL) {
+      Dict *new_dict = new Dict(fp, filename, path);
       int new_dict_id = dicts.size();
-
-      dicts.push_back( new Dict(fp, filename, path) );
+      dicts.push_back(new_dict);
       nametable[filename] = new_dict_id;
 
-      //#ifdef VERBOSE
-      printf("loading %s... => { name: %s, dict_id: %d }\n", path.c_str(), filename.c_str(), new_dict_id);
-      //#endif
+#ifdef VERBOSE
+      printf("loading %s... => { name: %s, dict_id: %d }\n", path.c_str(), new_dict->suffix(), new_dict_id);
+#endif
       return new_dict_id;
     }
   }
@@ -311,13 +294,14 @@ bool do_command(char *cmdstr)
     if (cmd.size() >= 2) {
       std::string filename = cmd[1];
       int dict_id = do_load(filename);
-      
+
       if (dict_id >= 0) {
+        char *name = dicts[dict_id]->suffix();
 #ifdef VERBOSE
-        std::cout << "+" << filename << std::endl;
+        std::cout << "+" << name << std::endl;
 #endif
         for (int i=2; i<cmd.size(); ++i) {
-          do_alias(cmd[i], filename);
+          do_alias(cmd[i], name);
         }
       } else {
         printf("ERROR: file %s not found in loadpaths\n", cmd[1].c_str());
@@ -339,7 +323,7 @@ bool do_command(char *cmdstr)
     }
   }
   else if (cmd[0] == "list") {
-    set<int> dict_ids(all(current_dict_ids));
+    std::set<int> dict_ids(all(current_dict_ids));
     for (int dict_id=0; dict_id<dicts.size(); ++dict_id) {
       printf("%2d%c %s\n", dict_id, (found(dict_ids,dict_id) ? '*' : ':'), dicts[dict_id]->info().c_str());
     }
@@ -354,6 +338,17 @@ bool do_command(char *cmdstr)
       std::cout << name->first << ": " << dict_id << " " << dicts[dict_id]->info() << std::endl;
     }
     */
+  }
+  else if (cmd[0] == "make") {
+    if (cmd.size() == 2 && cmd[1] == "index") {
+      traverse(current_dict_ids, current_dict_id) {
+        Dict *dict = dicts[*current_dict_id];
+        dict->make_sarray_index();
+        dict->load_sarray_index();
+      }
+    } else {
+      printf("[command] make index\n");
+    }
   }
   else if (cmd[0] == "dump") {
     if (cmd.size() >= 2) {
@@ -386,6 +381,7 @@ bool do_command(char *cmdstr)
       printf("[command] dump {header|index|words|all}\n");
     }
   }
+  /*
   else if (cmd[0] == "dev") {
     if (cmd.size() >= 2) {
       if (current_dict_ids.size() == 0) {
@@ -409,6 +405,7 @@ bool do_command(char *cmdstr)
       printf("[command] dev {makeindex}\n");
     }
   }
+  */
   else if (cmd[0] == "lookup") {
     do_lookup(cmdstr + 7);
     newline();
@@ -444,68 +441,5 @@ void count_word(PDICDatafield *datafield)
 {
   ++_wordcount;
   _wordsize_sum += (datafield->entry_index_size + 1);
-}
-
-unsigned char *entry_buf = NULL; // 全ての見出し語（に'\0'を付加したデータ）を結合したもの
-int entry_buf_offset = 0;
-vector<int> entry_start_pos; // 各見出し語の開始位置(entry_buf + entry_start_pos[i])
-#define ENTRY_BUF_SIZE 1024*1024*128 // 128MBとりあえず
-
-int make_index(PDICIndex *index)
-{
-  time_reset();
-
-  // initialize
-  entry_buf = (unsigned char *)malloc(ENTRY_BUF_SIZE);
-  if (!entry_buf) {
-    printf("entry_buf is not allocated\n");
-    return -1;
-  }
-  entry_start_pos.clear();
-  entry_buf_offset = 0;
-
-  index->iterate_all_datablocks(&stock_entry_words, NULL);
-
-  std::pair<int,int> time = time_usec();
-  printf("%d words, %d bytes; real:%d process:%d.\n", (int)entry_start_pos.size(), entry_buf_offset, time.first, time.second);
-
-  time_reset();
-
-  std::pair<int*,int> sarr = make_light_suffix_array(entry_buf, entry_buf_offset);
-  int* offsets = sarr.first;
-  int offsets_len = sarr.second;
-
-  unsigned char *needle = (unsigned char *)"whose creativity";
-  search_result_t result = search(entry_buf, offsets, offsets_len, needle, false);
-  printf("RESULT: "); std::cout << result << std::endl;
-  if (result.second.first >= 0) {
-    printf(" ? %s\n", entry_buf+offsets[result.second.first]);
-  }
-  if (result.first) {
-    for (int i=result.second.first; i<=result.second.second; ++i) {
-      printf(" - %s\n", entry_buf+offsets[i]);
-    }
-  } else {
-    printf(" - (not found)\n");
-  }
-  free((void *)offsets);
-
-  std::pair<int,int> time2 = time_usec();
-  printf("%d/%d ; real:%d process:%d.\n", offsets_len, entry_buf_offset, time2.first, time2.second);
-
-  return entry_buf_offset;
-}
-
-void stock_entry_words(PDICDatafield *datafield)
-{
-  unsigned char *entry_utf8 = datafield->entry_word_utf8();
-  int entry_utf8_memsize = strlen((char *)entry_utf8) + 1;
-  if (entry_buf_offset + entry_utf8_memsize > ENTRY_BUF_SIZE) {
-    printf("memory over at #%d (%s)\n", (int)entry_start_pos.size(), entry_utf8);
-    return;
-  }
-  entry_start_pos.push_back(entry_buf_offset);
-  memcpy(entry_buf + entry_buf_offset, entry_utf8, entry_utf8_memsize); // returns the position at \0
-  entry_buf_offset += entry_utf8_memsize;
 }
 
