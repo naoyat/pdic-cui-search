@@ -44,35 +44,47 @@ class Dict {
   std::string info() { return name + " " + path; }
 };
 
-// prototypes
-void load_rc();
-std::vector<int> resolve_aliases(const std::string& name);
-void do_use(std::string name);
-void do_lookup(char *needle, int needle_len=0);
-void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match);
-
-void dump(PDICDatafield *datafield);
-void dump_word(PDICDatafield *datafield);
-void count_word(PDICDatafield *datafield);
-void stock_entry_words(PDICDatafield *datafield);
-
-int calculate_space_for_index(PDICIndex *index);
-int make_index(PDICIndex *index);
-
-
-int do_load(const std::string& filename);
-void do_alias(const std::string& alias, const std::string& valid_name);
-void do_alias(const std::string& alias, const std::vector<std::string>& valid_names);
-bool do_command(char *cmdstr);
-
+//
 // globals
+//
 std::vector<std::string> loadpaths;
 std::vector<Dict*> dicts;
 std::map<std::string,std::vector<std::string> > aliases; // name -> name
 std::map<std::string,int> nametable; // name -> dict_id
-
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
+
+//
+// prototypes
+//
+void load_rc();
+
+/// shell commands
+bool do_command(char *cmdstr);
+// - add loadpath
+// - load
+int do_load(const std::string& filename);
+void do_alias(const std::string& alias, const std::string& valid_name);
+void do_alias(const std::string& alias, const std::vector<std::string>& valid_names);
+// - group
+// * list
+// * aliases
+// - use
+void do_use(std::string name);
+std::vector<int> resolve_aliases(const std::string& name);
+// - lookup
+void do_lookup(char *needle, int needle_len=0);
+void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match);
+// - dump
+void dump(PDICDatafield *datafield); // CALLBACK
+void dump_word(PDICDatafield *datafield); // CALLBACK
+void count_word(PDICDatafield *datafield); // CALLBACK
+void stock_entry_words(PDICDatafield *datafield); // CALLBACK
+// - dev
+int calculate_space_for_index(PDICIndex *index);
+int make_index(PDICIndex *index);
+
+
 
 int main(int argc, char **argv)
 {
