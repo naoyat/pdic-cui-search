@@ -11,11 +11,13 @@ CPPFLAGS = -O3 -DDEBUG -DVERBOSE
 OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o Dict.o \
 		cout.o util.o util_stl.o timeutil.o dump.o utf8.o bocu1.o filemem.o search.o
 
-TEST_OBJECTS = utf8_gtest.o PDICIndex_gtest.o filemem_gtest.o search_gtest.o
+TEST_OBJECTS = PDICIndex_gtest.o filemem_gtest.o search_gtest.o utf8_gtest.o util_gtest.o
 TEST_DATA = filemem_gtest.dat
 TEST_OUTPUTS = filemem_gtest.savemem
 
 pdic: main.o $(OBJECTS)
+	rm search.o
+	$(CPP) $(CPPFLAGS) -c search.cc
 	$(CPP) $(CPPFLAGS) -o pdic main.o $(OBJECTS) -liconv
 
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
@@ -55,3 +57,4 @@ main.o: main.cc  Criteria.h Dict.h PDICDatablock.h PDICDatafield.h PDICHeader.h 
 filemem_gtest.o: filemem_gtest.cc filemem.h dump.h
 search_gtest.o: search_gtest.cc  search.h util.h
 utf8_gtest.o: utf8_gtest.cc  types.h utf8.h
+util_gtest.o: util_gtest.cc  types.h util.h

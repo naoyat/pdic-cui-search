@@ -188,20 +188,26 @@ void lookup(FILE *fp, PDICIndex *index, unsigned char *needle, bool exact_match)
   Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
 
   search_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
+#ifdef VERBOSE
+  std::cout << "result = " << result << std::endl;
+#endif
   int from, to;
   if (result.first) {
-    from = result.second.first;
+    from = result.second.first;// - 1; if (from < 0) from = 0;
+    if (bstrcmp(index->entry_word(from), criteria->needle) != 0) { --from; if (from < 0) from = 0; }
     to = result.second.second;
   } else {
-    from = result.second.first; if (from < 0) goto not_found;
+    from = result.second.second - 1; if (from < 0) goto not_found;
     to = from;
   }
 
 #ifdef VERBOSE
   printf("lookup. from %d to %d, %d/%d...\n", from, to, to-from+1, index->_nindex);
 #endif
-  for (int ix=from-1; ix<=to; ix++) {
-    printf("  [%d]\n", ix);
+  for (int ix=from; ix<=to; ix++) {
+#ifdef VERBOSE
+    printf("  [%d/%d] ", ix, index->_nindex); bocu1_dump_in_utf8( index->entry_word(ix) ); newline();
+#endif
     if (ix < 0) continue;
     if (ix >= index->_nindex) break;
 
@@ -214,7 +220,7 @@ not_found:
   ;
 }
 
-void dump(PDICDatafield *datafield)//unsigned char *entry, unsigned char *jword)
+void dump(PDICDatafield *datafield)
 {
   puts((char *)datafield->entry_word_utf8());
 
@@ -225,7 +231,6 @@ void dump(PDICDatafield *datafield)//unsigned char *entry, unsigned char *jword)
 void dump_word(PDICDatafield *datafield)
 {
   puts((char *)datafield->entry_word_utf8());
-  //puts((char *)entry);
 }
 
 int do_load(const std::string& filename)
@@ -238,7 +243,7 @@ int do_load(const std::string& filename)
       Dict *new_dict = new Dict(fp, filename, path);
       int new_dict_id = dicts.size();
       dicts.push_back(new_dict);
-      nametable[filename] = new_dict_id;
+      nametable[new_dict->suffix()] = new_dict_id;
 
 #ifdef VERBOSE
       printf("loading %s... => { name: %s, dict_id: %d }\n", path.c_str(), new_dict->suffix(), new_dict_id);
@@ -258,7 +263,7 @@ void do_alias(const std::string& alias, const std::vector<std::string>& valid_na
 {
   aliases[alias] = valid_names;
 #ifdef VERBOSE
-  std::cout << "-" << alias << " -> " << join(valid_names, ", ") << std::endl;
+  //std::cout << "-" << alias << " -> " << join(valid_names, ", ") << std::endl;
 #endif
 }
 
@@ -298,7 +303,7 @@ bool do_command(char *cmdstr)
       if (dict_id >= 0) {
         char *name = dicts[dict_id]->suffix();
 #ifdef VERBOSE
-        std::cout << "+" << name << std::endl;
+        //std::cout << "+" << name << std::endl;
 #endif
         for (int i=2; i<cmd.size(); ++i) {
           do_alias(cmd[i], name);
@@ -365,6 +370,9 @@ bool do_command(char *cmdstr)
             index->header->dump();
           } else if (what_to_dump == "index") {
             index->dump();
+          } else if (what_to_dump == "datablock" && cmd.size() >= 3) {
+            int ix = atoi( cmd[2].c_str() );
+            index->iterate_datablock(ix, &dump_word, NULL);
           } else if (what_to_dump == "words") {
             index->iterate_all_datablocks(&dump_word, NULL);
           } else if (what_to_dump == "count") {
@@ -378,7 +386,7 @@ bool do_command(char *cmdstr)
         }
       }
     } else {
-      printf("[command] dump {header|index|words|all}\n");
+      printf("[command] dump {header|index|words|datablock <id>|all}\n");
     }
   }
   /*
