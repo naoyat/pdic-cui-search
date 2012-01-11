@@ -24,7 +24,9 @@ saryとかkyoto cabinetで検索したらいいんじゃないかと思います
 .pdicrc.sample を ~/.pdicrc としてコピーして、編集して使ってください。
 
 起動するとプロンプトが出ます。辞書が選択されていれば、入力した文字列を検索します。
-正規表現でいうと word なら /^word$/、word* なら /^word.*$/ で検索されます。まだPDIC内インデックスしか見てないので前方一致のみです。
+正規表現でいうと word なら /^word$/、word* なら /^word.*$/ で検索されます。
+まだPDIC内インデックスしか見てないので前方一致のみです。
+（suffix arrayを用いた独自インデックス検索を準備中。and/orとか正規表現もそのうちに）
 
 ■特殊コマンド
 
@@ -42,7 +44,7 @@ saryとかkyoto cabinetで検索したらいいんじゃないかと思います
     - 辞書を
 .use 辞書名
     - ターゲット辞書を変更。
-.dump {header|index|words|all}
+.dump {header|index|words|datablock|all}
     - ダンプコマンド。〈これはいまのところ開発用〉
     - 見出し語の全リストが .dump words で取れるとか
 .lookup 文字列
