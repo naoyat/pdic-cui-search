@@ -7,25 +7,26 @@
 
 #include "util.h"
 #include "util_stl.h"
+#include "dump.h"
 
 #ifdef TEST
 extern int cmp_count;
 #endif
 
-std::pair<char *,int *> concat_strings(char *strings[], int string_count, int end_marker)
+std::pair<byte*,int *> concat_strings(byte *strings[], int string_count, int end_marker)
 {
   int offset, *offsets = (int *)malloc(sizeof(int) * (string_count + 1));
-  if (!offsets) return std::make_pair((char *)NULL,(int *)NULL);
+  if (!offsets) return std::make_pair((byte *)NULL,(int *)NULL);
 
   offsets[0] = offset = 0;
   for (int i=0; i<string_count; ++i) {
-    offset += strlen(strings[i]) + 1;
+    offset += strlen((char *)strings[i]) + 1;
     offsets[i+1] = offset;
   }
   if (end_marker) offset++;
 
-  char *buf = (char *)malloc(offset), *p = buf;
-  if (!buf) { free((void *)offsets); return std::make_pair((char *)NULL,(int *)NULL); }
+  byte* buf = (byte *)malloc(offset), *p = buf;
+  if (!buf) { free((void *)offsets); return std::make_pair((byte *)NULL,(int *)NULL); }
 
   for (int i=0; i<string_count; ++i) {
     int len = offsets[i+1] - offsets[i] - 1;
@@ -102,11 +103,20 @@ search_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, b
     int mid = (lo + hi) / 2;
 
     cmp = exact_match ? bstrcmp(buf+offsets[mid], needle) : bstrncmp(buf+offsets[mid], needle, needle_len);
+#ifdef VERBOSE
+    /*
+    printf("  %d (%d %d %d) %d", exact_match, lo,mid,hi, cmp);
+    printf(" ?("); bocu1_dump_in_utf8(buf+offsets[mid]); printf(") ["); bocu1_dump(buf+offsets[mid]); printf("] ");
+    printf(" %d(", needle_len); bocu1_dump_in_utf8(needle); printf(") ["); bocu1_dump(needle); printf("]\n");
+    */
+#endif
+    //printf("  %d | %d | %d ", neg_max, mid, pos_min);
+    //bocu1_dump_in_utf8(buf+offsets[mid]); newline();
 #ifdef TEST
   ++cmp_count;
 #endif
     if (cmp == 0) {
-      //printf("  %d | %d | %d\n", neg_max, mid, pos_min);
+      //printf("  %d | =%d | %d\n", neg_max, mid, pos_min);
       // looking for neg-max
       lo = neg_max, hi = mid - 1;
       while (lo < hi) {
@@ -145,11 +155,13 @@ search_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, b
       return std::make_pair(true, std::make_pair(neg_max+1, pos_min-1));
     }
     else if (cmp < 0) {
+      //printf("  %d | <%d | %d\n", neg_max, mid, pos_min);
       if (mid > neg_max) neg_max = mid;
       lo = mid + 1;
       continue;
     }
     else if (cmp > 0) {
+      //printf("  %d | >%d | %d\n", neg_max, mid, pos_min);
       if (mid < pos_min) pos_min = mid;
       hi = mid - 1;
       continue;

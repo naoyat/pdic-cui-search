@@ -37,6 +37,14 @@ Criteria::~Criteria()
 bool
 Criteria::match(PDICDatafield *field)
 {
+  /*
+  printf("%%match(needle="); bocu1_dump_in_utf8( needle );
+  printf(", [");
+  bocu1_dump_in_utf8( field->entry_index );
+  printf("|");
+  bocu1_dump_in_utf8( field->entry_word );
+  printf("])\n");
+  */
   if (exact_match) {
     /*
     //    if (field->entry_word_size == needle_size
