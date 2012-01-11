@@ -33,7 +33,7 @@ test: pdic_gtest
 	rm -f $(TEST_OUTPUTS)
 
 clean:
-	rm -f $(TARGET) gtest *.o *~
+	rm -f pdic pdic_gtest *.o *~
 
 Criteria.o: Criteria.cc Criteria.h  PDICDatafield.h bocu1.h charcode.h dump.h types.h util.h
 Dict.o: Dict.cc Dict.h
