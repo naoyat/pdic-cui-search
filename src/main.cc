@@ -18,8 +18,7 @@
 #include "dump.h"
 #include "charcode.h"
 #include "timeutil.h"
-//#include "bsearch.h"
-#include "suffix_array.h"
+#include "search.h"
 
 #define DEBUG
 #define VERBOSE

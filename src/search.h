@@ -1,5 +1,5 @@
-#ifndef SUFFIX_ARRAY_H
-#define SUFFIX_ARRAY_H
+#ifndef SEARCH_H
+#define SEARCH_H
 
 #include <utility>
 #include "types.h"

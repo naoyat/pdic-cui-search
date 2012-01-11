@@ -1,4 +1,4 @@
-#include "suffix_array.h"
+#include "search.h"
 
 #include <vector>
 #include <queue>

@@ -1,17 +1,17 @@
 #include <gtest/gtest.h>
 
-#include "suffix_array.h"
+#include "search.h"
 #include <cstdlib>
 #include <cstring>
 #include "util.h"
 
 int cmp_count;
 
-TEST(suffix_array, concat_strings) {
+TEST(search, concat_strings) {
   EXPECT_TRUE(true);
 }
 
-TEST(suffix_array, search) {
+TEST(search, search) {
   //
   // preparation
   //
