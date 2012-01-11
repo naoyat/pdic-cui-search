@@ -3,24 +3,25 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "util.h"
 #include "bocu1.h"
-#include "utf8.h"
 #include "charcode.h"
+#include "utf8.h"
+#include "util.h"
+#include "types.h"
 
-PDICDatafield::PDICDatafield(unsigned char *entry_word,
+PDICDatafield::PDICDatafield(byte *entry_word,
                              int entry_word_size,
                              int entry_word_attrib,
                              int charcode,
-                             unsigned char *data,
+                             byte *data,
                              int data_size)
 {
-  _tabsep = (unsigned char *)strchr((char *)entry_word, '\t');
+  _tabsep = (byte *)strchr((char *)entry_word, '\t');
   if (_tabsep) {
-    this->entry_word = _tabsep + 1;
     this->entry_index = entry_word;
-    *_tabsep = 0;
     this->entry_index_size = (int)(_tabsep - entry_word);
+    //*_tabsep = 0;
+    this->entry_word = _tabsep + 1;
     this->entry_word_size = entry_word_size - this->entry_index_size - 1;
   } else {
     this->entry_word = this->entry_index = entry_word;
@@ -53,13 +54,13 @@ void
 PDICDatafield::retain()
 {
   if (!is_retained) {
-    entry_word  = (unsigned char *)clone((void *)entry_word, strlen((char *)entry_word)+1);
-    data        = (unsigned char *)clone((void *)data, data_size);
+    entry_word  = (byte *)clone((void *)entry_word, strlen((char *)entry_word)+1);
+    data        = (byte *)clone((void *)data, data_size);
     is_retained = true;
   }
 }
 
-unsigned char *
+byte *
 PDICDatafield::entry_word_utf8()
 {
   if (!_entry_word_utf8) {
@@ -78,11 +79,11 @@ PDICDatafield::entry_word_utf8()
   return _entry_word_utf8;
 }
 
-unsigned char *
+byte *
 PDICDatafield::jword_utf8()
 {
   if (!_jword_utf8) {
-    unsigned char *jword = data;
+    byte *jword = data;
     int jword_size = 0;
     if (entry_word_attrib & 0x10) {
       jword_size = strlen((char *)jword);
