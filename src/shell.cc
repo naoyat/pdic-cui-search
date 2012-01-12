@@ -49,7 +49,8 @@ void shell_init()
 {
   load_rc();
 }
-void shell_destroy() {
+void shell_destroy()
+{
   traverse(dicts, dict) delete *dict;
 }
 
@@ -118,10 +119,12 @@ bool do_use(std::string name)
 void render_ej(byte *entry_word, byte *jword)
 {
   std::cout << entry_word << std::endl;
-  
-  byte *jword_indented = (byte *)indent((char *)"   ", (char *)jword);
-  std::cout << jword_indented << std::endl;
-  free(jword_indented);
+
+  if (jword && jword[0]) {
+    byte *jword_indented = (byte *)indent((char *)"   ", (char *)jword);
+    std::cout << jword_indented << std::endl;
+    free(jword_indented);
+  }
 
   if (more_newline) std::cout << std::endl;
 }
@@ -155,12 +158,25 @@ std::vector<std::pair<std::string,std::string> > lookup(byte *needle, int needle
     Dict *dict = dicts[*current_dict_id];
     bool exact_match = true;
     if (needle[needle_len-1] == '*') {
-      exact_match = false;
       needle[needle_len-1] = 0;
+      exact_match = false;
     }
 
-    result = lookup_core(dict->fp, dict->index, (byte *)needle, exact_match);
-    traverse(result, it) result_total.push_back(*it);
+    if (needle[0] == '*' && needle_len >= 2) {
+      // suffix array search
+      std::vector<int> matches = dict->search_in_sarray((byte *)needle+1);
+      traverse(matches, offset) {
+        //printf("- %s\n", dict->entry_buf + *offset);
+        byte *entry_word = dict->entry_buf + *offset;
+        result_total.push_back( std::make_pair((const char *)entry_word, "") );
+      }
+      //printf("%d matches.\n", (int)matches.size());
+      //continue;
+    } else {
+      // normal search
+      result = lookup_core(dict->fp, dict->index, (byte *)needle, exact_match);
+      traverse(result, it) result_total.push_back(*it);
+    }
   }
   std::sort(all(result_total));
 
@@ -364,7 +380,7 @@ bool do_command(char *cmdstr)
       traverse(current_dict_ids, current_dict_id) {
         Dict *dict = dicts[*current_dict_id];
         dict->make_sarray_index();
-        dict->load_sarray_index();
+        //dict->load_sarray_index();
       }
     } else {
       printf("[command] make index\n");

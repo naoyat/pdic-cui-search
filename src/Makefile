@@ -36,7 +36,7 @@ clean:
 	rm -f pdic pdic_gtest *.o *~
 
 Criteria.o: Criteria.cc Criteria.h  PDICDatafield.h bocu1.h charcode.h dump.h types.h util.h
-Dict.o: Dict.cc Dict.h
+Dict.o: Dict.cc Dict.h  PDICHeader.h PDICIndex.h PDICDatafield.h filemem.h timeutil.h
 PDICDatablock.o: PDICDatablock.cc PDICDatablock.h  Criteria.h PDICDatafield.h PDICHeader.h PDICIndex.h bocu1.h charcode.h util.h types.h
 PDICDatafield.o: PDICDatafield.cc PDICDatafield.h  bocu1.h charcode.h utf8.h util.h
 PDICHeader.o: PDICHeader.cc PDICHeader.h  dump.h util.h
@@ -47,7 +47,7 @@ dump.o: dump.cc dump.h  bocu1.h dump.h types.h util.h
 filemem.o: filemem.cc filemem.h  types.h util_stl.h
 search.o: search.cc search.h  util.h
 shell.o: shell.cc shell.h  Criteria.h Dict.h PDICDatablock.h PDICDatafield.h PDICHeader.h PDICIndex.h \
-		bocu1.h charcode.h cout.h dump.h search.h timeutil.h util.h util_stl.h
+		bocu1.h charcode.h dump.h search.h timeutil.h util.h util_stl.h
 timeutil.o: timeutil.cc timeutil.h
 utf8.o: utf8.cc utf8.h  types.h
 util.o: util.cc util.h  types.h
