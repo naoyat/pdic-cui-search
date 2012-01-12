@@ -7,6 +7,7 @@
 
 #include "util.h"
 #include "util_stl.h"
+#include "types.h"
 #include "dump.h"
 
 #ifdef TEST
@@ -45,19 +46,64 @@ int bstrcmp_(const void *s1, const void *s2)
   return bstrcmp(buf_ + *(int *)s1, buf_ + *(int *)s2);
 }
 
+std::pair<int*,int> make_full_suffix_array(byte *buf, int buf_size)
+{
+  int size_at_most = buf_size;
+  int *offsets = (int *)malloc(sizeof(int)*size_at_most), *s = offsets;
+
+  for (int i=0; i<buf_size; ++i) *(s++) = i;
+
+  int actual_size = (int)(s - offsets);
+  buf_ = buf;
+  qsort(offsets, actual_size, sizeof(int), bstrcmp_);
+
+  int *newp = (int *)realloc((void *)offsets, sizeof(int)*actual_size);
+  if (newp) offsets = newp;
+
+  return std::make_pair(offsets, actual_size);
+}
+
 std::pair<int*,int> make_light_suffix_array(byte *buf, int buf_size)
 {
   int size_at_most = buf_size;
   int *offsets = (int *)malloc(sizeof(int)*size_at_most), *s = offsets;
 
-  int start_cnt = 0;
-  byte last_b = 0;
-  for (int i=0; i<buf_size; ++i) {
-    byte b = buf[i];
-    if (!b) continue;
-    if (0x80 <= b && b <= 0xbf) continue;
-    if (last_b < 'A') *(s++) = i;
-    last_b = b;
+  bool last_alpha = false;
+  for (int i=0; i<buf_size; ) {
+    byte b = *(buf + i);
+    if (b <= 0x20) {
+      ++i;
+      last_alpha = false;
+    } else if (b < 0x80) { // 00-7F: [UTF-8] 1 letter
+      if (isalpha((int)b)) {
+        if (!last_alpha) *(s++) = i;
+        last_alpha = true;
+      } else {
+        last_alpha = false;
+      }
+      ++i;
+    } else if (b < 0xC0) { // 80-BF: [UTF-8] 先頭以外
+      last_alpha = false;
+      ++i;
+    } else if (b < 0xE0) { // C0-DF: [UTF-8] 2 letters
+      *(s++) = i; i += 2;
+      last_alpha = false;
+    } else if (b < 0xF0) { // E0-EF: [UTF-8] 3 letters
+      *(s++) = i; i += 3;
+      last_alpha = false;
+    } else if (b < 0xF8) { // F0-F7: [UTF-8] 4 letters
+      *(s++) = i; i += 4;
+      last_alpha = false;
+    } else if (b < 0xFC) { // F8-FB: [UTF-8] 5 letters
+      *(s++) = i; i += 5;
+      last_alpha = false;
+    } else if (b < 0xFE) { // FC-FD: [UTF-8] 6 letters
+      *(s++) = i; i += 6;
+      last_alpha = false;
+    } else { // FE,FF
+      ++i;
+      last_alpha = false;
+    }
   }
 
   int actual_size = (int)(s - offsets);
