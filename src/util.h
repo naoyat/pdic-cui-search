@@ -28,4 +28,6 @@ int bstrncmp(byte *s1, byte *s2, size_t n, int minimum_charcode=0x20);
 int pbstrcmp(const void *s1, const void *s2);
 int pbstrncmp(const void *s1, const void *s2, size_t n);
 
+byte *strhead(byte *ptr);
+
 #endif

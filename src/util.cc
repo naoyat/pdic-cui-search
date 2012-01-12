@@ -87,3 +87,10 @@ int pbsrncmp(const void *s1, const void *s2, size_t n)
 {
   return bstrncmp(*(byte **)s1, *(byte **)s2, n);
 }
+
+byte *strhead(byte *ptr)
+{
+  byte *p = ptr;
+  while (*p) --p;
+  return p+1;
+}
