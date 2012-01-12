@@ -36,6 +36,7 @@ public:
   char *suffix() { return _suffix; }
 
   int make_sarray_index(int buffer_size_enough_for_whole_entries =ENTRY_BUF_SIZE);
+  void unload_additional_files();
   bool load_additional_files();
   std::vector<int> search_in_sarray(byte *needle);
 };

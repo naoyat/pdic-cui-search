@@ -47,18 +47,7 @@ Dict::~Dict()
   delete _suffix;
   delete index;
 
-  if (entry_buf) {
-    unloadmem((byte *)entry_buf);
-    entry_buf = NULL;
-  }
-  if (entry_start_pos) {
-    unloadmem((byte *)entry_start_pos);
-    entry_start_pos = (int *)NULL;
-  }
-  if (entry_suffix_array) {
-    unloadmem((byte *)entry_suffix_array);
-    entry_suffix_array = (int *)NULL;
-  }
+  unload_additional_files();
 }
 
 // global (only for callback routines)
@@ -158,9 +147,28 @@ Dict::search_in_sarray(byte *needle)
   return std::vector<int>(all(matched_offsets));
 }
 
+void
+Dict::unload_additional_files()
+{
+  if (entry_buf) {
+    unloadmem((byte *)entry_buf);
+    entry_buf = NULL;
+  }
+  if (entry_start_pos) {
+    unloadmem((byte *)entry_start_pos);
+    entry_start_pos = (int *)NULL;
+  }
+  if (entry_suffix_array) {
+    unloadmem((byte *)entry_suffix_array);
+    entry_suffix_array = (int *)NULL;
+  }
+}
+
 bool
 Dict::load_additional_files()
 {
+  unload_additional_files();
+
   for (int i=0; i<loadpaths.size(); ++i) {
     std::string path = loadpaths[i] + "/" + this->suffix();
 
