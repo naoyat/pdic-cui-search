@@ -16,11 +16,13 @@
 PDICDatablock::PDICDatablock(FILE *fp, PDICIndex *index, int ix)
 {
   _index = index;
-  unsigned int datablock_offset = index->datablock_offset(ix);
+  _ix = ix;
+
+  _datablock_offset = index->datablock_offset(ix);
   unsigned int block_size = index->datablock_block_size();
   _isAligned = index->header->isAligned();
 
-  fseek(fp, datablock_offset, SEEK_SET);
+  fseek(fp, _datablock_offset, SEEK_SET);
   unsigned char blocks_buf[2];
   size_t size = fread(blocks_buf, 2, 1, fp);
   int using_blocks_count = u16val(blocks_buf);
@@ -63,6 +65,8 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
       if (field_length == 0) break;
     }
 
+    int start_ofs = ofs;
+
     if (_isAligned) {
       compress_length = _datablock_buf[ofs++];
       entry_word_attrib = _datablock_buf[ofs++];
@@ -85,7 +89,9 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
     // byte* entry_word, int entry_word_attrib, byte* data, int datasize
     memcpy(entry_word + compress_length, entry_word_compressed, entry_word_compressed_size+1);
 
-    PDICDatafield datafield(entry_word,
+    PDICDatafield datafield(_datablock_offset + 2 + start_ofs,
+                            field_length,
+                            entry_word,
                             compress_length + entry_word_compressed_size, // entry_word_size
                             entry_word_attrib,
                             _index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS,

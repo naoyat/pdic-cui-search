@@ -11,8 +11,9 @@ class PDICDatablock {
 private:
   //  PDICHeader *header;
   PDICIndex *_index;
+  int _ix;
   unsigned char *_datablock_buf;
-  int _datablock_buf_size;
+  int _datablock_offset, _datablock_buf_size;
   bool _is4byte;
   bool _isAligned;
 

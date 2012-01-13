@@ -3,6 +3,9 @@
 
 class PDICDatafield {
  public:
+  int            start_pos;
+  int            field_length;
+
   unsigned char *entry_word;
   int            entry_word_size;
   int            entry_word_attrib;
@@ -18,9 +21,9 @@ class PDICDatafield {
 
   bool           is_retained;
 
-
  public:
-  PDICDatafield(unsigned char *entry_word, int entry_word_size, int entry_word_attrib,
+  PDICDatafield(int start_pos, int field_length,
+                unsigned char *entry_word, int entry_word_size, int entry_word_attrib,
                 int charcode, unsigned char *data, int data_size);
   ~PDICDatafield();
 

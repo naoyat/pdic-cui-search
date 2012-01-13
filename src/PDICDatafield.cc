@@ -9,13 +9,18 @@
 #include "util.h"
 #include "types.h"
 
-PDICDatafield::PDICDatafield(byte *entry_word,
+PDICDatafield::PDICDatafield(int start_pos,
+                             int field_length,
+                             byte *entry_word,
                              int entry_word_size,
                              int entry_word_attrib,
                              int charcode,
                              byte *data,
                              int data_size)
 {
+  this->start_pos = start_pos;
+  this->field_length = field_length;
+
   _tabsep = (byte *)strchr((char *)entry_word, '\t');
   if (_tabsep) {
     this->entry_index = entry_word;
