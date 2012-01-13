@@ -1,6 +1,7 @@
 #include "Dict.h"
 
 #include <vector>
+#include <string>
 
 #include <libgen.h>
 #include <strings.h>
@@ -8,10 +9,13 @@
 #include "Criteria.h"
 #include "PDICHeader.h"
 #include "PDICIndex.h"
+#include "PDICDatablock.h"
 #include "PDICDatafield.h"
+#include "bocu1.h"
 #include "filemem.h"
 #include "timeutil.h"
 #include "util_stl.h"
+#include "utf8.h"
 
 #include "charcode.h"
 
@@ -209,9 +213,33 @@ not_found:
   return dump_result;
 }
 
-lookup_result_vec regexp_lookup(pattern)
+lookup_result_vec
+Dict::regexp_lookup(const RE2& pattern)
 {
-  return lookup_result_vec();
+  if (!entry_buf || !entry_start_pos) {
+    std::cout << "[NOTICE] 正規表現検索には事前のインデックス作成が必要です。" << std::endl;
+    return lookup_result_vec();
+  }
+
+  lookup_result_vec result;
+
+  int matched_entries_count = 0;
+  if (verbose_mode) {
+    time_reset();
+  }
+  for (int i=0; i<entry_start_pos_length; ++i) {
+    const char *entry = (const char *)entry_buf + entry_start_pos[i];
+    if (RE2::PartialMatch(entry, pattern)) {
+      result.push_back( std::make_pair(std::string(entry), "") );
+      ++matched_entries_count;
+    }
+  }
+  if (verbose_mode) {
+    std::pair<int,int> time = time_usec();
+    printf("%d/%d matches; real:%d process:%d.\n", matched_entries_count, entry_start_pos_length, time.first, time.second);
+  }
+
+  return result;
 }
 
 

@@ -11,16 +11,11 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "Criteria.h"
 #include "Dict.h"
-#include "PDICDatablock.h"
 #include "PDICDatafield.h"
 #include "PDICHeader.h"
 #include "PDICIndex.h"
 
-#include "bocu1.h"
-#include "dump.h"
-#include "search.h"
 #include "timeutil.h"
 #include "util.h"
 #include "util_stl.h"
@@ -145,14 +140,9 @@ void do_lookup(char *needle, int needle_len)
 
 void do_regexp_lookup(char *needle, int needle_len)
 {
-  if (current_dict_ids.size() == 0) {
-    printf("no dictionary selected\n");
-    return lookup_result_vec();
-  }
-
   if (!needle_len) needle_len = strlen(needle);
 
-  re2::RE2 pattern(re2::StringPiece(needle, needle_len));
+  RE2 pattern(re2::StringPiece(needle, needle_len));
 
   if (verbose_mode) {
     std::cout << "REGEXP: " << current_dict_name << " " << current_dict_ids << std::endl;
@@ -205,19 +195,23 @@ lookup_result_vec lookup(byte *needle, int needle_len)
   return result_total;
 }
 
-lookup_result_vec regexp_lookup(re2::RE2 pattern)
+lookup_result_vec regexp_lookup(const RE2& pattern)
 {
+  if (current_dict_ids.size() == 0) {
+    printf("no dictionary selected\n");
+    return lookup_result_vec();
+  }
+
   lookup_result_vec result_total, result;
 
   traverse(current_dict_ids, current_dict_id) {
-    result = dicts[*current_dict_id]->regexp_search(pattern);
+    result = dicts[*current_dict_id]->regexp_lookup(pattern);
     result_total.insert(result_total.end(), all(result));
   }
   std::sort(all(result_total));
 
   return result_total;
 }
-
 
 void dump_ej(PDICDatafield *datafield)
 {

@@ -23,7 +23,7 @@ pdic: main.o $(OBJECTS)
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 	rm search.o
 	$(CPP) $(CPPFLAGS) -DTEST -c search.cc
-	$(CPP) $(CPPFLAGS) -DTEST -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv
+	$(CPP) $(CPPFLAGS) -DTEST -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv -lre2
 
 shell: pdic
 	./pdic
@@ -36,7 +36,8 @@ clean:
 	rm -f pdic pdic_gtest *.o *~
 
 Criteria.o: Criteria.cc Criteria.h  PDICDatafield.h bocu1.h charcode.h dump.h types.h util.h
-Dict.o: Dict.cc Dict.h  PDICHeader.h PDICIndex.h PDICDatafield.h filemem.h timeutil.h
+Dict.o: Dict.cc Dict.h  Criteria.h PDICHeader.h PDICIndex.h PDICDatablock.cc PDICDatafield.h \
+        bocu1.h charcode.h filemem.h timeutil.h util_stl.h utf8.h types.h
 PDICDatablock.o: PDICDatablock.cc PDICDatablock.h  Criteria.h PDICDatafield.h PDICHeader.h PDICIndex.h bocu1.h charcode.h util.h types.h
 PDICDatafield.o: PDICDatafield.cc PDICDatafield.h  bocu1.h charcode.h utf8.h util.h
 PDICHeader.o: PDICHeader.cc PDICHeader.h  dump.h util.h
@@ -46,8 +47,7 @@ cout.o: cout.cc cout.h
 dump.o: dump.cc dump.h  bocu1.h dump.h types.h util.h
 filemem.o: filemem.cc filemem.h  types.h util_stl.h
 search.o: search.cc search.h  util.h
-shell.o: shell.cc shell.h  Criteria.h Dict.h PDICDatablock.h PDICDatafield.h PDICHeader.h PDICIndex.h \
-		bocu1.h charcode.h dump.h search.h timeutil.h util.h util_stl.h
+shell.o: shell.cc shell.h  Dict.h PDICDatafield.h PDICHeader.h PDICIndex.h timeutil.h util.h util_stl.h types.h
 timeutil.o: timeutil.cc timeutil.h
 utf8.o: utf8.cc utf8.h  types.h
 util.o: util.cc util.h  types.h

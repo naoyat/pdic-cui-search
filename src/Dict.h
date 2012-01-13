@@ -45,7 +45,7 @@ public:
   std::vector<int> search_in_sarray(byte *needle);
 
   lookup_result_vec normal_lookup(byte *needle, bool exact_match);
-  lookup_result_vec regexp_lookup(re2::RE2 pattern);
+  lookup_result_vec regexp_lookup(const RE2& pattern);
 };
 
 #endif;

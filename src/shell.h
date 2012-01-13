@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <re2/re2.h>
+
+#include "Dict.h"
 #include "types.h"
 
 class PDICIndex;
@@ -41,7 +44,7 @@ int calculate_space_for_index(PDICIndex *index);
 
 
 // lookup
-std::vector<std::pair<std::string,std::string> > lookup(byte *needle, int needle_len=0);
-std::vector<std::pair<std::string,std::string> > lookup_core(FILE *fp, PDICIndex *index, byte *needle, bool exact_match);
+lookup_result_vec lookup(byte *needle, int needle_len=0);
+lookup_result_vec regexp_lookup(const RE2& pattern);
 
 #endif
