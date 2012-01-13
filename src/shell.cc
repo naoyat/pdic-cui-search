@@ -15,7 +15,7 @@
 #include "PDICDatafield.h"
 #include "PDICHeader.h"
 #include "PDICIndex.h"
-
+#include "filemem.h"
 #include "timeutil.h"
 #include "util.h"
 #include "util_stl.h"
@@ -37,6 +37,7 @@ std::map<std::string,int> nametable; // name -> dict_id
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
 
+bool emphasize_mode = false;
 bool verbose_mode = false;
 bool more_newline = false;
 bool direct_dump_mode = false;
@@ -128,10 +129,11 @@ void do_lookup(char *needle, int needle_len)
   }
 
   match_count = 0;
+  RE2 pattern((const char*)needle);
   lookup_result_vec result = normal_lookup((byte *)needle, needle_len);
 
   int match_count_at_end = match_count;
-  if (!direct_dump_mode) traverse(result, it) render_ej(*it);
+  if (!direct_dump_mode) traverse(result, it) render_ej(*it, pattern);
 
   if (verbose_mode) {
     std::cout << "// matched " << match_count_at_end << " item(s)." << std::endl;
@@ -156,10 +158,11 @@ void do_sarray_lookup(char *needle, int needle_len)
 
   match_count = 0;
 
-  lookup_result_vec result = sarray_lookup((byte *)needle);
+  RE2 pattern((const char *)needle);
+  lookup_result_vec result = sarray_lookup((byte*)needle);
 
   int match_count_at_end = match_count;
-  if (!direct_dump_mode) traverse(result, it) render_ej(*it);
+  if (!direct_dump_mode) traverse(result, it) render_ej(*it, pattern);
 
   if (verbose_mode) {
     std::cout << "// matched " << match_count_at_end << " item(s)." << std::endl;
@@ -186,7 +189,7 @@ void do_regexp_lookup(char *needle, int needle_len)
   lookup_result_vec result = regexp_lookup(pattern);
 
   int match_count_at_end = match_count;
-  if (!direct_dump_mode) traverse(result, it) render_ej(*it);
+  if (!direct_dump_mode) traverse(result, it) render_ej(*it, pattern);
 
   if (verbose_mode) {
     std::cout << "// matched " << match_count_at_end << " item(s)." << std::endl;
@@ -246,9 +249,9 @@ int do_load(const std::string& filename)
   for (int i=0; i<loadpaths.size(); ++i) {
     std::string path = loadpaths[i] + "/" + filename;
 
-    FILE *fp = fopen(path.c_str(), "r");
-    if (fp != NULL) {
-      Dict *new_dict = new Dict(fp, filename, path);
+    byte *filemem = loadmem(path.c_str());
+    if (filemem) {
+      Dict *new_dict = new Dict(filename, filemem);
       int new_dict_id = dicts.size();
       dicts.push_back(new_dict);
       nametable[new_dict->suffix()] = new_dict_id;
@@ -295,6 +298,14 @@ bool do_command(char *cmdstr)
   else if (cmd[0] == "indirect") {
     printf("indirect dump mode.\n");
     direct_dump_mode = false;
+  }
+  else if (cmd[0] == "emphasize") {
+    printf("emphasize mode.\n");
+    emphasize_mode = true;
+  }
+  else if (cmd[0] == "plain") {
+    printf("plain mode.\n");
+    emphasize_mode = false;
   }
   else if (cmd[0] == "newline") {
     if (cmd.size() == 2) {

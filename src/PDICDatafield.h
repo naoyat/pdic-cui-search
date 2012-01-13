@@ -1,6 +1,8 @@
 #ifndef PDIC_DATAFIELD_H
 #define PDIC_DATAFIELD_H
 
+class Criteria;
+
 class PDICDatafield {
  public:
   int            start_pos;
@@ -21,10 +23,14 @@ class PDICDatafield {
 
   bool           is_retained;
 
+  Criteria      *criteria;
+  bool           v6index;
+
  public:
-  PDICDatafield(int start_pos, int field_length,
+  PDICDatafield(int start_ofs, int field_length,
                 unsigned char *entry_word, int entry_word_size, int entry_word_attrib,
-                int charcode, unsigned char *data, int data_size);
+                int charcode, unsigned char *data, int data_size,
+                bool v6index, Criteria *criteria);
   ~PDICDatafield();
 
  public:

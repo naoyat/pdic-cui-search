@@ -5,15 +5,18 @@ class PDICHeader;
 class Criteria;
 
 #include <utility>
-#include <cstdio>
+//#include <cstdio>
 
 #include "search.h"
+#include "types.h"
 
 class PDICIndex {
 private:
+  byte *filemem;
+
   bool header_needs_delete;
-  unsigned char *index_buf;
-  FILE *fp;
+  byte *index_buf;
+  int  index_size;
 
 public:
   PDICHeader *header;
@@ -27,8 +30,8 @@ public:
   int* phys_ids;
   
 public:
-  PDICIndex(FILE *fp);
-  PDICIndex(FILE *fp, PDICHeader *header);
+  PDICIndex(byte *filemem);
+  PDICIndex(byte *filemem, PDICHeader *header);
   ~PDICIndex();
 
 public:
@@ -45,7 +48,7 @@ public:
   }
 
 private:
-  int load_index(FILE *fp);
+  int load_index();
 
 public:
   bool isBOCU1() { return _isBOCU1; }

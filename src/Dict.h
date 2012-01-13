@@ -6,11 +6,12 @@
 #include <map>
 
 #include <cstdio>
-#include "types.h"
-
 #include <re2/re2.h>
 
+#include "types.h"
+
 class PDICIndex;
+class Criteria;
 
 #define ENTRY_BUF_SIZE 1024*1024*128 // 128MBとりあえず
 
@@ -24,7 +25,7 @@ typedef std::vector<lookup_result> lookup_result_vec;
 
 class Dict {
  public:
-  FILE *fp;
+  byte *filemem;
   std::string path, name;
   char *_suffix;
 
@@ -36,7 +37,7 @@ public:
   int *entry_suffix_array, entry_suffix_array_length;
   
 public:
-  Dict(FILE *fp, const std::string& name, const std::string& path);
+  Dict(const std::string& name, byte *filemem);
   ~Dict();
   std::string info() { return name + " " + path; }
   char *suffix() { return _suffix; }
@@ -55,7 +56,7 @@ public:
 
 
 // render
-void render_ej(lookup_result result);
+void render_ej(lookup_result result, const RE2& re);
 
 // CALLBACKS
 void dump_ej(PDICDatafield *datafield);

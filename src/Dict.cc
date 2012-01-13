@@ -5,6 +5,7 @@
 
 #include <libgen.h>
 #include <strings.h>
+#include <re2/re2.h>
 
 #include "Criteria.h"
 #include "PDICHeader.h"
@@ -18,23 +19,25 @@
 #include "utf8.h"
 
 #include "charcode.h"
+#include "ansi_color.h"
 
 #ifdef DEBUG
 #include "cout.h"
 #endif
 
 extern std::vector<std::string> loadpaths;
-extern bool verbose_mode;
 extern bool direct_dump_mode;
+extern bool emphasize_mode;
 extern bool more_newline;
+extern bool verbose_mode;
 extern int match_count;
 
-Dict::Dict(FILE *fp, const std::string& name, const std::string& path)
+Dict::Dict(const std::string& name, byte *filemem)//, const std::string& path)
 {
-  this->fp = fp;
-  this->index = new PDICIndex(fp);
+  this->index = new PDICIndex(filemem);
   this->name = name;
-  this->path = path;
+  this->filemem = filemem;
+  //this->path = path;
 
   this->entry_buf = (byte *)NULL;
   this->entry_start_pos = (int *)NULL;
@@ -52,7 +55,7 @@ Dict::Dict(FILE *fp, const std::string& name, const std::string& path)
 
 Dict::~Dict()
 {
-  fclose(fp);
+  unloadmem(filemem); filemem = (byte*)NULL;
 
   delete _suffix;
   delete index;
@@ -137,7 +140,9 @@ lookup_result_vec dump_result;
 
 void dump_ej(PDICDatafield *datafield)
 {
-  render_ej(std::make_pair( datafield->entry_word_utf8(), datafield->jword_utf8() ));
+  byte *entry_word = datafield->entry_word_utf8();
+  byte *jword      = datafield->jword_utf8();
+  render_ej( std::make_pair(entry_word,jword), datafield->criteria->re2_pattern );
   ++match_count;
 }
 void dump_entry(PDICDatafield *datafield)
@@ -152,7 +157,7 @@ void dump_to_vector(PDICDatafield *datafield)
   byte *jword = clone_cstr(datafield->jword_utf8());
 
   //  dump_result.push_back( std::make_pair((byte*)entry_word.c_str(), (byte*)jword.c_str()) );
-  dump_result.push_back( std::make_pair(entry_word, jword) );
+  dump_result.push_back( std::make_pair(entry_word,jword) );
   ++match_count;
 }
 
@@ -161,15 +166,9 @@ Dict::normal_lookup(byte *needle, bool exact_match)
 {
   int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
 
-  Criteria *criteria;
-  if (index->header->major_version() >= HYPER6) {
-    byte *needle_for_index = string_for_index(needle);
-    criteria = new Criteria(needle_for_index, target_charcode, exact_match);
-    free((void *)needle_for_index);
-  } else {
-    criteria = new Criteria(needle, target_charcode, exact_match);
-  }
-
+  //Criteria *criteria;
+  //if (index->header->major_version() >= HYPER6) {
+  Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
 
   bsearch_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
   if (verbose_mode) {
@@ -203,7 +202,7 @@ Dict::normal_lookup(byte *needle, bool exact_match)
     if (ix < 0) continue;
     if (ix >= index->_nindex) break;
 
-    PDICDatablock* datablock = new PDICDatablock(this->fp, this->index, ix);
+    PDICDatablock* datablock = new PDICDatablock(filemem, this->index, ix);
     if (direct_dump_mode) {
       datablock->iterate(&dump_ej, criteria);
     } else {
@@ -229,11 +228,13 @@ Dict::search_in_sarray(byte *needle)
   std::set<int> matched_offsets;
 
   if (result.first) {
+    RE2 pattern((const char *)needle);
     for (int i=result.second.first; i<=result.second.second; ++i) {
-      byte *head = strhead(this->entry_buf + entry_suffix_array[i]);
-      int offset = (int)(head - this->entry_buf);
+      byte *entry_word = strhead(this->entry_buf + entry_suffix_array[i]);
+      int offset = (int)(entry_word - this->entry_buf);
       if (direct_dump_mode) {
-        std::cout << "- " << head << std::endl;
+        render_ej( std::make_pair(entry_word,(byte*)NULL), pattern );
+        //std::cout << "- " << head << std::endl;
       } else {
         matched_offsets.insert(offset);
       }
@@ -275,12 +276,13 @@ Dict::regexp_lookup(const RE2& pattern)
   //  time_reset();
   //}
   for (int i=0; i<entry_start_pos_length; ++i) {
-    const char *entry = (const char *)entry_buf + entry_start_pos[i];
-    if (RE2::PartialMatch(entry, pattern)) {
+    const char *entry_word = (const char *)entry_buf + entry_start_pos[i];
+    if (RE2::PartialMatch(entry_word, pattern)) {
       if (direct_dump_mode) {
-        std::cout << "- " << entry << std::endl;
+        render_ej( std::make_pair((byte*)entry_word,(byte*)NULL), pattern );
+        //std::cout << "- " << entry << std::endl;
       } else {
-        result.push_back( std::make_pair((byte*)entry, (byte*)"") );
+        result.push_back( std::make_pair((byte*)entry_word, (byte*)NULL) );
       }
       ++matched_entries_count;
     }
@@ -347,16 +349,22 @@ Dict::load_additional_files()
   return false;
 }
 
-void render_ej(lookup_result result)
+void render_ej(lookup_result result, const RE2& re)
 {
   byte *entry_word = result.first;
   byte *jword      = result.second;
 
-  std::cout << entry_word << std::endl;
+  if (emphasize_mode)
+    puts_emphasized(entry_word, re);
+  else
+    puts((char *)entry_word);
 
   if (jword && jword[0]) {
     byte *jword_indented = (byte *)indent((char *)"   ", (char *)jword);
-    std::cout << jword_indented << std::endl;
+    if (emphasize_mode)
+      puts_emphasized(jword_indented, re);
+    else
+      puts((char *)jword_indented);
     free(jword_indented);
   }
 

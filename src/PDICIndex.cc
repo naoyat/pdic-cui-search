@@ -7,28 +7,27 @@
 #include "PDICHeader.h"
 #include "PDICIndex.h"
 #include "PDICDatablock.h"
-//#include "Criteria.h"
 
 #include "dump.h"
 #include "bocu1.h"
 
-PDICIndex::PDICIndex(FILE *fp)
+PDICIndex::PDICIndex(byte *filemem)
 {
-  this->header = new PDICHeader(fp);
-  this->fp = fp;
+  this->filemem = filemem;
+  this->header = new PDICHeader(filemem);
   header_needs_delete = true;
-  load_index(fp);
+  load_index();
 }
-PDICIndex::PDICIndex(FILE *fp, PDICHeader *header)
+PDICIndex::PDICIndex(byte *filemem, PDICHeader *header)
 {
+  this->filemem = filemem;
   this->header = header;
-  this->fp = fp;
   header_needs_delete = false;
-  load_index(fp);
+  load_index();
 }
 PDICIndex::~PDICIndex()
 {
-  if (index_buf) delete index_buf;
+  //if (index_buf) delete index_buf;
 
   if (header_needs_delete) delete header;
   delete entry_word_offsets;
@@ -37,21 +36,14 @@ PDICIndex::~PDICIndex()
 }
 
 int
-PDICIndex::load_index(FILE *fp)
+PDICIndex::load_index()
 {
-  int index_offset = header->header_size() + header->extheader();
-  fseek(fp, index_offset, SEEK_SET);
-  
-  int index_size = header->index_size();
-  index_buf = new unsigned char[index_size]; //(unsigned char *)malloc(index_size);
-  if (index_buf == NULL) return 0;
+  index_buf = filemem + header->header_size() + header->extheader();
+  index_size = header->index_size();
 
   _nindex = header->nindex();
   _isBOCU1 = header->isBOCU1();
   int index_blkbit = header->index_blkbit();// ? 4 : 2; // 0->2(16bit), 1->4(32bit)
-
-  size_t size = fread(index_buf, index_size, 1, fp);
-  if (size != 1) return 0;
 
   entry_word_offsets = new int[_nindex];
   entry_word_lengths = new int[_nindex];
@@ -117,7 +109,7 @@ PDICIndex::dump()
 void
 PDICIndex::iterate_datablock(int ix, action_proc *action, Criteria *criteria)
 {
-  PDICDatablock *datablock = new PDICDatablock(fp, this, ix);
+  PDICDatablock *datablock = new PDICDatablock(filemem, this, ix);
   datablock->iterate(action, criteria);
   delete datablock;
 }

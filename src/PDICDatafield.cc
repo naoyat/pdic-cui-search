@@ -16,10 +16,14 @@ PDICDatafield::PDICDatafield(int start_pos,
                              int entry_word_attrib,
                              int charcode,
                              byte *data,
-                             int data_size)
+                             int data_size,
+                             bool v6index,
+                             Criteria *criteria)
 {
   this->start_pos = start_pos;
   this->field_length = field_length;
+  this->v6index = v6index;
+  this->criteria = criteria;
 
   _tabsep = (byte *)strchr((char *)entry_word, '\t');
   if (_tabsep) {
@@ -27,7 +31,7 @@ PDICDatafield::PDICDatafield(int start_pos,
     this->entry_index_size = (int)(_tabsep - entry_word);
     //*_tabsep = 0;
     this->entry_word = _tabsep + 1;
-    this->entry_word_size = entry_word_size - this->entry_index_size - 1;
+    this->entry_word_size  = entry_word_size - this->entry_index_size - 1;
   } else {
     this->entry_word = this->entry_index = entry_word;
     this->entry_word_size = this->entry_index_size = entry_word_size;

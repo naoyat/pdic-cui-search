@@ -13,33 +13,23 @@
 #include "bocu1.h"
 #include "charcode.h"
 
-PDICDatablock::PDICDatablock(FILE *fp, PDICIndex *index, int ix)
+PDICDatablock::PDICDatablock(byte *filemem, PDICIndex *index, int ix)
 {
+  this->filemem = filemem;
+  this->datablock_start = filemem + index->datablock_offset(ix);
+
   _index = index;
   _ix = ix;
 
-  _datablock_offset = index->datablock_offset(ix);
-  unsigned int block_size = index->datablock_block_size();
-  _isAligned = index->header->isAligned();
+  _v6index = (index->header->major_version() >= HYPER6) ? true : false;
+  _isAligned = _index->header->isAligned();
 
-  fseek(fp, _datablock_offset, SEEK_SET);
-  unsigned char blocks_buf[2];
-  size_t size = fread(blocks_buf, 2, 1, fp);
-  int using_blocks_count = u16val(blocks_buf);
+  int using_blocks_count = u16val(datablock_start);
   _is4byte = using_blocks_count & 0x8000; using_blocks_count &= 0x7fff;
 
-  _datablock_buf_size = block_size * using_blocks_count - 2;
+  datablock_start += 2;
+  datablock_size = _index->datablock_block_size() * using_blocks_count - 2;
   //printf("使用ブロック数: %d (%d); %d bytes\n", using_blocks_count, is4byte, datablock_buf_size);
-
-  _datablock_buf = new unsigned char[_datablock_buf_size];
-  if (_datablock_buf == NULL) return;
-
-  size = fread(_datablock_buf, _datablock_buf_size, 1, fp);
-  if (size != 1) return;
-}
-PDICDatablock::~PDICDatablock()
-{
-  if (_datablock_buf) delete _datablock_buf;
 }
 
 void
@@ -50,67 +40,56 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
   //  unsigned char *top_word;
   //  int top_word_length = 0;
 
-  for (int ofs=0,field_id=0; ofs<_datablock_buf_size; ++field_id) {
+  for (byte *pos=datablock_start,*endpos=pos+datablock_size; pos<endpos; ) {
     bool matched = false;
 
     // +0
-    int field_length, compress_length, entry_word_attrib, next_ofs;
+    int field_length, compress_length, entry_word_attrib;
     unsigned char *entry_word_compressed;
     int entry_word_compressed_size;
 
     if (_is4byte) {
-      field_length = s32val(_datablock_buf + ofs); ofs += 4;
+      field_length = s32val(pos); pos += 4;
     } else {
-      field_length = s16val(_datablock_buf + ofs); ofs += 2;
+      field_length = s16val(pos); pos += 2;
       if (field_length == 0) break;
     }
 
-    int start_ofs = ofs;
+    byte *start_pos = pos, *next_pos;
 
     if (_isAligned) {
-      compress_length = _datablock_buf[ofs++];
-      entry_word_attrib = _datablock_buf[ofs++];
-      next_ofs = ofs + field_length;
+      compress_length = *(pos++);
+      entry_word_attrib = *(pos++);
+      next_pos = pos + field_length;
 
-      entry_word_compressed = _datablock_buf + ofs;
+      entry_word_compressed = pos;
       entry_word_compressed_size = strlen((char *)entry_word_compressed);
-      ofs += entry_word_compressed_size + 1;
+      pos += entry_word_compressed_size + 1;
     } else {
-      compress_length = _datablock_buf[ofs++];
-      next_ofs = ofs + field_length;
+      compress_length = *(pos++);
+      next_pos = pos + field_length;
 
-      entry_word_compressed = _datablock_buf + ofs;
+      entry_word_compressed = pos;
       entry_word_compressed_size = strlen((char *)entry_word_compressed);
-      ofs += entry_word_compressed_size + 1;
+      pos += entry_word_compressed_size + 1;
 
-      entry_word_attrib = _datablock_buf[ofs++];
+      entry_word_attrib = *(pos++);
     }
 
     // byte* entry_word, int entry_word_attrib, byte* data, int datasize
     memcpy(entry_word + compress_length, entry_word_compressed, entry_word_compressed_size+1);
 
-    PDICDatafield datafield(_datablock_offset + 2 + start_ofs,
+    PDICDatafield datafield((int)(start_pos - filemem),
                             field_length,
                             entry_word,
                             compress_length + entry_word_compressed_size, // entry_word_size
                             entry_word_attrib,
                             _index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS,
-                            _datablock_buf + ofs, // data
-                            next_ofs - ofs // datasize
-                            );
+                            pos, // data
+                            (int)(next_pos - pos), // datasize
+                            _v6index,
+                            criteria);
 
-    /*
-    unsigned char *tabsep_at = (unsigned char *)strchr((char *)word_uncompress_buf, '\t');
-    unsigned char *word_body;
-    int entry_len;
-    if (tabsep_at) {
-      word_body = tabsep_at + 1;
-      entry_len = tabsep_at - word_buf;
-    } else {
-      word_body = word_buf;
-      entry_len = compress_length + entry_word_datalength;
-    }
-    */
     if (criteria) {
       matched = criteria->match(&datafield);
     } else {
@@ -119,26 +98,9 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
 
     if (matched) {
       (*action)(&datafield);
-      /*
-      unsigned char *entry_utf8, *jword_utf8;
-      if (_index->isBOCU1()) {
-        entry_utf8 = bocu1_to_utf8(word_body);
-        jword_utf8 = bocu1_to_utf8(jword, jword_datalength);
-      } else {
-        //unsigned char *jword0 = (unsigned char *)cstr(jword, jword_datalength);
-        entry_utf8 = sjis_to_utf8(word_body);
-        jword_utf8 = sjis_to_utf8(jword, jword_datalength);
-      }
-      
-      (*action)(entry_utf8, jword_utf8);
-      (*action)(word_buf, _utf8, jword_utf8);
-      
-      free((void *)entry_utf8);
-      free((void *)jword_utf8);
-      */
     }
-    
+
     if (_is4byte) break;
-    ofs = next_ofs;
+    pos = next_pos;
   }
 }
