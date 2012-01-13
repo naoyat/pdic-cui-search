@@ -18,7 +18,8 @@ class PDICIndex;
 #define SUFFIX_ENTRY_START  ".entry.st"
 #define SUFFIX_ENTRY_SARRAY ".entry.sf"
 
-typedef std::pair<std::string,std::string> lookup_result;
+//typedef std::pair<std::string,std::string> lookup_result;
+typedef std::pair<byte*,byte*> lookup_result;
 typedef std::vector<lookup_result> lookup_result_vec;
 
 class Dict {

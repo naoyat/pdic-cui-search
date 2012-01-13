@@ -46,6 +46,8 @@ void shell_init()
 }
 void shell_destroy()
 {
+  free_all_cloned_buffers();
+
   traverse(dicts, dict) delete *dict;
 }
 
@@ -137,9 +139,7 @@ void do_lookup(char *needle, int needle_len)
   }
 
   lookup_result_vec result = normal_lookup((byte *)needle, needle_len);
-  traverse(result, it) {
-    render_ej((byte *)it->first.c_str(), (byte *)it->second.c_str());
-  }
+  traverse(result, it) render_ej(it->first, it->second);
 }
 
 void do_sarray_lookup(char *needle, int needle_len)
@@ -159,9 +159,7 @@ void do_sarray_lookup(char *needle, int needle_len)
   }
 
   lookup_result_vec result = sarray_lookup((byte *)needle);
-  traverse(result, it) {
-    render_ej((byte *)it->first.c_str(), (byte *)it->second.c_str());
-  }
+  traverse(result, it) render_ej(it->first, it->second);
 }
 
 void do_regexp_lookup(char *needle, int needle_len)
@@ -180,9 +178,7 @@ void do_regexp_lookup(char *needle, int needle_len)
   }
 
   lookup_result_vec result = regexp_lookup(pattern);
-  traverse(result, it) {
-    render_ej((byte *)it->first.c_str(), (byte *)it->second.c_str());
-  }
+  traverse(result, it) render_ej(it->first, it->second);
 }
 
 lookup_result_vec normal_lookup(byte *needle, int needle_len)
@@ -450,6 +446,8 @@ bool do_command(char *cmdstr)
   else {
     printf("ERROR: unknown command, '%s'\n", cmd[0].c_str());
   }
+
+  free_all_cloned_buffers();
 
   return true;
 }

@@ -24,7 +24,7 @@ Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match)
       break;
     default:
       needle_size = strlen((char *)needle_utf8);
-      needle = cstr(needle_utf8, needle_size);
+      needle = clone_cstr(needle_utf8, needle_size, false);
       break;
   }
   this->exact_match = exact_match;

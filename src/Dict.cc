@@ -135,9 +135,10 @@ lookup_result_vec dump_result;
 void dump_to_vector(PDICDatafield *datafield)
 {
   // vector<pair<string,string> > dump_result;
-  std::string entry_word = (char *)datafield->entry_word_utf8();
-  std::string jword = (char *)datafield->jword_utf8();
+  byte *entry_word = clone_cstr(datafield->entry_word_utf8());
+  byte *jword = clone_cstr(datafield->jword_utf8());
 
+  //  dump_result.push_back( std::make_pair((byte*)entry_word.c_str(), (byte*)jword.c_str()) );
   dump_result.push_back( std::make_pair(entry_word, jword) );
 }
 
@@ -218,7 +219,7 @@ Dict::sarray_lookup(byte *needle)
   std::vector<int> matches = this->search_in_sarray(needle);
   traverse(matches, offset) {
     byte *entry_word = this->entry_buf + *offset;
-    result.push_back( std::make_pair((const char *)entry_word, "") );
+    result.push_back( std::make_pair((byte*)entry_word, (byte*)"") );
   }
 
   return result;
@@ -241,7 +242,7 @@ Dict::regexp_lookup(const RE2& pattern)
   for (int i=0; i<entry_start_pos_length; ++i) {
     const char *entry = (const char *)entry_buf + entry_start_pos[i];
     if (RE2::PartialMatch(entry, pattern)) {
-      result.push_back( std::make_pair(std::string(entry), "") );
+      result.push_back( std::make_pair((byte*)entry, (byte*)"") );
       ++matched_entries_count;
     }
   }

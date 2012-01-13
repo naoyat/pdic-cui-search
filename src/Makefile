@@ -25,7 +25,7 @@ eijiro_gtest: gtest_main.o $(OBJECTS) eijiro_gtest.o
 	$(CPP) $(CPPFLAGS) -o eijiro_gtest gtest_main.o $(OBJECTS) eijiro_gtest.o -lgtest -liconv -lre2
 
 shell: pdic
-	./pdic
+	if [ x`which rlwrap` = x ]; then ./pdic ; else rlwrap ./pdic ; fi
 
 test: pdic_gtest
 	./pdic_gtest

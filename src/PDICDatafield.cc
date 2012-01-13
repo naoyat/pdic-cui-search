@@ -54,8 +54,8 @@ void
 PDICDatafield::retain()
 {
   if (!is_retained) {
-    entry_word  = (byte *)clone((void *)entry_word, strlen((char *)entry_word)+1);
-    data        = (byte *)clone((void *)data, data_size);
+    entry_word  = clone_cstr(entry_word, 0, false);
+    data        = clone_cstr(data, data_size, false);
     is_retained = true;
   }
 }
@@ -101,7 +101,7 @@ PDICDatafield::jword_utf8()
         _jword_utf8 = sjis_to_utf8(jword, jword_size);
         break;
       default:
-        _jword_utf8 = cstr(jword, jword_size);
+        _jword_utf8 = clone_cstr(jword, jword_size, false);
         break;
     }
   }

@@ -1,8 +1,10 @@
 #include "util.h"
 
+#include <set>
 #include <cstdlib>
 #include <cstring>
 
+#include "util_stl.h"
 #include "types.h"
 
 char *indent(char *spacer, char *src)
@@ -25,18 +27,34 @@ char *indent(char *spacer, char *src)
   return indented;
 }
 
-void *clone(void *data, size_t size)
+std::set<void*> clone_ptrs;
+
+void free_cloned_buffer(void *ptr)
+{
+  if (found(clone_ptrs,ptr)) {
+    free(ptr);
+    clone_ptrs.erase(ptr);
+  }
+}
+void free_all_cloned_buffers()
+{
+  traverse(clone_ptrs,ptr) free(*ptr);
+  clone_ptrs.clear();
+}
+
+void *clone(void *data, size_t size, bool gc)
 {
   void *buf = malloc(size);
   memcpy(buf, data, size);
+  if (gc) clone_ptrs.insert(buf);
   return buf;
 }
 
-byte *cstr(byte *data, int length)
+byte *clone_cstr(byte *data, int length, bool gc)
 {
   if (!length) length = strlen((char *)data);
 
-  void *newstr = clone((void *)data, length+1);
+  void *newstr = clone((void *)data, length+1, gc);
   data[length] = 0;
 
   return (byte *)newstr;

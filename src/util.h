@@ -17,8 +17,10 @@ inline unsigned long long u64val(byte *data) { return *(unsigned long long *)dat
 
 char *indent(char *spacer, char *str);
 
-void *clone(void *data, size_t size);
-byte *cstr(byte *data, int length=0);
+void *clone(void *data, size_t size, bool gc=true);
+byte *clone_cstr(byte *data, int length=0, bool gc=true);
+void free_cloned_buffer(void *ptr);
+void free_all_cloned_buffers();
 
 // byte版 str(n)cmp
 int bstrcmp(byte *s1, byte *s2, int minimum_charcode=0x20);
