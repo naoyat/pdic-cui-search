@@ -86,9 +86,9 @@ byte *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
   dest[j] = 0;
   return dest;
 }
-unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_size)
+unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_length)
 {
-  dest_size = 0;
+  dest_length = 0;
 
   unichar* dest = (unichar *)malloc(sizeof(unichar)*(src_size+1));
   if (!dest) return NULL;
@@ -139,21 +139,21 @@ unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_size)
     }
 
     if (codepoint < 0x10000) {
-      dest[dest_size++] = codepoint;
+      dest[dest_length++] = codepoint;
     } else if (codepoint < 0x110000) {
       int upper, lower;
       surrogate(codepoint, &upper, &lower);
       //printf("{%x -> %04x:%04x}", codepoint, upper, lower);
-      dest[dest_size++] = upper;
-      dest[dest_size++] = lower;
+      dest[dest_length++] = upper;
+      dest[dest_length++] = lower;
     } else {
       // simply ignore
     }
   }
 
-  dest[dest_size] = 0;
+  dest[dest_length] = 0;
 
-  unichar *newp = (unichar *)realloc((void *)dest, sizeof(unichar)*(dest_size+1));
+  unichar *newp = (unichar *)realloc((void *)dest, sizeof(unichar)*(dest_length+1));
   return newp ? newp : dest;
 }
 

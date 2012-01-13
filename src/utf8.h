@@ -14,7 +14,7 @@ int unsurrogate(int upper, int lower);
 
 // codepoints <=> utf8
 byte *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size);
-unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_size);
+unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_length);
 
 // sjis <=> utf8 (using iconv)
 char *_iconv(const char *src, size_t src_size, const char *src_code, char *dest, size_t dest_size, const char *dest_code);
