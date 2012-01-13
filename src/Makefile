@@ -16,14 +16,13 @@ TEST_DATA = filemem_gtest.dat
 TEST_OUTPUTS = filemem_gtest.savemem
 
 pdic: main.o $(OBJECTS)
-	rm search.o
-	$(CPP) $(CPPFLAGS) -c search.cc
 	$(CPP) $(CPPFLAGS) -o pdic main.o $(OBJECTS) -liconv -lre2
 
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
-	rm search.o
-	$(CPP) $(CPPFLAGS) -DTEST -c search.cc
-	$(CPP) $(CPPFLAGS) -DTEST -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv -lre2
+	$(CPP) $(CPPFLAGS) -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv -lre2
+
+eijiro_gtest: gtest_main.o $(OBJECTS) eijiro_gtest.o
+	$(CPP) $(CPPFLAGS) -o eijiro_gtest gtest_main.o $(OBJECTS) eijiro_gtest.o -lgtest -liconv -lre2
 
 shell: pdic
 	./pdic
@@ -31,6 +30,9 @@ shell: pdic
 test: pdic_gtest
 	./pdic_gtest
 	rm -f $(TEST_OUTPUTS)
+
+test_eijiro: eijiro_gtest
+	./eijiro_gtest
 
 clean:
 	rm -f pdic pdic_gtest *.o *~
@@ -62,3 +64,5 @@ search_gtest.o: search_gtest.cc  search.h util.h
 shell_gtest.o: shell_gtest.cc  shell.h
 utf8_gtest.o: utf8_gtest.cc  types.h utf8.h
 util_gtest.o: util_gtest.cc  types.h util.h
+
+eijiro_gtest.o: eijiro_gtest.cc  Dict.h shell.h

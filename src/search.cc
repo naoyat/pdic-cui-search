@@ -10,8 +10,8 @@
 #include "types.h"
 #include "dump.h"
 
-#ifdef TEST
-extern int cmp_count;
+#ifdef DEBUG
+int cmp_count;
 #endif
 
 std::pair<byte*,int *> concat_strings(byte *strings[], int string_count, int end_marker)
@@ -122,7 +122,7 @@ std::pair<int*,int> make_light_suffix_array(byte *buf, int buf_size)
 // PDICのindexなど、配列に入っている要素と要素の間に見えない要素がある場合、NEG-endを見るべき
 bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, bool exact_match)
 {
-#ifdef TEST
+#ifdef DEBUG
   cmp_count = 0;
 #endif
 
@@ -131,13 +131,13 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
   int needle_len = strlen((char *)needle);
 
   int cmp = exact_match ? bstrcmp(buf+0, needle) : bstrncmp(buf+0, needle, needle_len);
-#ifdef TEST
+#ifdef DEBUG
   ++cmp_count;
 #endif
   if (cmp > 0) return std::make_pair(false, std::make_pair(-1, 0));
 
   cmp = exact_match ? bstrcmp(buf+offsets[offsets_len-1], needle) : bstrncmp(buf+offsets[offsets_len-1], needle, needle_len);
-#ifdef TEST
+#ifdef DEBUG
   ++cmp_count;
 #endif
   if (cmp < 0) return std::make_pair(false, std::make_pair(offsets_len-1, offsets_len));
@@ -158,7 +158,7 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
 #endif
     //printf("  %d | %d | %d ", neg_max, mid, pos_min);
     //bocu1_dump_in_utf8(buf+offsets[mid]); newline();
-#ifdef TEST
+#ifdef DEBUG
   ++cmp_count;
 #endif
     if (cmp == 0) {
@@ -169,7 +169,7 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
         mid = (lo + hi + 1) / 2;
         //printf(" (%d %d %d)\n", lo,mid,hi);
         cmp = exact_match ? bstrcmp(buf+offsets[mid], needle) : bstrncmp(buf+offsets[mid], needle, needle_len);
-#ifdef TEST
+#ifdef DEBUG
   ++cmp_count;
 #endif
         if (cmp == 0) {
@@ -186,7 +186,7 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
       while (lo < hi) {
         mid = (lo + hi) / 2;
         cmp = exact_match ? bstrcmp(buf+offsets[mid], needle) : bstrncmp(buf+offsets[mid], needle, needle_len);
-#ifdef TEST
+#ifdef DEBUG
   ++cmp_count;
 #endif
         if (cmp == 0) {
