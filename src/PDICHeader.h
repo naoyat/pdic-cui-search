@@ -85,12 +85,15 @@ public:
   PDICHeader(FILE *fp);
   ~PDICHeader();
 
+  int version() { return _version; }
+  int major_version() { return _major_version; }
+  int minor_version() { return _minor_version; }
   void dump();
 
 public:
   unsigned char* headername() { return buf + OFS_HEADERNAME; }
   unsigned char* dictitle() { return buf + OFS_DICTITLE; }
-  int version() { return s16val(buf + OFS_VERSION); }
+
   int lword() {
     // HYPER6.10: { 1024 }
     // HYPER6.00: { 248 }

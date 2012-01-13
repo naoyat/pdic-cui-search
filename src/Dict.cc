@@ -25,6 +25,9 @@
 
 extern std::vector<std::string> loadpaths;
 extern bool verbose_mode;
+extern bool direct_dump_mode;
+extern bool more_newline;
+extern int match_count;
 
 Dict::Dict(FILE *fp, const std::string& name, const std::string& path)
 {
@@ -132,6 +135,16 @@ Dict::make_sarray_index(int buffer_size_enough_for_whole_entries)
 
 lookup_result_vec dump_result;
 
+void dump_ej(PDICDatafield *datafield)
+{
+  render_ej(std::make_pair( datafield->entry_word_utf8(), datafield->jword_utf8() ));
+  ++match_count;
+}
+void dump_entry(PDICDatafield *datafield)
+{
+  puts((char *)datafield->entry_word_utf8());
+  ++match_count;
+}
 void dump_to_vector(PDICDatafield *datafield)
 {
   // vector<pair<string,string> > dump_result;
@@ -140,6 +153,7 @@ void dump_to_vector(PDICDatafield *datafield)
 
   //  dump_result.push_back( std::make_pair((byte*)entry_word.c_str(), (byte*)jword.c_str()) );
   dump_result.push_back( std::make_pair(entry_word, jword) );
+  ++match_count;
 }
 
 lookup_result_vec
@@ -147,11 +161,19 @@ Dict::normal_lookup(byte *needle, bool exact_match)
 {
   int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
 
-  Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
+  Criteria *criteria;
+  if (index->header->major_version() >= HYPER6) {
+    byte *needle_for_index = string_for_index(needle);
+    criteria = new Criteria(needle_for_index, target_charcode, exact_match);
+    free((void *)needle_for_index);
+  } else {
+    criteria = new Criteria(needle, target_charcode, exact_match);
+  }
+
 
   bsearch_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
   if (verbose_mode) {
-    std::cout << "result = " << result << std::endl;
+    //std::cout << "result = " << result << std::endl;
   }
 
   int from, to;
@@ -165,22 +187,28 @@ Dict::normal_lookup(byte *needle, bool exact_match)
   }
 
   if (verbose_mode) {
-    printf("lookup. from %d to %d, %d/%d...\n", from, to, to-from+1, index->_nindex);
+    //printf("lookup. from %d to %d, %d/%d...\n", from, to, to-from+1, index->_nindex);
   }
 
   dump_result.clear();
   
   for (int ix=from; ix<=to; ix++) {
     if (verbose_mode) {
+      /*
       byte *utf8str = bocu1_to_utf8( index->entry_word(ix) );
       printf("  [%d/%d] %s\n", ix, index->_nindex, utf8str);
       free((void *)utf8str);
+      */
     }
     if (ix < 0) continue;
     if (ix >= index->_nindex) break;
 
     PDICDatablock* datablock = new PDICDatablock(this->fp, this->index, ix);
-    datablock->iterate(&dump_to_vector, criteria);
+    if (direct_dump_mode) {
+      datablock->iterate(&dump_ej, criteria);
+    } else {
+      datablock->iterate(&dump_to_vector, criteria);
+    }
     delete datablock;
   }
 not_found:
@@ -204,7 +232,11 @@ Dict::search_in_sarray(byte *needle)
     for (int i=result.second.first; i<=result.second.second; ++i) {
       byte *head = strhead(this->entry_buf + entry_suffix_array[i]);
       int offset = (int)(head - this->entry_buf);
-      matched_offsets.insert(offset);
+      if (direct_dump_mode) {
+        std::cout << "- " << head << std::endl;
+      } else {
+        matched_offsets.insert(offset);
+      }
     }
   }
 
@@ -217,9 +249,12 @@ Dict::sarray_lookup(byte *needle)
   lookup_result_vec result;
 
   std::vector<int> matches = this->search_in_sarray(needle);
-  traverse(matches, offset) {
-    byte *entry_word = this->entry_buf + *offset;
-    result.push_back( std::make_pair((byte*)entry_word, (byte*)"") );
+  if (!direct_dump_mode) {
+    traverse(matches, offset) {
+      byte *entry_word = this->entry_buf + *offset;
+      result.push_back( std::make_pair((byte*)entry_word, (byte*)"") );
+    }
+    match_count += matches.size();
   }
 
   return result;
@@ -236,19 +271,26 @@ Dict::regexp_lookup(const RE2& pattern)
   lookup_result_vec result;
 
   int matched_entries_count = 0;
-  if (verbose_mode) {
-    time_reset();
-  }
+  //if (verbose_mode) {
+  //  time_reset();
+  //}
   for (int i=0; i<entry_start_pos_length; ++i) {
     const char *entry = (const char *)entry_buf + entry_start_pos[i];
     if (RE2::PartialMatch(entry, pattern)) {
-      result.push_back( std::make_pair((byte*)entry, (byte*)"") );
+      if (direct_dump_mode) {
+        std::cout << "- " << entry << std::endl;
+      } else {
+        result.push_back( std::make_pair((byte*)entry, (byte*)"") );
+      }
       ++matched_entries_count;
     }
   }
+
+  match_count += matched_entries_count;
+
   if (verbose_mode) {
-    std::pair<int,int> time = time_usec();
-    printf("%d/%d matches; real:%d process:%d.\n", matched_entries_count, entry_start_pos_length, time.first, time.second);
+    //std::pair<int,int> time = time_usec();
+    //printf("%d/%d regexp matches; real:%d process:%d.\n", matched_entries_count, entry_start_pos_length, time.first, time.second);
   }
 
   return result;
@@ -303,4 +345,20 @@ Dict::load_additional_files()
     }
   }
   return false;
+}
+
+void render_ej(lookup_result result)
+{
+  byte *entry_word = result.first;
+  byte *jword      = result.second;
+
+  std::cout << entry_word << std::endl;
+
+  if (jword && jword[0]) {
+    byte *jword_indented = (byte *)indent((char *)"   ", (char *)jword);
+    std::cout << jword_indented << std::endl;
+    free(jword_indented);
+  }
+
+  if (more_newline) std::cout << std::endl;
 }

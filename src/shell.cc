@@ -39,6 +39,8 @@ std::string current_dict_name = "";
 
 bool verbose_mode = false;
 bool more_newline = false;
+bool direct_dump_mode = false;
+int match_count;
 
 void shell_init()
 {
@@ -113,19 +115,6 @@ bool do_use(std::string name)
   }
 }
 
-void render_ej(byte *entry_word, byte *jword)
-{
-  std::cout << entry_word << std::endl;
-
-  if (jword && jword[0]) {
-    byte *jword_indented = (byte *)indent((char *)"   ", (char *)jword);
-    std::cout << jword_indented << std::endl;
-    free(jword_indented);
-  }
-
-  if (more_newline) std::cout << std::endl;
-}
-
 void do_lookup(char *needle, int needle_len)
 {
   if (!needle_len) needle_len = strlen(needle);
@@ -138,8 +127,15 @@ void do_lookup(char *needle, int needle_len)
     std::cout << "LOOKUP: " << current_dict_name << " " << current_dict_ids << std::endl;
   }
 
+  match_count = 0;
   lookup_result_vec result = normal_lookup((byte *)needle, needle_len);
-  traverse(result, it) render_ej(it->first, it->second);
+
+  int match_count_at_end = match_count;
+  if (!direct_dump_mode) traverse(result, it) render_ej(*it);
+
+  if (verbose_mode) {
+    std::cout << "// matched " << match_count_at_end << " item(s)." << std::endl;
+  }
 }
 
 void do_sarray_lookup(char *needle, int needle_len)
@@ -158,8 +154,16 @@ void do_sarray_lookup(char *needle, int needle_len)
     std::cout << "SARRAY: " << current_dict_name << " " << current_dict_ids << std::endl;
   }
 
+  match_count = 0;
+
   lookup_result_vec result = sarray_lookup((byte *)needle);
-  traverse(result, it) render_ej(it->first, it->second);
+
+  int match_count_at_end = match_count;
+  if (!direct_dump_mode) traverse(result, it) render_ej(*it);
+
+  if (verbose_mode) {
+    std::cout << "// matched " << match_count_at_end << " item(s)." << std::endl;
+  }
 }
 
 void do_regexp_lookup(char *needle, int needle_len)
@@ -174,12 +178,21 @@ void do_regexp_lookup(char *needle, int needle_len)
       return;
     }
     std::cout << "REGEXP: " << current_dict_name << " " << current_dict_ids << std::endl;
-    printf("%d\n", re2::RE2::PartialMatch("abcdefghijklmnopqrstuvwxyz", pattern));
+    //printf("%d\n", re2::RE2::PartialMatch("abcdefghijklmnopqrstuvwxyz", pattern));
   }
 
+  match_count = 0;
+
   lookup_result_vec result = regexp_lookup(pattern);
-  traverse(result, it) render_ej(it->first, it->second);
+
+  int match_count_at_end = match_count;
+  if (!direct_dump_mode) traverse(result, it) render_ej(*it);
+
+  if (verbose_mode) {
+    std::cout << "// matched " << match_count_at_end << " item(s)." << std::endl;
+  }
 }
+
 
 lookup_result_vec normal_lookup(byte *needle, int needle_len)
 {
@@ -228,15 +241,6 @@ lookup_result_vec regexp_lookup(const RE2& pattern)
   return result_total;
 }
 
-void dump_ej(PDICDatafield *datafield)
-{
-  render_ej( datafield->entry_word_utf8(), datafield->jword_utf8() );
-}
-void dump_word(PDICDatafield *datafield)
-{
-  puts((char *)datafield->entry_word_utf8());
-}
-
 int do_load(const std::string& filename)
 {
   for (int i=0; i<loadpaths.size(); ++i) {
@@ -283,6 +287,14 @@ bool do_command(char *cmdstr)
   else if (cmd[0] == "quiet") {
     printf("quiet mode.\n");
     verbose_mode = false;
+  }
+  else if (cmd[0] == "direct") {
+    printf("direct dump mode.\n");
+    direct_dump_mode = true;
+  }
+  else if (cmd[0] == "indirect") {
+    printf("indirect dump mode.\n");
+    direct_dump_mode = false;
   }
   else if (cmd[0] == "newline") {
     if (cmd.size() == 2) {
@@ -394,9 +406,9 @@ bool do_command(char *cmdstr)
             index->dump();
           } else if (what_to_dump == "datablock" && cmd.size() >= 3) {
             int ix = atoi( cmd[2].c_str() );
-            index->iterate_datablock(ix, &dump_word, NULL);
+            index->iterate_datablock(ix, &dump_entry, NULL);
           } else if (what_to_dump == "words") {
-            index->iterate_all_datablocks(&dump_word, NULL);
+            index->iterate_all_datablocks(&dump_entry, NULL);
           } else if (what_to_dump == "count") {
             printf("[%d]", *current_dict_id);
             calculate_space_for_index(index);

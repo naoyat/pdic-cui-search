@@ -36,9 +36,6 @@ void do_lookup(char *needle, int needle_len=0);
 void do_sarray_lookup(char *needle, int needle_len=0);
 void do_regexp_lookup(char *needle, int needle_len=0);
 // - dump
-void dump_ej(PDICDatafield *datafield); // CALLBACK
-void dump_word(PDICDatafield *datafield); // CALLBACK
-void dump_to_vector(PDICDatafield *datafield); // CALLBACK
 void count_word(PDICDatafield *datafield); // CALLBACK
 // - dev
 int calculate_space_for_index(PDICIndex *index);

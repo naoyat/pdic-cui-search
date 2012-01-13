@@ -53,4 +53,13 @@ public:
   lookup_result_vec regexp_lookup(const RE2& pattern);
 };
 
+
+// render
+void render_ej(lookup_result result);
+
+// CALLBACKS
+void dump_ej(PDICDatafield *datafield);
+void dump_entry(PDICDatafield *datafield);
+void dump_to_vector(PDICDatafield *datafield);
+
 #endif;
