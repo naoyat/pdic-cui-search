@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "ctype.h"
+
 #include "PDICHeader.h"
 #include "PDICIndex.h"
 #include "PDICDatablock.h"
@@ -118,4 +120,53 @@ PDICIndex::iterate_datablock(int ix, action_proc *action, Criteria *criteria)
   PDICDatablock *datablock = new PDICDatablock(fp, this, ix);
   datablock->iterate(action, criteria);
   delete datablock;
+}
+
+//
+// PDIC6 utility
+//
+unichar katakana_map[0x60] = {
+  0,     0x30A2,0,     0x30A4,0,     0x30A6,0,     0x30A8,0,     0x30AA,0,     0,  0x30AB,0,     0x30AD,0,
+  0x30AF,0,     0x30B1,0,     0x30B3,0,     0x30B5,0,     0x30B7,0,     0x30B9,0,  0x30BB,0,     0x30BD,0,
+  0x30BF,0,     0x30C1,0x30C4,0,     0x30C4,0,     0x30C6,0,     0x30C8,0,     0,  0,     0,     0,     0,
+  0x30CF,0x30CF,0,     0x30D2,0x30D2,0,     0x30D5,0x30D5,0,     0x30D8,0x30D8,0,  0x30DB,0x30DB,0,     0,
+  0,     0,     0,     0x30E4,0,     0x30E6,0,     0x30E8,0,     0,     0,     0,  0,     0,     0x30EF,0,
+  0,     0,     0,     0,     0x30A6,0x30AB,0x30B1,0x30EF,0x30F0,0x30F1,0x30F2,0,  0,     0,     0,     0 };
+
+byte *string_for_index(byte *src_str)
+{
+  int src_cp_length;
+  unichar *src_cp = decode_utf8(src_str, strlen((char *)src_str), src_cp_length);
+
+  int dest_cp_length = 0;
+  unichar *dest_cp = (unichar *)malloc(sizeof(unichar)*(src_cp_length + 1));
+  for (int i=0; i<src_cp_length; ++i) {
+    int ch_s = src_cp[i], ch_d;
+
+    if (isupper(ch_s)) ch_d = tolower(ch_s);
+    else if (ch_s == '-') ch_d = ' ';
+    else if (ch_s == '\'') continue; // skip quote
+    else if (ch_s == 0x3001) ch_d = ','; // 、
+    else if (ch_s == 0x3002) ch_d = '.'; // 。
+    else if (ch_s == 0x301c) ch_d = '~'; // 〜
+    else if (0x30a0 <= ch_s && ch_s <= 0x30ff) {
+      int ch = katakana_map[ch_s - 0x30a0];
+      ch_d = ch ? ch : ch_s;
+    }
+    else if (0xff00 <= ch_s && ch_s <= 0xff9f) ch_d = ch_s - 0xff00 + 0x20;
+    else ch_d = ch_s;
+
+    dest_cp[dest_cp_length++] = ch_d;
+  }
+  dest_cp[dest_cp_length] = 0;
+  free((void *)src_cp);
+
+  int dest_size;
+  byte *dest_str = encode_utf8(dest_cp, dest_cp_length, dest_size);
+
+  free((void *)dest_cp);
+
+  //printf("{%s} --> {%s}\n", src_str, dest_str);
+
+  return dest_str;
 }

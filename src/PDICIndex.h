@@ -51,4 +51,6 @@ public:
   bool isBOCU1() { return _isBOCU1; }
 };
 
+byte *string_for_index(byte *str);
+
 #endif
