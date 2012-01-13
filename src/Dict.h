@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 #include <cstdio>
 #include <re2/re2.h>
@@ -13,15 +14,28 @@
 class PDICIndex;
 class Criteria;
 
-#define ENTRY_BUF_SIZE 1024*1024*128 // 128MBとりあえず
-
-#define SUFFIX_ENTRY        ".entry"
-#define SUFFIX_ENTRY_START  ".entry.st"
-#define SUFFIX_ENTRY_SARRAY ".entry.sf"
+#define SX_PDIC           ".dic"
+#define SX_TOC            ".toc"
+#define SX_ENTRY          ".entry"
+#define SX_ENTRY_SARRAY   ".entry.sf"
+#define SX_JWORD          ".trans"
+#define SX_JWORD_SARRAY   ".trans.sf"
+#define SX_EXAMPLE        ".exmp"
+#define SX_EXAMPLE_SARRAY ".exmp.sf"
+#define SX_PRON           ".pron"
+#define SX_PRON_SARRAY    ".pron.sf"
 
 //typedef std::pair<std::string,std::string> lookup_result;
 typedef std::pair<byte*,byte*> lookup_result;
 typedef std::vector<lookup_result> lookup_result_vec;
+
+typedef struct {
+  int pdic_datafield_pos; // in filemem (PDICDatablock)
+  int entry_start_pos;    // in .entry
+  int jword_start_pos;    // in .jword
+  int example_start_pos;  // in .exmp
+  int pron_start_pos;     // in .pron
+} Toc;
 
 class Dict {
  public:
@@ -31,10 +45,12 @@ class Dict {
 
 public:
   PDICIndex *index;
-  byte *entry_buf;
-  int *entry_start_pos, entry_start_pos_length;
-  std::map<int,int> entry_start_rev;
-  int *entry_suffix_array, entry_suffix_array_length;
+  Toc  *toc;
+  int   toc_length;
+  byte *entry_buf, *jword_buf;
+  std::map<int,int> entry_start_rev, jword_start_rev;
+  int  *entry_suffix_array, entry_suffix_array_length;
+  int  *jword_suffix_array, jword_suffix_array_length;
   
 public:
   Dict(const std::string& name, byte *filemem);
@@ -42,18 +58,23 @@ public:
   std::string info() { return name + " " + path; }
   char *suffix() { return _suffix; }
 
-  int make_sarray_index(int buffer_size_enough_for_whole_entries =ENTRY_BUF_SIZE);
+  int make_toc();
   void unload_additional_files();
   bool load_additional_files();
 
 private:
-  std::vector<int> search_in_sarray(byte *needle);
+  std::set<int> search_in_sarray(byte *buf, std::map<int,int>& rev, int *sarray, int sarray_length, byte *needle);
+  std::set<int> search_in_entry_sarray(byte *needle) {
+    return this->search_in_sarray(entry_buf, entry_start_rev, entry_suffix_array, entry_suffix_array_length, needle);
+  }
+  std::set<int> search_in_jword_sarray(byte *needle) {
+    return this->search_in_sarray(jword_buf, jword_start_rev, jword_suffix_array, jword_suffix_array_length, needle);
+  }
 public:
   lookup_result_vec normal_lookup(byte *needle, bool exact_match);
   lookup_result_vec sarray_lookup(byte *needle);
   lookup_result_vec regexp_lookup(const RE2& pattern);
 };
-
 
 // render
 void render_ej(lookup_result result, const RE2& re);
@@ -62,5 +83,8 @@ void render_ej(lookup_result result, const RE2& re);
 void dump_ej(PDICDatafield *datafield);
 void dump_entry(PDICDatafield *datafield);
 void dump_to_vector(PDICDatafield *datafield);
+
+void estimate_buf_size(PDICDatafield *datafield);
+void stock_entry_words(PDICDatafield *datafield);
 
 #endif;
