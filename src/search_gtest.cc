@@ -49,7 +49,7 @@ TEST(search, search) {
   //
   // actual test
   //
-  search_result_t result;
+  bsearch_result_t result;
 
   // *exact match*
   // matches once
