@@ -9,7 +9,7 @@ CPPFLAGS = -O3 -DDEBUG
 
 
 OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o Dict.o \
-		ansi_color.o bocu1.o cout.o dump.o filemem.o search.o shell.o timeutil.o utf8.o util.o util_stl.o
+          bocu1.o cout.o dump.o filemem.o search.o shell.o timeutil.o utf8.o util.o util_stl.o
 
 TEST_OBJECTS = Dict_gtest.o PDICIndex_gtest.o filemem_gtest.o search_gtest.o shell_gtest.o utf8_gtest.o util_gtest.o
 TEST_DATA = filemem_gtest.dat
@@ -44,7 +44,6 @@ PDICDatablock.o: PDICDatablock.cc PDICDatablock.h  Criteria.h PDICDatafield.h PD
 PDICDatafield.o: PDICDatafield.cc PDICDatafield.h  bocu1.h charcode.h utf8.h util.h
 PDICHeader.o: PDICHeader.cc PDICHeader.h  dump.h util.h
 PDICIndex.o: PDICIndex.cc PDICIndex.h  PDICDatablock.h PDICHeader.h PDICIndex.h bocu1.h search.h dump.h
-ansi_color.o: ansi_color.cc ansi_color.h  types.h util.h
 bocu1.o: bocu1.cc bocu1.h  dump.h types.h utf8.h
 cout.o: cout.cc cout.h
 dump.o: dump.cc dump.h  bocu1.h dump.h types.h util.h

@@ -27,7 +27,7 @@ class PDICDatafield {
   bool           v6index;
 
  public:
-  PDICDatafield(int start_ofs, int field_length,
+  PDICDatafield(int start_pos, int field_length,
                 unsigned char *entry_word, int entry_word_size, int entry_word_attrib,
                 int charcode, unsigned char *data, int data_size,
                 bool v6index, Criteria *criteria);
