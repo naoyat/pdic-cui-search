@@ -33,6 +33,7 @@ bool do_use(std::string name);
 std::vector<int> resolve_aliases(const std::string& name);
 // - lookup
 void do_lookup(char *needle, int needle_len=0);
+void do_sarray_lookup(char *needle, int needle_len=0);
 void do_regexp_lookup(char *needle, int needle_len=0);
 // - dump
 void dump_ej(PDICDatafield *datafield); // CALLBACK
@@ -44,7 +45,8 @@ int calculate_space_for_index(PDICIndex *index);
 
 
 // lookup
-lookup_result_vec lookup(byte *needle, int needle_len=0);
+lookup_result_vec normal_lookup(byte *needle, int needle_len=0);
+lookup_result_vec sarray_lookup(byte *needle, int needle_len=0);
 lookup_result_vec regexp_lookup(const RE2& pattern);
 
 #endif

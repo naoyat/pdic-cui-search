@@ -129,10 +129,36 @@ void do_lookup(char *needle, int needle_len)
   if (!needle_len) needle_len = strlen(needle);
 
   if (verbose_mode) {
+    if (current_dict_ids.size() == 0) {
+      printf("no dictionary selected\n");
+      return;
+    }
     std::cout << "LOOKUP: " << current_dict_name << " " << current_dict_ids << std::endl;
   }
 
-  std::vector<std::pair<std::string,std::string> > result = lookup((byte *)needle, needle_len);
+  lookup_result_vec result = normal_lookup((byte *)needle, needle_len);
+  traverse(result, it) {
+    render_ej((byte *)it->first.c_str(), (byte *)it->second.c_str());
+  }
+}
+
+void do_sarray_lookup(char *needle, int needle_len)
+{
+  if (!needle_len) needle_len = strlen(needle);
+
+  if (needle[needle_len-1] == '*') {
+    needle[needle_len-1] = 0;
+  }
+
+  if (verbose_mode) {
+    if (current_dict_ids.size() == 0) {
+      printf("no dictionary selected\n");
+      return;
+    }
+    std::cout << "SARRAY: " << current_dict_name << " " << current_dict_ids << std::endl;
+  }
+
+  lookup_result_vec result = sarray_lookup((byte *)needle);
   traverse(result, it) {
     render_ej((byte *)it->first.c_str(), (byte *)it->second.c_str());
   }
@@ -145,6 +171,10 @@ void do_regexp_lookup(char *needle, int needle_len)
   RE2 pattern(re2::StringPiece(needle, needle_len));
 
   if (verbose_mode) {
+    if (current_dict_ids.size() == 0) {
+      printf("no dictionary selected\n");
+      return;
+    }
     std::cout << "REGEXP: " << current_dict_name << " " << current_dict_ids << std::endl;
     printf("%d\n", re2::RE2::PartialMatch("abcdefghijklmnopqrstuvwxyz", pattern));
   }
@@ -155,40 +185,34 @@ void do_regexp_lookup(char *needle, int needle_len)
   }
 }
 
-lookup_result_vec lookup(byte *needle, int needle_len)
+lookup_result_vec normal_lookup(byte *needle, int needle_len)
 {
   if (!needle_len) needle_len = strlen((char *)needle);
 
-  if (current_dict_ids.size() == 0) {
-    printf("no dictionary selected\n");
-    return lookup_result_vec();
+  bool exact_match = true;
+  if (needle[needle_len-1] == '*') {
+    needle[needle_len-1] = 0;
+    exact_match = false;
   }
 
   lookup_result_vec result_total, result;
 
   traverse(current_dict_ids, current_dict_id) {
-    Dict *dict = dicts[*current_dict_id];
-    bool exact_match = true;
-    if (needle[needle_len-1] == '*') {
-      needle[needle_len-1] = 0;
-      exact_match = false;
-    }
+    result = dicts[*current_dict_id]->normal_lookup((byte *)needle, exact_match);
+    result_total.insert(result_total.end(), all(result));
+  }
+  std::sort(all(result_total));
 
-    if (needle[0] == '*' && needle_len >= 2) {
-      // suffix array search
-      std::vector<int> matches = dict->search_in_sarray((byte *)needle+1);
-      traverse(matches, offset) {
-        //printf("- %s\n", dict->entry_buf + *offset);
-        byte *entry_word = dict->entry_buf + *offset;
-        result_total.push_back( std::make_pair((const char *)entry_word, "") );
-      }
-      //printf("%d matches.\n", (int)matches.size());
-      //continue;
-    } else {
-      // normal search
-      result = dict->normal_lookup((byte *)needle, exact_match);
-      result_total.insert(result_total.end(), all(result));
-    }
+  return result_total;
+}
+
+lookup_result_vec sarray_lookup(byte *needle, int needle_len)
+{
+  lookup_result_vec result_total, result;
+
+  traverse(current_dict_ids, current_dict_id) {
+    result = dicts[*current_dict_id]->sarray_lookup(needle);
+    result_total.insert(result_total.end(), all(result));
   }
   std::sort(all(result_total));
 
@@ -197,11 +221,6 @@ lookup_result_vec lookup(byte *needle, int needle_len)
 
 lookup_result_vec regexp_lookup(const RE2& pattern)
 {
-  if (current_dict_ids.size() == 0) {
-    printf("no dictionary selected\n");
-    return lookup_result_vec();
-  }
-
   lookup_result_vec result_total, result;
 
   traverse(current_dict_ids, current_dict_id) {
@@ -421,6 +440,12 @@ bool do_command(char *cmdstr)
   */
   else if (cmd[0] == "lookup") {
     do_lookup(cmdstr + 7);
+  }
+  else if (cmd[0] == "sarray") {
+    do_sarray_lookup(cmdstr + 7);
+  }
+  else if (cmd[0] == "regexp") {
+    do_regexp_lookup(cmdstr + 7);
   }
   else {
     printf("ERROR: unknown command, '%s'\n", cmd[0].c_str());

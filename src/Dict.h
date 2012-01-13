@@ -18,7 +18,8 @@ class PDICIndex;
 #define SUFFIX_ENTRY_START  ".entry.st"
 #define SUFFIX_ENTRY_SARRAY ".entry.sf"
 
-typedef std::vector<std::pair<std::string,std::string> > lookup_result_vec;
+typedef std::pair<std::string,std::string> lookup_result;
+typedef std::vector<lookup_result> lookup_result_vec;
 
 class Dict {
  public:
@@ -42,9 +43,12 @@ public:
   int make_sarray_index(int buffer_size_enough_for_whole_entries =ENTRY_BUF_SIZE);
   void unload_additional_files();
   bool load_additional_files();
-  std::vector<int> search_in_sarray(byte *needle);
 
+private:
+  std::vector<int> search_in_sarray(byte *needle);
+public:
   lookup_result_vec normal_lookup(byte *needle, bool exact_match);
+  lookup_result_vec sarray_lookup(byte *needle);
   lookup_result_vec regexp_lookup(const RE2& pattern);
 };
 

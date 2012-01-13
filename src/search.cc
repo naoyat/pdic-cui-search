@@ -120,7 +120,7 @@ std::pair<int*,int> make_light_suffix_array(byte *buf, int buf_size)
 // [NEG-begin, ..., NEG-end, 0-begin, ..., 0-end, POS-begin, ..., POS-end]
 // returns {found?, {match-begin = NEG-end+1, match-end = POS_END-1}}
 // PDICのindexなど、配列に入っている要素と要素の間に見えない要素がある場合、NEG-endを見るべき
-search_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, bool exact_match)
+bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, bool exact_match)
 {
 #ifdef TEST
   cmp_count = 0;

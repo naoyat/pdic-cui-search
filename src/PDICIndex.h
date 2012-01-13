@@ -35,7 +35,7 @@ public:
   unsigned char *entry_word(int ix) { return index_buf + entry_word_offsets[ix]; }
   unsigned int datablock_offset(int ix);
   unsigned int datablock_block_size() { return header->block_size(); }
-  search_result_t bsearch_in_index(unsigned char *needle, bool exact_match) {
+  bsearch_result_t bsearch_in_index(unsigned char *needle, bool exact_match) {
     return search(index_buf, entry_word_offsets, _nindex, needle, exact_match);
   }
   void dump();

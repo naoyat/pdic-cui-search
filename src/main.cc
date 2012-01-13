@@ -40,11 +40,18 @@ int main(int argc, char **argv)
         system(line+1);
         break;
 
+      case '*':
+        if (verbose_mode) {
+          printf("[LOOKUP<sarray>] %s\n", line+1);
+        }
+        do_sarray_lookup(line+1, linelen-1);
+        break;
+
       case '/':
         if (strchr(line+1,'/') == line + linelen - 1)  {
           line[linelen-1] = 0;
           if (verbose_mode) {
-            printf("[REGEXP] /%s/\n", line+1);
+            printf("[LOOKUP<regexp>] /%s/\n", line+1);
           }
           do_regexp_lookup(line+1, linelen-2);
           break;
@@ -53,7 +60,7 @@ int main(int argc, char **argv)
 
       default:
         if (verbose_mode) {
-          printf("[COMMAND] lookup \"%s\"\n", line);
+          printf("[LOOKUP<normal>] %s\n", line);
         }
         do_lookup(line, linelen);
         break;

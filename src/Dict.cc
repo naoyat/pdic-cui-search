@@ -129,31 +129,6 @@ Dict::make_sarray_index(int buffer_size_enough_for_whole_entries)
   return entry_buf_size;
 }
 
-std::vector<int>
-Dict::search_in_sarray(byte *needle)
-{
-  search_result_t result = search(entry_buf, entry_suffix_array, entry_suffix_array_length, needle, false);
-  if (verbose_mode) {
-    printf("SARRAY: "); std::cout << result << std::endl;
-  }
-
-  std::set<int> matched_offsets;
-  /*      
-  if (result.second.first >= 0) {
-    printf(" ? %s\n", this->entry_buf + entry_suffix_array[result.second.first]);
-  }
-  */
-  if (result.first) {
-    for (int i=result.second.first; i<=result.second.second; ++i) {
-      byte *head = strhead(this->entry_buf + entry_suffix_array[i]);
-      int offset = (int)(head - this->entry_buf);
-      matched_offsets.insert(offset);
-    }
-  }
-
-  return std::vector<int>(all(matched_offsets));
-}
-
 
 lookup_result_vec dump_result;
 
@@ -173,7 +148,7 @@ Dict::normal_lookup(byte *needle, bool exact_match)
 
   Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
 
-  search_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
+  bsearch_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
   if (verbose_mode) {
     std::cout << "result = " << result << std::endl;
   }
@@ -211,6 +186,42 @@ not_found:
   ;
 
   return dump_result;
+}
+
+
+std::vector<int>
+Dict::search_in_sarray(byte *needle)
+{
+  bsearch_result_t result = search(entry_buf, entry_suffix_array, entry_suffix_array_length, needle, false);
+  if (verbose_mode) {
+    printf("SARRAY: "); std::cout << result << std::endl;
+  }
+
+  std::set<int> matched_offsets;
+
+  if (result.first) {
+    for (int i=result.second.first; i<=result.second.second; ++i) {
+      byte *head = strhead(this->entry_buf + entry_suffix_array[i]);
+      int offset = (int)(head - this->entry_buf);
+      matched_offsets.insert(offset);
+    }
+  }
+
+  return std::vector<int>(all(matched_offsets));
+}
+
+lookup_result_vec
+Dict::sarray_lookup(byte *needle)
+{
+  lookup_result_vec result;
+
+  std::vector<int> matches = this->search_in_sarray(needle);
+  traverse(matches, offset) {
+    byte *entry_word = this->entry_buf + *offset;
+    result.push_back( std::make_pair((const char *)entry_word, "") );
+  }
+
+  return result;
 }
 
 lookup_result_vec
