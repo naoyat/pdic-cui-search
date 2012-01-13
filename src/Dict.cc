@@ -209,6 +209,13 @@ not_found:
   return dump_result;
 }
 
+lookup_result_vec regexp_lookup(pattern)
+{
+  return lookup_result_vec();
+}
+
+
+
 void
 Dict::unload_additional_files()
 {

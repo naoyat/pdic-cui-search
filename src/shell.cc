@@ -25,6 +25,9 @@
 #include "util.h"
 #include "util_stl.h"
 
+#include <re2/re2.h>
+#include <re2/stringpiece.h>
+
 #ifdef DEBUG
 #include "cout.h"
 #endif
@@ -140,6 +143,28 @@ void do_lookup(char *needle, int needle_len)
   }
 }
 
+void do_regexp_lookup(char *needle, int needle_len)
+{
+  if (current_dict_ids.size() == 0) {
+    printf("no dictionary selected\n");
+    return lookup_result_vec();
+  }
+
+  if (!needle_len) needle_len = strlen(needle);
+
+  re2::RE2 pattern(re2::StringPiece(needle, needle_len));
+
+  if (verbose_mode) {
+    std::cout << "REGEXP: " << current_dict_name << " " << current_dict_ids << std::endl;
+    printf("%d\n", re2::RE2::PartialMatch("abcdefghijklmnopqrstuvwxyz", pattern));
+  }
+
+  lookup_result_vec result = regexp_lookup(pattern);
+  traverse(result, it) {
+    render_ej((byte *)it->first.c_str(), (byte *)it->second.c_str());
+  }
+}
+
 lookup_result_vec lookup(byte *needle, int needle_len)
 {
   if (!needle_len) needle_len = strlen((char *)needle);
@@ -179,6 +204,20 @@ lookup_result_vec lookup(byte *needle, int needle_len)
 
   return result_total;
 }
+
+lookup_result_vec regexp_lookup(re2::RE2 pattern)
+{
+  lookup_result_vec result_total, result;
+
+  traverse(current_dict_ids, current_dict_id) {
+    result = dicts[*current_dict_id]->regexp_search(pattern);
+    result_total.insert(result_total.end(), all(result));
+  }
+  std::sort(all(result_total));
+
+  return result_total;
+}
+
 
 void dump_ej(PDICDatafield *datafield)
 {

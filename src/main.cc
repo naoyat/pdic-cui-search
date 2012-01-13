@@ -6,6 +6,7 @@
 #include "dump.h"
 
 extern std::string current_dict_name;
+extern bool verbose_mode;
 
 int main(int argc, char **argv)
 {
@@ -26,15 +27,35 @@ int main(int argc, char **argv)
 
     switch (line[0]) {
       case '.': // command mode
+        if (verbose_mode) {
+          printf("[COMMAND] %s\n", line+1);
+        }
         looping = do_command(line+1);
         break;
 
       case '!': // external shell mode
+        if (verbose_mode) {
+          printf("[EXTERNAL] %s\n", line+1);
+        }
         system(line+1);
         break;
 
+      case '/':
+        if (strchr(line+1,'/') == line + linelen - 1)  {
+          line[linelen-1] = 0;
+          if (verbose_mode) {
+            printf("[REGEXP] /%s/\n", line+1);
+          }
+          do_regexp_lookup(line+1, linelen-2);
+          break;
+        }
+        // else fall thru
+
       default:
-        do_lookup(line);
+        if (verbose_mode) {
+          printf("[COMMAND] lookup \"%s\"\n", line);
+        }
+        do_lookup(line, linelen);
         break;
     }
   }

@@ -8,6 +8,8 @@
 #include <cstdio>
 #include "types.h"
 
+#include <re2/re2.h>
+
 class PDICIndex;
 
 #define ENTRY_BUF_SIZE 1024*1024*128 // 128MBとりあえず
@@ -43,6 +45,7 @@ public:
   std::vector<int> search_in_sarray(byte *needle);
 
   lookup_result_vec normal_lookup(byte *needle, bool exact_match);
+  lookup_result_vec regexp_lookup(re2::RE2 pattern);
 };
 
 #endif;

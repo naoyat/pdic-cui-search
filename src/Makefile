@@ -18,7 +18,7 @@ TEST_OUTPUTS = filemem_gtest.savemem
 pdic: main.o $(OBJECTS)
 	rm search.o
 	$(CPP) $(CPPFLAGS) -c search.cc
-	$(CPP) $(CPPFLAGS) -o pdic main.o $(OBJECTS) -liconv
+	$(CPP) $(CPPFLAGS) -o pdic main.o $(OBJECTS) -liconv -lre2
 
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 	rm search.o
