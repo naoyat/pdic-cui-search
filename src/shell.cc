@@ -19,7 +19,6 @@
 #include "PDICIndex.h"
 
 #include "bocu1.h"
-#include "charcode.h"
 #include "dump.h"
 #include "search.h"
 #include "timeutil.h"
@@ -39,8 +38,6 @@ std::map<std::string,std::vector<std::string> > aliases; // name -> name
 std::map<std::string,int> nametable; // name -> dict_id
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
-
-std::vector<std::pair<std::string,std::string> > dump_result;
 
 bool verbose_mode = false;
 bool more_newline = false;
@@ -143,16 +140,16 @@ void do_lookup(char *needle, int needle_len)
   }
 }
 
-std::vector<std::pair<std::string,std::string> > lookup(byte *needle, int needle_len)
+lookup_result_vec lookup(byte *needle, int needle_len)
 {
   if (!needle_len) needle_len = strlen((char *)needle);
 
   if (current_dict_ids.size() == 0) {
     printf("no dictionary selected\n");
-    return std::vector<std::pair<std::string,std::string> >();
+    return lookup_result_vec();
   }
 
-  std::vector<std::pair<std::string,std::string> > result_total, result;
+  lookup_result_vec result_total, result;
 
   traverse(current_dict_ids, current_dict_id) {
     Dict *dict = dicts[*current_dict_id];
@@ -174,67 +171,13 @@ std::vector<std::pair<std::string,std::string> > lookup(byte *needle, int needle
       //continue;
     } else {
       // normal search
-      result = lookup_core(dict->fp, dict->index, (byte *)needle, exact_match);
-      traverse(result, it) result_total.push_back(*it);
+      result = dict->normal_lookup((byte *)needle, exact_match);
+      result_total.insert(result_total.end(), all(result));
     }
   }
   std::sort(all(result_total));
 
   return result_total;
-}
-
-void dump_to_vector(PDICDatafield *datafield)
-{
-  // vector<pair<string,string> > dump_result;
-  std::string entry_word = (char *)datafield->entry_word_utf8();
-  std::string jword = (char *)datafield->jword_utf8();
-
-  dump_result.push_back( std::make_pair(entry_word, jword) );
-}
-
-std::vector<std::pair<std::string,std::string> > lookup_core(FILE *fp, PDICIndex *index, byte *needle, bool exact_match)
-{
-  int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
-
-  Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
-
-  search_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
-  if (verbose_mode) {
-    std::cout << "result = " << result << std::endl;
-  }
-  int from, to;
-  if (result.first) {
-    from = result.second.first;// - 1; if (from < 0) from = 0;
-    if (bstrcmp(index->entry_word(from), criteria->needle) != 0) { --from; if (from < 0) from = 0; }
-    to = result.second.second;
-  } else {
-    from = result.second.second - 1; if (from < 0) goto not_found;
-    to = from;
-  }
-
-  if (verbose_mode) {
-    printf("lookup. from %d to %d, %d/%d...\n", from, to, to-from+1, index->_nindex);
-  }
-
-  dump_result.clear();
-  
-  for (int ix=from; ix<=to; ix++) {
-    if (verbose_mode) {
-      byte *utf8str = bocu1_to_utf8( index->entry_word(ix) );
-      printf("  [%d/%d] %s\n", ix, index->_nindex, utf8str);
-      free((void *)utf8str);
-    }
-    if (ix < 0) continue;
-    if (ix >= index->_nindex) break;
-
-    PDICDatablock* datablock = new PDICDatablock(fp, index, ix);
-    datablock->iterate(&dump_to_vector, criteria);
-    delete datablock;
-  }
-not_found:
-  ;
-
-  return dump_result;
 }
 
 void dump_ej(PDICDatafield *datafield)

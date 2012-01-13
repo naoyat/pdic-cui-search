@@ -5,12 +5,15 @@
 #include <libgen.h>
 #include <strings.h>
 
+#include "Criteria.h"
 #include "PDICHeader.h"
 #include "PDICIndex.h"
 #include "PDICDatafield.h"
 #include "filemem.h"
 #include "timeutil.h"
 #include "util_stl.h"
+
+#include "charcode.h"
 
 #ifdef DEBUG
 #include "cout.h"
@@ -145,6 +148,65 @@ Dict::search_in_sarray(byte *needle)
   }
 
   return std::vector<int>(all(matched_offsets));
+}
+
+
+lookup_result_vec dump_result;
+
+void dump_to_vector(PDICDatafield *datafield)
+{
+  // vector<pair<string,string> > dump_result;
+  std::string entry_word = (char *)datafield->entry_word_utf8();
+  std::string jword = (char *)datafield->jword_utf8();
+
+  dump_result.push_back( std::make_pair(entry_word, jword) );
+}
+
+lookup_result_vec
+Dict::normal_lookup(byte *needle, bool exact_match)
+{
+  int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
+
+  Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
+
+  search_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
+  if (verbose_mode) {
+    std::cout << "result = " << result << std::endl;
+  }
+
+  int from, to;
+  if (result.first) {
+    from = result.second.first;// - 1; if (from < 0) from = 0;
+    if (bstrcmp(index->entry_word(from), criteria->needle) != 0) { --from; if (from < 0) from = 0; }
+    to = result.second.second;
+  } else {
+    from = result.second.second - 1; if (from < 0) goto not_found;
+    to = from;
+  }
+
+  if (verbose_mode) {
+    printf("lookup. from %d to %d, %d/%d...\n", from, to, to-from+1, index->_nindex);
+  }
+
+  dump_result.clear();
+  
+  for (int ix=from; ix<=to; ix++) {
+    if (verbose_mode) {
+      byte *utf8str = bocu1_to_utf8( index->entry_word(ix) );
+      printf("  [%d/%d] %s\n", ix, index->_nindex, utf8str);
+      free((void *)utf8str);
+    }
+    if (ix < 0) continue;
+    if (ix >= index->_nindex) break;
+
+    PDICDatablock* datablock = new PDICDatablock(this->fp, this->index, ix);
+    datablock->iterate(&dump_to_vector, criteria);
+    delete datablock;
+  }
+not_found:
+  ;
+
+  return dump_result;
 }
 
 void

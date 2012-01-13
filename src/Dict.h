@@ -16,6 +16,8 @@ class PDICIndex;
 #define SUFFIX_ENTRY_START  ".entry.st"
 #define SUFFIX_ENTRY_SARRAY ".entry.sf"
 
+typedef std::vector<std::pair<std::string,std::string> > lookup_result_vec;
+
 class Dict {
  public:
   FILE *fp;
@@ -39,6 +41,8 @@ public:
   void unload_additional_files();
   bool load_additional_files();
   std::vector<int> search_in_sarray(byte *needle);
+
+  lookup_result_vec normal_lookup(byte *needle, bool exact_match);
 };
 
 #endif;
