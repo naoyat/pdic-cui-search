@@ -15,8 +15,6 @@ inline unsigned int u16val(byte *data) { return *(unsigned short *)data; }
 inline unsigned int u32val(byte *data) { return *(unsigned long *)data; }
 inline unsigned long long u64val(byte *data) { return *(unsigned long long *)data; }
 
-char *indent(char *spacer, char *str);
-
 void *clone(void *data, size_t size, bool gc=true);
 byte *clone_cstr(byte *data, int length=0, bool gc=true);
 void free_cloned_buffer(void *ptr);

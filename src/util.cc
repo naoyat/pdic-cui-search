@@ -7,26 +7,6 @@
 #include "util_stl.h"
 #include "types.h"
 
-char *indent(char *spacer, char *src)
-{
-  int len_before = strlen(src);
-  int len_spacer = strlen(spacer);
-  // pass1
-  int nl = 0;
-  for (char *p=src; *p; ++p) {
-    if (*p == '\n') nl++;
-  }
-  int len_after = len_before + (1+nl)*len_spacer;
-  char *indented = (char *)malloc(len_after + 1); indented[len_after] = 0;
-
-  strcpy(indented, spacer); char *dest = indented + len_spacer;
-  for (char *p=src; *p; ++p) {
-    *(dest++) = *p;
-    if (*p == '\n') { strcpy(dest, spacer); dest += len_spacer; }
-  }
-  return indented;
-}
-
 std::set<void*> clone_ptrs;
 
 void free_cloned_buffer(void *ptr)
