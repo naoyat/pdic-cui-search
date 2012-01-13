@@ -37,10 +37,11 @@ std::map<std::string,int> nametable; // name -> dict_id
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
 
-bool emphasize_mode = false;
+bool color_mode = false;
 bool verbose_mode = false;
 bool more_newline = false;
 bool direct_dump_mode = false;
+bool whole_mode = false;
 int match_count;
 
 void shell_init()
@@ -299,13 +300,21 @@ bool do_command(char *cmdstr)
     printf("indirect dump mode.\n");
     direct_dump_mode = false;
   }
-  else if (cmd[0] == "emphasize") {
-    printf("emphasize mode.\n");
-    emphasize_mode = true;
+  else if (cmd[0] == "whole") {
+    printf("whole mode.\n");
+    whole_mode = true;
+  }
+  else if (cmd[0] == "entry") {
+    printf("entry mode.\n");
+    whole_mode = false;
+  }
+  else if (cmd[0] == "color") {
+    printf("color mode.\n");
+    color_mode = true;
   }
   else if (cmd[0] == "plain") {
     printf("plain mode.\n");
-    emphasize_mode = false;
+    color_mode = false;
   }
   else if (cmd[0] == "newline") {
     if (cmd.size() == 2) {
@@ -389,74 +398,45 @@ bool do_command(char *cmdstr)
     }
     */
   }
-  else if (cmd[0] == "make") {
-    if (cmd.size() == 2 && cmd[1] == "index") {
-      traverse(current_dict_ids, current_dict_id) {
-        Dict *dict = dicts[*current_dict_id];
-        dict->make_sarray_index();
-        //dict->load_sarray_index();
-      }
-    } else {
-      printf("[command] make index\n");
+  else if (cmd.size() == 2 && cmd[0] == "make" && cmd[1] == "toc") {
+    traverse(current_dict_ids, current_dict_id) {
+      Dict *dict = dicts[*current_dict_id];
+      dict->make_toc();
+      //dict->load_sarray_index();
     }
   }
   else if (cmd[0] == "dump") {
-    if (cmd.size() >= 2) {
-      if (current_dict_ids.size() == 0) {
-        printf("ERROR: no dictionary selected\n");
-      } else {
-        if (verbose_mode) {
-          std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
-        }
-        traverse(current_dict_ids, current_dict_id) {
-          PDICIndex *index = dicts[*current_dict_id]->index;
-          std::string what_to_dump = cmd[1];
-          if (what_to_dump == "header") {
-            index->header->dump();
-          } else if (what_to_dump == "index") {
-            index->dump();
-          } else if (what_to_dump == "datablock" && cmd.size() >= 3) {
-            int ix = atoi( cmd[2].c_str() );
-            index->iterate_datablock(ix, &dump_entry, NULL);
-          } else if (what_to_dump == "words") {
-            index->iterate_all_datablocks(&dump_entry, NULL);
-          } else if (what_to_dump == "count") {
-            printf("[%d]", *current_dict_id);
-            calculate_space_for_index(index);
-          } else if (what_to_dump == "all") {
-            index->iterate_all_datablocks(&dump_ej, NULL);
-          } else {
-            printf("ERROR: I don't know how to dump '%s'...\n", what_to_dump.c_str());
-          }
-        }
-      }
-    } else {
+    if (cmd.size() == 1) {
       printf("[command] dump {header|index|words|datablock <id>|all}\n");
-    }
-  }
-  /*
-  else if (cmd[0] == "dev") {
-    if (cmd.size() >= 2) {
-      if (current_dict_ids.size() == 0) {
-        printf("ERROR: no dictionary selected\n");
-      } else {
-        // std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
-        traverse(current_dict_ids, current_dict_id) {
-          PDICIndex *index = dicts[*current_dict_id]->index;
-          std::string subcmd = cmd[1];
-          if (subcmd == "makeindex") {
-            printf("[%d]", *current_dict_id);
-            make_index(index);
-          } else {
-            printf("ERROR: illegal command: '%s'...\n", subcmd.c_str());
-          }
+    } else if (current_dict_ids.size() == 0) {
+      printf("ERROR: no dictionary selected\n");
+    } else {
+      if (verbose_mode) {
+        std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
+      }
+      traverse(current_dict_ids, current_dict_id) {
+        PDICIndex *index = dicts[*current_dict_id]->index;
+        std::string what_to_dump = cmd[1];
+        if (what_to_dump == "header") {
+          index->header->dump();
+        } else if (what_to_dump == "index") {
+          index->dump();
+        } else if (what_to_dump == "datablock" && cmd.size() >= 3) {
+          int ix = atoi( cmd[2].c_str() );
+          index->iterate_datablock(ix, &dump_entry, NULL);
+        } else if (what_to_dump == "words") {
+          index->iterate_all_datablocks(&dump_entry, NULL);
+        } else if (what_to_dump == "count") {
+          printf("[%d]", *current_dict_id);
+          calculate_space_for_index(index);
+        } else if (what_to_dump == "all") {
+          index->iterate_all_datablocks(&dump_ej, NULL);
+        } else {
+          printf("ERROR: I don't know how to dump '%s'...\n", what_to_dump.c_str());
         }
       }
-    } else {
-      printf("[command] dev {makeindex}\n");
     }
   }
-  */
   else if (cmd[0] == "lookup") {
     do_lookup(cmdstr + 7);
   }
