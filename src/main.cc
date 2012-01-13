@@ -27,34 +27,42 @@ int main(int argc, char **argv)
 
     switch (line[0]) {
       case '.': // command mode
-        if (verbose_mode) {
-          printf("[COMMAND] %s\n", line+1);
+        if (linelen > 1) {
+          if (verbose_mode) {
+            printf("[COMMAND] %s\n", line+1);
+          }
+          looping = do_command(line+1);
         }
-        looping = do_command(line+1);
         break;
 
       case '!': // external shell mode
-        if (verbose_mode) {
-          printf("[EXTERNAL] %s\n", line+1);
+        if (linelen > 1) {
+          if (verbose_mode) {
+            printf("[EXTERNAL] %s\n", line+1);
+          }
+          system(line+1);
         }
-        system(line+1);
         break;
 
       case '*':
-        if (verbose_mode) {
-          printf("[LOOKUP<sarray>] %s\n", line+1);
+        if (linelen > 1) {
+          if (verbose_mode) {
+            printf("[LOOKUP<sarray>] %s\n", line+1);
+          }
+          do_sarray_lookup(line+1, linelen-1);
         }
-        do_sarray_lookup(line+1, linelen-1);
         break;
 
       case '/':
-        if (strchr(line+1,'/') == line + linelen - 1)  {
-          line[linelen-1] = 0;
-          if (verbose_mode) {
-            printf("[LOOKUP<regexp>] /%s/\n", line+1);
+        if (linelen >= 3) {
+          if (strchr(line+1,'/') == line + linelen - 1)  {
+            line[linelen-1] = 0;
+            if (verbose_mode) {
+              printf("[LOOKUP<regexp>] /%s/\n", line+1);
+            }
+            do_regexp_lookup(line+1, linelen-2);
+            break;
           }
-          do_regexp_lookup(line+1, linelen-2);
-          break;
         }
         // else fall thru
 
