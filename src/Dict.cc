@@ -260,9 +260,9 @@ Dict::make_toc()
   index->iterate_all_datablocks(&stock_entry_words, NULL);
 
   std::pair<int,int> time = time_usec();
-  printf("データ抽出: %d words, {%d + %d + %d + %d}; real:%d process:%d.\n",
+  printf("データ抽出: %d words, {%d + %d + %d + %d}; real:%.3fmsec process:%.3fmsec\n",
          (int)_toc.size(), _entry_buf_size, _jword_buf_size, _example_buf_size, _pron_buf_size,
-         time.first, time.second);
+         0.001*time.first, 0.001*time.second);
 
   time_reset();
 
@@ -318,7 +318,7 @@ Dict::make_toc()
   free((void *)pron_suffix_array);
 
   std::pair<int,int> time2 = time_usec();
-  printf("suffix array: {%d/%d %d/%d %d/%d %d/%d} ; real:%.3f process:%.3f.\n",
+  printf("suffix array: {%d/%d %d/%d %d/%d %d/%d} ; real:%.3fmsec process:%.3fmsec\n",
          this->entry_suffix_array_length, _entry_buf_offset,
          this->jword_suffix_array_length, _jword_buf_offset,
          this->example_suffix_array_length, _example_buf_offset,
