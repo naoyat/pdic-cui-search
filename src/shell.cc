@@ -37,6 +37,7 @@ std::map<std::string,int> nametable; // name -> dict_id
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
 
+extern bool separator_mode;
 extern bool verbose_mode;
 extern bool direct_dump_mode;
 extern bool full_search_mode;
@@ -290,6 +291,10 @@ bool do_command(char *cmdstr)
         direct_dump_mode = onoff;
         std::cout << "direct dump mode = " << onoff_str << std::endl;
       }
+      else if (cmd[1] == "separator") {
+        separator_mode = onoff;
+        std::cout << "separator mode = " << onoff_str << std::endl;
+      }
       else if (cmd[1] == "full" || cmd[1] == "full_search") {
         full_search_mode = onoff;
         std::cout << "full search mode = " << onoff_str << std::endl;
@@ -309,7 +314,7 @@ bool do_command(char *cmdstr)
       }
     } else {
       std::cout << "[command] set {limit} = <number>" << std::endl;
-      std::cout << "[command] set {verbose|direct|full|coloring|newline} = {on|off}" << std::endl;
+      std::cout << "[command] set {verbose|separator|direct|full|coloring|newline} = {on|off}" << std::endl;
     }
   }
   else if (cmd[0] == "add") {

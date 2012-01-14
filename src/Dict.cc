@@ -35,6 +35,7 @@ bool lookup_result_desc( const lookup_result& left, const lookup_result& right )
 
 extern std::vector<std::string> loadpaths;
 
+bool separator_mode = false;
 bool verbose_mode = false;
 bool direct_dump_mode = false;
 bool full_search_mode = false;
@@ -284,8 +285,8 @@ void dump_to_vector(PDICDatafield *datafield)
 lookup_result_vec
 Dict::normal_lookup(byte *needle, bool exact_match)
 {
-  if (verbose_mode) {
-    std::cout << "// LOOKUP \"" << needle << "\" in " << name << "..." << std::endl;
+  if (separator_mode) {
+    std::cout << "====== ^" << needle << (exact_match ? "$" : "") << " in " << name << " ======" << std::endl;
   }
 
   int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
@@ -386,8 +387,9 @@ Dict::sarray_lookup(byte *needle)
     std::cout << "//  → .make toc" << std::endl;
     return lookup_result_vec();
   }
-  if (verbose_mode) {
-    std::cout << "// SUFFIX ARRAY LOOKUP \"" << needle << "\" in " << name << "..." << std::endl;
+
+  if (separator_mode) {
+    std::cout << "====== \"" << needle << "\" in " << name << " ======" << std::endl;
   }
 
   lookup_result_vec result;
@@ -422,8 +424,9 @@ Dict::regexp_lookup(const RE2& re)
     std::cout << "//  → .make toc" << std::endl;
     return lookup_result_vec();
   }
-  if (verbose_mode) {
-    std::cout << "// REGEXP /" << re.pattern() << "/ in " << name << "..." << std::endl;
+
+  if (separator_mode) {
+    std::cout << "====== /" << re.pattern() << "/ in " << name << " ======" << std::endl;
   }
 
   lookup_result_vec result;
