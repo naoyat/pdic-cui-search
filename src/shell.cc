@@ -55,29 +55,31 @@ void shell_destroy()
   traverse(dicts, dict) delete *dict;
 }
 
-void load_rc()
+void load_rc(char *rcpath)
 {
-  char rcpath[128];
-  strncpy(rcpath, getenv("HOME"), 120);
-  strcat(rcpath, "/.pdicrc");
+  char buf[256];
+  if (!rcpath) {
+    strncpy(buf, getenv("HOME"), 119);
+    strcat(buf, "/.pdicrc");
+    rcpath = buf;
+  }
 
   FILE *fp = fopen(rcpath, "r");
   if (fp != NULL) {
-    char line[256];
-    while (fgets(line, 256, fp)) {
-      int linelen = strlen(line); line[--linelen] = 0;
+    while (fgets(buf, 256, fp)) {
+      int linelen = strlen(buf); buf[--linelen] = 0;
       if (linelen == 0) continue;
 
-      char *rem = strchr(line, ';');
-      if (rem) { *rem = 0; linelen = (int)(rem - line); }
+      char *rem = strchr(buf, ';');
+      if (rem) { *rem = 0; linelen = (int)(rem - buf); }
 
       while (linelen > 0) {
-        if (line[linelen-1] != ' ') break;
-        line[--linelen] = 0;
+        if (buf[linelen-1] != ' ') break;
+        buf[--linelen] = 0;
       }
       if (linelen == 0) continue;
 
-      do_command(line);
+      do_command(buf);
     }
   } else {
     std::cout << "// .pdicrc が見つかりません。" << std::endl;
