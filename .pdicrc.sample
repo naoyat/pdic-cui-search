@@ -21,4 +21,5 @@ use 英辞郎132
 set verbose = on
 set direct = on
 set coloring = on
+set full = on
 set limit = 100
