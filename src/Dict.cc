@@ -280,8 +280,9 @@ Dict::normal_lookup(byte *needle, bool exact_match)
   //Criteria *criteria;
   //if (index->header->major_version() >= HYPER6) {
   Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
-
-  bsearch_result_t result = index->bsearch_in_index(criteria->needle, exact_match);
+  byte *needle_for_index = criteria->needle_for_index ? criteria->needle_for_index : criteria->needle;
+  //printf("needle for index: {%s}\n", needle_for_index);
+  bsearch_result_t result = index->bsearch_in_index(needle_for_index, exact_match);
   if (verbose_mode) {
     //std::cout << "result = " << result << std::endl;
   }

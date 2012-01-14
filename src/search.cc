@@ -10,6 +10,9 @@
 #include "types.h"
 #include "dump.h"
 
+#include "bocu1.h"
+#include "utf8.h"
+
 #ifdef DEBUG
 int cmp_count;
 #endif
@@ -130,7 +133,8 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
 
   int needle_len = strlen((char *)needle);
 
-  int cmp = exact_match ? bstrcmp(buf+0, needle) : bstrncmp(buf+0, needle, needle_len);
+  int cmp = exact_match ? bstrcmp(buf+offsets[0], needle) : bstrncmp(buf+offsets[0], needle, needle_len);
+  //printf("buf+%d: {%s} vs {%s}\n", offsets[0], bocu1_to_utf8(buf+offsets[0]), bocu1_to_utf8(needle));
 #ifdef DEBUG
   ++cmp_count;
 #endif

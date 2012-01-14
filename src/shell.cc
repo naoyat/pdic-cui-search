@@ -128,7 +128,12 @@ void do_normal_lookup(char *needle, int needle_len)
 
   reset_match_count();
 
-  RE2 pattern((const char*)needle);
+  char needle_pattern[4+needle_len+1];
+  sprintf(needle_pattern, "(?i)%s", needle);
+  if (needle[needle_len-1] == '*') {
+    needle_pattern[4+needle_len-1] = 0;
+  }
+  RE2 pattern(needle_pattern);
   lookup_result_vec result = normal_lookup((byte *)needle, needle_len);
   lap_match_count();
 

@@ -11,6 +11,7 @@ class Criteria
 public:
   RE2   re2_pattern;
 
+  byte *needle_utf8, *needle_for_index_utf8;
   byte *needle, *needle_for_index;
   int   needle_size, needle_size_for_index;
   bool  exact_match;
