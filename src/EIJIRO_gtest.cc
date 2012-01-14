@@ -14,21 +14,20 @@ extern std::vector<Dict*> dicts;
 TEST(EIJIRO, sarray_loookup)
 {
   load_rc();
+  do_command((char *)"set direct = no");
+  do_command((char *)"set coloring = no");
 
   int dict_id = do_load("EIJI-132.DIC");
   ASSERT_TRUE( dict_id >= 0 );
 
   Dict *dict = dicts[dict_id];
 
-  lookup_result_vec result;
-  std::string entry_word, jword;
-
-  result = dict->sarray_lookup((byte *)"whose creativity");
+  lookup_result_vec result = dict->sarray_lookup((byte *)"whose creativity");
   EXPECT_EQ( 3, result.size() );
 
-  EXPECT_STREQ( "man whose creativity seems boundless", result[0].first.c_str() );
-  EXPECT_STREQ( "person whose creativity seems boundless", result[1].first.c_str() );
-  EXPECT_STREQ( "woman whose creativity seems boundless", result[2].first.c_str() );
+  EXPECT_STREQ( "man whose creativity seems boundless", (const char *)result[0].entry_word );
+  EXPECT_STREQ( "person whose creativity seems boundless", (const char *)result[1].entry_word );
+  EXPECT_STREQ( "woman whose creativity seems boundless", (const char *)result[2].entry_word );
 
   delete dict;
 }
@@ -36,16 +35,15 @@ TEST(EIJIRO, sarray_loookup)
 TEST(EIJIRO, EIJI_131)
 {
   load_rc();
+  do_command((char *)"set direct = no");
+  do_command((char *)"set coloring = no");
 
   int dict_id = do_load("EIJI-131.DIC");
   ASSERT_TRUE( dict_id >= 0 );
 
   Dict *dict = dicts[dict_id];
 
-  lookup_result_vec result;
-  std::string entry_word, jword;
-
-  result = dict->normal_lookup((byte *)"unhate", true);
+  lookup_result_vec result = dict->normal_lookup((byte *)"unhate", true);
   EXPECT_EQ( 0, result.size() );
 
   result = dict->normal_lookup((byte *)"claim without foundation", true);
@@ -59,30 +57,27 @@ TEST(EIJIRO, EIJI_131)
 TEST(Dict, EIJI_132)
 {
   load_rc();
+  do_command((char *)"set direct = no");
+  do_command((char *)"set coloring = no");
 
   int dict_id = do_load("EIJI-132.DIC");
   ASSERT_TRUE( dict_id >= 0 );
 
   Dict *dict = dicts[dict_id];
 
-  lookup_result_vec result;
-  std::string entry_word, jword;
-
-  result = dict->normal_lookup((byte *)"unhate", true);
+  lookup_result_vec result = dict->normal_lookup((byte *)"unhate", true);
   EXPECT_EQ( 1, result.size() );
-  entry_word = result[0].first;
-  jword = result[0].second;
-  EXPECT_STREQ( "unhate", entry_word.c_str() );
+
+  EXPECT_STREQ( "unhate", (const char *)result[0].entry_word );
   // 【他動】〜を憎むのをやめる、〜に対する憎しみを解く
-  EXPECT_STREQ( "【他動】\xef\xbd\x9eを憎むのをやめる、\xef\xbd\x9eに対する憎しみを解く", jword.c_str() );
+  EXPECT_STREQ( "【他動】\xef\xbd\x9eを憎むのをやめる、\xef\xbd\x9eに対する憎しみを解く", (const char *)result[0].jword );
 
   result = dict->normal_lookup((byte *)"claim without foundation", true);
   EXPECT_EQ( 1, result.size() );
-  entry_word = result[0].first;
-  jword = result[0].second;
-  EXPECT_STREQ( "claim without foundation", entry_word.c_str() );
+
+  EXPECT_STREQ( "claim without foundation", (const char *)result[0].entry_word );
   // 《a 〜》根拠のない主張
-  EXPECT_STREQ( "《a \xef\xbd\x9e》根拠のない主張", jword.c_str() );
+  EXPECT_STREQ( "《a \xef\xbd\x9e》根拠のない主張", (const char *)result[0].jword );
 
   delete dict;
 }

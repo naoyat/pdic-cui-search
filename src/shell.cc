@@ -205,7 +205,7 @@ lookup_result_vec normal_lookup(byte *needle, int needle_len)
     result = dicts[*current_dict_id]->normal_lookup((byte *)needle, exact_match);
     result_total.insert(result_total.end(), all(result));
   }
-  std::sort(all(result_total), lookup_result_desc);
+  std::sort(all(result_total), lookup_result_asc);
 
   return result_total;
 }
@@ -218,7 +218,7 @@ lookup_result_vec sarray_lookup(byte *needle, int needle_len)
     result = dicts[*current_dict_id]->sarray_lookup(needle);
     result_total.insert(result_total.end(), all(result));
   }
-  std::sort(all(result_total), lookup_result_desc);
+  std::sort(all(result_total), lookup_result_asc);
 
   return result_total;
 }
@@ -231,7 +231,7 @@ lookup_result_vec regexp_lookup(const RE2& pattern)
     result = dicts[*current_dict_id]->regexp_lookup(pattern);
     result_total.insert(result_total.end(), all(result));
   }
-  std::sort(all(result_total), lookup_result_desc);
+  std::sort(all(result_total), lookup_result_asc);
 
   return result_total;
 }
