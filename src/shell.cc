@@ -431,36 +431,10 @@ bool do_command(char *cmdstr)
     do_regexp_lookup(cmdstr + 7);
   }
   else {
-    printf("ERROR: unknown command, '%s'\n", cmd[0].c_str());
+    std::cout << "// [ERROR] 未知のコマンド '" << cmd[0] << "' に遭遇..." << std::endl;
   }
 
   free_all_cloned_buffers();
 
   return true;
-}
-
-int _wordcount = 0;
-int _wordsize_sum = 0;
-
-int calculate_space_for_index(PDICIndex *index)
-{
-  time_reset();
-
-  _wordcount = 0;
-  _wordsize_sum = 0;
-  //_words.clear();
-
-  index->iterate_all_datablocks(&count_word, NULL);
-
-  std::pair<int,int> time = time_usec();
-
-  printf("%d words, %d bytes; %.2f b/w; real:%d process:%d.\n", _wordcount, _wordsize_sum, (double)_wordsize_sum/_wordcount, time.first, time.second);
-
-  return _wordsize_sum;
-}
-
-void count_word(PDICDatafield *datafield)
-{
-  ++_wordcount;
-  _wordsize_sum += (datafield->entry_index_size + 1);
 }
