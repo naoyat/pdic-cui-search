@@ -73,8 +73,13 @@ private:
 public:
   lookup_result_vec normal_lookup(byte *needle, bool exact_match);
   lookup_result_vec sarray_lookup(byte *needle);
-  lookup_result_vec regexp_lookup(const RE2& pattern);
+  lookup_result_vec regexp_lookup(const RE2& re);
 };
+
+// match count
+void reset_match_count();
+void lap_match_count();
+void say_match_count();
 
 // render
 void render_ej(lookup_result result, const RE2& re);
