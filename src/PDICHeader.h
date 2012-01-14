@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include "util.h" // sNNval(), uNNval()
+#include "types.h"
 
 #define OLDDIC  1 // PDIC ver 1.x : OLDDIC
 #define NEWDIC1 2 // PDIC ver 2.x : NEWDIC1
@@ -92,8 +93,8 @@ public:
   void dump();
 
 public:
-  unsigned char* headername() { return filemem + OFS_HEADERNAME; }
-  unsigned char* dictitle() { return filemem + OFS_DICTITLE; }
+  byte* headername() { return filemem + OFS_HEADERNAME; }
+  byte* dictitle() { return filemem + OFS_DICTITLE; }
 
   int lword() {
     // HYPER6.10: { 1024 }
@@ -237,7 +238,7 @@ public:
     else
       return 0;
   }
-  unsigned char *cypt() {
+  byte *cypt() {
     if (_major_version >= HYPER6)
       return filemem + OFS_HYPER6_CYPT;
     else
@@ -249,13 +250,13 @@ public:
     else
       return 0;
   }
-  unsigned char *dicident() {
+  byte *dicident() {
     if (_major_version >= HYPER5)
       return filemem + OFS_HYPER5_DICIDENT;
     else
       return NULL;
   }
-  unsigned char *derefid() {
+  byte *derefid() {
     if (_major_version == HYPER6 && _minor_version < 10)
       return filemem + OFS_HYPER6_DEREFID;
     else

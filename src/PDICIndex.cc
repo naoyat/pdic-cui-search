@@ -48,22 +48,19 @@ PDICIndex::load_index()
   entry_word_offsets = new int[_nindex];
   entry_word_lengths = new int[_nindex];
   phys_ids = new int[_nindex];
-  //entry_words = (unsigned char **)malloc(sizeof(unsigned char *)*nindex);
-  //phys_ids = (int *)malloc(sizeof(int)*nindex);
 
   int actual_nindex = 0;
   for (int ix=0,ofs=0; ix<_nindex && ofs<index_size; ++ix) {
-    //nindex; int ofs=0; ofs<index_size; ) {
     int phys_id;
     if (index_blkbit == 0) {
       phys_id = s16val(index_buf + ofs); ofs += 2;
     } else {
       phys_id = s32val(index_buf + ofs); ofs += 4;
     }
-    
+
     if (ofs >= index_size) break;
 
-    unsigned char *entry_word = index_buf + ofs; // cstr
+    byte *entry_word = index_buf + ofs; // cstr
     int entry_word_length = strlen((char *)entry_word);
 
     if (phys_ids[ix] == 0 && entry_word_length == 0) break;

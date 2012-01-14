@@ -24,7 +24,6 @@ public:
   bool _isBOCU1;
 
 public:
-  //unsigned char **entry_words;
   int* entry_word_offsets;
   int* entry_word_lengths;
   int* phys_ids;
@@ -35,10 +34,10 @@ public:
   ~PDICIndex();
 
 public:
-  unsigned char *entry_word(int ix) { return index_buf + entry_word_offsets[ix]; }
+  byte *entry_word(int ix) { return index_buf + entry_word_offsets[ix]; }
   unsigned int datablock_offset(int ix);
   unsigned int datablock_block_size() { return header->block_size(); }
-  bsearch_result_t bsearch_in_index(unsigned char *needle, bool exact_match) {
+  bsearch_result_t bsearch_in_index(byte *needle, bool exact_match) {
     return search(index_buf, entry_word_offsets, _nindex, needle, exact_match);
   }
   void dump();

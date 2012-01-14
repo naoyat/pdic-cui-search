@@ -12,6 +12,7 @@
 #include "util.h"
 #include "bocu1.h"
 #include "charcode.h"
+#include "types.h"
 
 PDICDatablock::PDICDatablock(byte *filemem, PDICIndex *index, int ix)
 {
@@ -35,17 +36,14 @@ PDICDatablock::PDICDatablock(byte *filemem, PDICIndex *index, int ix)
 void
 PDICDatablock::iterate(action_proc *action, Criteria *criteria)
 {
-  unsigned char entry_word[1024]; // （圧縮見出し語の伸長用）見出し語バッファ。Ver6でlword=1024なの
-  
-  //  unsigned char *top_word;
-  //  int top_word_length = 0;
+  byte entry_word[1024]; // （圧縮見出し語の伸長用）見出し語バッファ。Ver6でlword=1024なの
 
   for (byte *pos=datablock_start,*endpos=pos+datablock_size; pos<endpos; ) {
     bool matched = false;
 
     // +0
     int field_length, compress_length, entry_word_attrib;
-    unsigned char *entry_word_compressed;
+    byte *entry_word_compressed;
     int entry_word_compressed_size;
 
     if (_is4byte) {
