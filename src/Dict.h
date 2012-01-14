@@ -59,10 +59,12 @@ public:
   PDICIndex *index;
   Toc  *toc;
   int   toc_length;
-  byte *entry_buf, *jword_buf;
-  std::map<int,int> entry_start_rev, jword_start_rev;
+  byte *entry_buf, *jword_buf, *example_buf, *pron_buf;
+  std::map<int,int> entry_start_rev, jword_start_rev, example_start_rev, pron_start_rev;
   int  *entry_suffix_array, entry_suffix_array_length;
   int  *jword_suffix_array, jword_suffix_array_length;
+  int  *example_suffix_array, example_suffix_array_length;
+  int  *pron_suffix_array, pron_suffix_array_length;
   
 public:
   Dict(const std::string& name, byte *filemem);
@@ -81,6 +83,12 @@ private:
   }
   std::set<int> search_in_jword_sarray(byte *needle) {
     return this->search_in_sarray(jword_buf, jword_start_rev, jword_suffix_array, jword_suffix_array_length, needle);
+  }
+  std::set<int> search_in_example_sarray(byte *needle) {
+    return this->search_in_sarray(example_buf, example_start_rev, example_suffix_array, example_suffix_array_length, needle);
+  }
+  std::set<int> search_in_pron_sarray(byte *needle) {
+    return this->search_in_sarray(pron_buf, pron_start_rev, pron_suffix_array, pron_suffix_array_length, needle);
   }
 public:
   lookup_result_vec normal_lookup(byte *needle, bool exact_match);

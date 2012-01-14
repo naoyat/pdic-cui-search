@@ -87,6 +87,10 @@ Dict::Dict(const std::string& name, byte *filemem)//, const std::string& path)
   this->entry_suffix_array = (int *)NULL;
   this->jword_buf = (byte *)NULL;
   this->jword_suffix_array = (int *)NULL;
+  this->example_buf = (byte *)NULL;
+  this->example_suffix_array = (int *)NULL;
+  this->pron_buf = (byte *)NULL;
+  this->pron_suffix_array = (int *)NULL;
 
   _suffix = new char[name.size()+1];
   strcpy(_suffix, basename((char *)name.c_str()));
@@ -110,92 +114,116 @@ Dict::~Dict()
 
 // global (only for callback routines)
 byte *_entry_buf = NULL; // 全ての見出し語（に'\0'を付加したデータ）を結合したもの
-byte *_jword_buf = NULL; // 全ての見出し語（に'\0'を付加したデータ）を結合したもの
+byte *_jword_buf = NULL; // 全ての訳語（〃
+byte *_example_buf = NULL; // 全ての用例（〃
+byte *_pron_buf = NULL; // 全ての発音記号（〃
 int _entry_buf_size = 0, _entry_buf_offset = 0;
 int _jword_buf_size = 0, _jword_buf_offset = 0;
+int _example_buf_size = 0, _example_buf_offset = 0;
+int _pron_buf_size = 0, _pron_buf_offset = 0;
 int _count = 0;
 std::vector<Toc> _toc; // 各見出し語の開始位置など(entry_buf + entry_start_pos[i])
 
 void estimate_buf_size(PDICDatafield *datafield)
 {
   byte *entry_utf8 = datafield->entry_word_utf8();
-  if (entry_utf8) {
+  if (entry_utf8 && entry_utf8[0]) {
     _entry_buf_size += strlen((char *)datafield->entry_word_utf8()) + 1;
-  } else {
-    ++_entry_buf_size;
   }
 
   byte *jword_utf8 = datafield->jword_utf8();
-  if (jword_utf8) {
+  if (jword_utf8 && jword_utf8[0]) {
     _jword_buf_size += strlen((char *)datafield->jword_utf8()) + 1;
-  } else {
-    ++_jword_buf_size;
+  }
+
+  byte *example_utf8 = datafield->example_utf8();
+  if (example_utf8 && example_utf8[0]) {
+    _example_buf_size += strlen((char *)datafield->example_utf8()) + 1;
+  }
+
+  byte *pron_utf8 = datafield->pron_utf8();
+  if (pron_utf8 && pron_utf8[0]) {
+    _pron_buf_size += strlen((char *)datafield->pron_utf8()) + 1;
   }
 
   ++_count;
-  if (_count & 10000 == 0) {
-    printf("\r%d %d\n", _entry_buf_size, _jword_buf_size);
+
+  if (_count & 1000 == 0) {
+    printf("%9d %9d %9d %9d\r", _entry_buf_size, _jword_buf_size, _example_buf_size, _pron_buf_size);
   }
 }
+
 void stock_entry_words(PDICDatafield *datafield)
 {
+  Toc toc;
+
+  toc.pdic_datafield_pos = datafield->start_pos;
+
   byte *entry_utf8 = datafield->entry_word_utf8();
-  int entry_utf8_memsize;
   if (entry_utf8 && entry_utf8[0]) {
-    entry_utf8_memsize = strlen((char *)entry_utf8) + 1;
+    int entry_utf8_memsize = strlen((char *)entry_utf8) + 1;
+    memcpy(_entry_buf + _entry_buf_offset, entry_utf8, entry_utf8_memsize); // returns the position at \0
+    toc.entry_start_pos = _entry_buf_offset;
+    _entry_buf_offset += entry_utf8_memsize;
   } else {
-    entry_utf8 = (byte*)"";
-    entry_utf8_memsize = 1;
-  }
-  if (_entry_buf_offset + entry_utf8_memsize > _entry_buf_size) {
-    printf("[entry] memory over at #%d (%s)\n", (int)_toc.size(), entry_utf8);
-    return;
+    toc.entry_start_pos = 0;
   }
 
   byte *jword_utf8 = datafield->jword_utf8();
-  int jword_utf8_memsize;
   if (jword_utf8 && jword_utf8[0]) {
-    jword_utf8_memsize = strlen((char *)jword_utf8) + 1;
+    int jword_utf8_memsize = strlen((char *)jword_utf8) + 1;
+    memcpy(_jword_buf + _jword_buf_offset, jword_utf8, jword_utf8_memsize); // returns the position at \0
+    toc.jword_start_pos = _jword_buf_offset;
+    _jword_buf_offset += jword_utf8_memsize;
   } else {
-    jword_utf8 = (byte*)"";
-    jword_utf8_memsize = 1;
-  }
-  if (_jword_buf_offset + jword_utf8_memsize > _jword_buf_size) {
-    printf("[jword] memory over at #%d (%s)\n", (int)_toc.size(), jword_utf8);
-    return;
+    toc.jword_start_pos = 0;
   }
 
-  _toc.push_back((Toc){datafield->start_pos, _entry_buf_offset, _jword_buf_offset, 0, 0});
+  byte *example_utf8 = datafield->example_utf8();
+  if (example_utf8 && example_utf8[0]) {
+    int example_utf8_memsize = strlen((char *)example_utf8) + 1;
+    memcpy(_example_buf + _example_buf_offset, example_utf8, example_utf8_memsize); // returns the position at \0
+    toc.example_start_pos = _example_buf_offset;
+    _example_buf_offset += example_utf8_memsize;
+  } else {
+    toc.example_start_pos = 0;
+  }
 
-  // _entry_buf に書き足し
-  memcpy(_entry_buf + _entry_buf_offset, entry_utf8, entry_utf8_memsize); // returns the position at \0
-  _entry_buf_offset += entry_utf8_memsize;
+  byte *pron_utf8 = datafield->pron_utf8();
+  if (pron_utf8 && pron_utf8[0]) {
+    int pron_utf8_memsize = strlen((char *)pron_utf8) + 1;
+    memcpy(_pron_buf + _pron_buf_offset, pron_utf8, pron_utf8_memsize); // returns the position at \0
+    toc.pron_start_pos = _pron_buf_offset;
+    _pron_buf_offset += pron_utf8_memsize;
+  } else {
+    toc.pron_start_pos = 0;
+  }
 
-  memcpy(_jword_buf + _jword_buf_offset, jword_utf8, jword_utf8_memsize); // returns the position at \0
-  _jword_buf_offset += jword_utf8_memsize;
+  _toc.push_back(toc);
 }
 
 int
 Dict::make_toc()
 {
-  std::cout << "インデックスを作成します..." << std::endl;
+  std::cout << name << ": インデックスを作成します..." << std::endl;
   time_reset();
 
   // initialize
-  _toc.clear();
 
+  //
+  // PASS1: 先に必要なメモリ量を計算してしまう
+  //
   _count = 0;
-  _entry_buf_size = _jword_buf_size = 1;
+  _entry_buf_size = _jword_buf_size = _example_buf_size = _pron_buf_size = 1;
+
   index->iterate_all_datablocks(&estimate_buf_size, NULL);
   //printf("サイズ: entry:%d jword:%d\n", _entry_buf_size, _jword_buf_size);
-  
+
   _entry_buf = (byte *)malloc(_entry_buf_size);
   if (!_entry_buf) {
     printf("entry_buf is not allocated\n");
     return -1;
   }
-  _entry_buf_offset = 0;
-  (_entry_buf)[_entry_buf_offset++] = 0;
 
   _jword_buf = (byte *)malloc(_jword_buf_size);
   if (!_jword_buf) {
@@ -203,25 +231,47 @@ Dict::make_toc()
     free((void *)_entry_buf);
     return -1;
   }
-  _jword_buf_offset = 0;
-  (_jword_buf)[_jword_buf_offset++] = 0;
+
+  _example_buf = (byte *)malloc(_example_buf_size);
+  if (!_example_buf) {
+    printf("example_buf is not allocated\n");
+    free((void *)_entry_buf);
+    free((void *)_jword_buf);
+    return -1;
+  }
+
+  _pron_buf = (byte *)malloc(_pron_buf_size);
+  if (!_pron_buf) {
+    printf("pron_buf is not allocated\n");
+    free((void *)_entry_buf);
+    free((void *)_jword_buf);
+    free((void *)_example_buf);
+    return -1;
+  }
+
+  //
+  // PASS2: 全てのデータブロックから全ての単語データを抽出
+  //
+  _toc.clear();
+
+  _entry_buf[0] = _jword_buf[0] = _example_buf[0] = _pron_buf[0] = 0;
+  _entry_buf_offset = _jword_buf_offset = _example_buf_offset = _pron_buf_offset = 1;
 
   index->iterate_all_datablocks(&stock_entry_words, NULL);
 
   std::pair<int,int> time = time_usec();
-  printf("%d words, {%d + %d + ...}; real:%d process:%d.\n",
-         (int)_toc.size(), _entry_buf_size, _jword_buf_size,
+  printf("データ抽出: %d words, {%d + %d + %d + %d}; real:%d process:%d.\n",
+         (int)_toc.size(), _entry_buf_size, _jword_buf_size, _example_buf_size, _pron_buf_size,
          time.first, time.second);
 
   time_reset();
 
-  std::pair<int*,int> entry_sarray = make_light_suffix_array(_entry_buf, _entry_buf_size);
-  int *entry_suffix_array = entry_sarray.first;
-  int entry_suffix_array_length = entry_sarray.second;
-  std::pair<int*,int> jword_sarray = make_light_suffix_array(_jword_buf, _jword_buf_size);
-  int *jword_suffix_array = jword_sarray.first;
-  int jword_suffix_array_length = jword_sarray.second;
+  //
+  // 保存
+  //
+  std::string savepath = this->suffix();
 
+  // TOC
   int toc_len = _toc.size();
   Toc *toc = (Toc *)malloc(sizeof(Toc)*toc_len);
   if (!toc) {
@@ -230,24 +280,52 @@ Dict::make_toc()
   }
   for (int i=0,c=_toc.size(); i<c; ++i) toc[i] = _toc[i];
 
-
-  std::string savepath = this->suffix();
   savemem((savepath + SX_TOC).c_str(), (byte *)toc, sizeof(Toc)*_toc.size());
-  savemem((savepath + SX_ENTRY).c_str(), _entry_buf, _entry_buf_size);
-  savemem((savepath + SX_ENTRY_SARRAY).c_str(), (byte *)entry_suffix_array, sizeof(int)*entry_suffix_array_length);
-  savemem((savepath + SX_JWORD).c_str(), _jword_buf, _jword_buf_size);
-  savemem((savepath + SX_JWORD_SARRAY).c_str(), (byte *)jword_suffix_array, sizeof(int)*jword_suffix_array_length);
-
-  free((void *)_entry_buf); _entry_buf = NULL;
   free((void *)toc);
-  free((void *)entry_suffix_array);
-  free((void *)jword_suffix_array);
   _toc.clear();
 
-  this->load_additional_files();
+  // entry sarray
+  std::pair<int*,int> entry_sarray = make_light_suffix_array(_entry_buf, _entry_buf_size);
+  int *entry_suffix_array = entry_sarray.first;
+  int entry_suffix_array_length = entry_sarray.second;
+  savemem((savepath + SX_ENTRY).c_str(), _entry_buf, _entry_buf_size);
+  savemem((savepath + SX_ENTRY_SARRAY).c_str(), (byte *)entry_suffix_array, sizeof(int)*entry_suffix_array_length);
+  free((void *)_entry_buf); _entry_buf = NULL;
+  free((void *)entry_suffix_array);
+
+  std::pair<int*,int> jword_sarray = make_light_suffix_array(_jword_buf, _jword_buf_size);
+  int *jword_suffix_array = jword_sarray.first;
+  int jword_suffix_array_length = jword_sarray.second;
+  savemem((savepath + SX_JWORD).c_str(), _jword_buf, _jword_buf_size);
+  savemem((savepath + SX_JWORD_SARRAY).c_str(), (byte *)jword_suffix_array, sizeof(int)*jword_suffix_array_length);
+  free((void *)_jword_buf); _jword_buf = NULL;
+  free((void *)jword_suffix_array);
+
+  std::pair<int*,int> example_sarray = make_light_suffix_array(_example_buf, _example_buf_size);
+  int *example_suffix_array = example_sarray.first;
+  int example_suffix_array_length = example_sarray.second;
+  savemem((savepath + SX_EXAMPLE).c_str(), _example_buf, _example_buf_size);
+  savemem((savepath + SX_EXAMPLE_SARRAY).c_str(), (byte *)example_suffix_array, sizeof(int)*example_suffix_array_length);
+  free((void *)_example_buf); _example_buf = NULL;
+  free((void *)example_suffix_array);
+
+  std::pair<int*,int> pron_sarray = make_light_suffix_array(_pron_buf, _pron_buf_size);
+  int *pron_suffix_array = pron_sarray.first;
+  int pron_suffix_array_length = pron_sarray.second;
+  savemem((savepath + SX_PRON).c_str(), _pron_buf, _pron_buf_size);
+  savemem((savepath + SX_PRON_SARRAY).c_str(), (byte *)pron_suffix_array, sizeof(int)*pron_suffix_array_length);
+  free((void *)_pron_buf); _pron_buf = NULL;
+  free((void *)pron_suffix_array);
 
   std::pair<int,int> time2 = time_usec();
-  printf("%d/%d ; real:%d process:%d.\n", this->entry_suffix_array_length, _entry_buf_offset, time2.first, time2.second);
+  printf("suffix array: {%d/%d %d/%d %d/%d %d/%d} ; real:%.3f process:%.3f.\n",
+         this->entry_suffix_array_length, _entry_buf_offset,
+         this->jword_suffix_array_length, _jword_buf_offset,
+         this->example_suffix_array_length, _example_buf_offset,
+         this->pron_suffix_array_length, _pron_buf_offset,
+         0.001*time2.first, 0.001*time2.second);
+
+  this->load_additional_files();
 
   return toc_len;
 }
@@ -364,9 +442,9 @@ Dict::search_in_sarray(byte *buf, std::map<int,int>& rev, int *sarray, int sarra
           render_ej( (lookup_result){
               (byte*)entry_buf + toc[word_id].entry_start_pos,
                   (byte*)jword_buf + toc[word_id].jword_start_pos,
-                  NULL,
-                  NULL},
-                     pattern );
+                  (byte*)example_buf + toc[word_id].example_start_pos,
+                  (byte*)pron_buf + toc[word_id].pron_start_pos},
+            pattern );
         //entry_word,(byte*)NULL), pattern );
         //std::cout << "- " << head << std::endl;
         } else {
@@ -400,15 +478,19 @@ Dict::sarray_lookup(byte *needle)
   if (full_search_mode) {
     std::set<int> jword_matches = this->search_in_jword_sarray(needle);
     matched_word_ids.insert(all(jword_matches));
+    std::set<int> example_matches = this->search_in_example_sarray(needle);
+    matched_word_ids.insert(all(example_matches));
+    std::set<int> pron_matches = this->search_in_pron_sarray(needle);
+    matched_word_ids.insert(all(pron_matches));
   }
 
   if (!direct_dump_mode) {
     traverse(matched_word_ids,word_id) {
       result.push_back( (lookup_result){
-            (byte*)entry_buf + toc[*word_id].entry_start_pos,
+          (byte*)entry_buf + toc[*word_id].entry_start_pos,
                 (byte*)jword_buf + toc[*word_id].jword_start_pos,
-                NULL,
-                NULL} );
+                (byte*)example_buf + toc[*word_id].example_start_pos,
+                (byte*)pron_buf + toc[*word_id].pron_start_pos });
     }
     _match_count += matched_word_ids.size();
   }
@@ -435,11 +517,17 @@ Dict::regexp_lookup(const RE2& re)
   for (int i=0; i<toc_length; ++i) {
     const char *entry_word = (const char *)entry_buf + toc[i].entry_start_pos;
     const char *jword = (const char *)jword_buf + toc[i].jword_start_pos;
-    if (RE2::PartialMatch(entry_word, re) || (full_search_mode && RE2::PartialMatch(jword, re))) {
+    const char *example = (const char *)example_buf + toc[i].example_start_pos;
+    const char *pron = (const char *)pron_buf + toc[i].pron_start_pos;
+    if (RE2::PartialMatch(entry_word, re)
+        || (full_search_mode && jword[0] && RE2::PartialMatch(jword, re))
+        || (full_search_mode && example[0] && RE2::PartialMatch(example, re))
+        || (full_search_mode && pron[0] && RE2::PartialMatch(pron, re))
+        ) {
       if (direct_dump_mode) {
-        render_ej( (lookup_result){(byte*)entry_word,(byte*)jword,NULL,NULL}, re );
+        render_ej( (lookup_result){(byte*)entry_word,(byte*)jword,(byte*)example,(byte*)pron}, re );
       } else {
-        result.push_back( (lookup_result){(byte*)entry_word,(byte*)jword,NULL,NULL} );
+        result.push_back( (lookup_result){(byte*)entry_word,(byte*)jword,(byte*)example,(byte*)pron} );
       }
       ++matched_entries_count;
     }
@@ -468,6 +556,14 @@ Dict::unload_additional_files()
     unloadmem((byte *)jword_buf);
     jword_buf = NULL;
   }
+  if (example_buf) {
+    unloadmem((byte *)example_buf);
+    example_buf = NULL;
+  }
+  if (pron_buf) {
+    unloadmem((byte *)pron_buf);
+    pron_buf = NULL;
+  }
   
   if (entry_suffix_array) {
     unloadmem((byte *)entry_suffix_array);
@@ -476,6 +572,14 @@ Dict::unload_additional_files()
   if (jword_suffix_array) {
     unloadmem((byte *)jword_suffix_array);
     jword_suffix_array = (int *)NULL;
+  }
+  if (example_suffix_array) {
+    unloadmem((byte *)example_suffix_array);
+    example_suffix_array = (int *)NULL;
+  }
+  if (pron_suffix_array) {
+    unloadmem((byte *)pron_suffix_array);
+    pron_suffix_array = (int *)NULL;
   }
 }
 
@@ -491,11 +595,25 @@ Dict::load_additional_files()
       this->toc = (Toc *)loadmem((path + SX_TOC).c_str());
       if (this->toc) {
         this->toc_length = mem_size((byte *)this->toc) / sizeof(Toc);
+
         this->entry_start_rev.clear();
         this->jword_start_rev.clear();
+        this->example_start_rev.clear();
+        this->pron_start_rev.clear();
+
         for (int i=0; i<this->toc_length; ++i) {
-          entry_start_rev[ this->toc[i].entry_start_pos ] = i;
-          jword_start_rev[ this->toc[i].jword_start_pos ] = i;
+          if (this->toc[i].entry_start_pos) {
+            entry_start_rev[ this->toc[i].entry_start_pos ] = i;
+          }
+          if (this->toc[i].jword_start_pos) {
+            jword_start_rev[ this->toc[i].jword_start_pos ] = i;
+          }
+          if (this->toc[i].example_start_pos) {
+            example_start_rev[ this->toc[i].example_start_pos ] = i;
+          }
+          if (this->toc[i].pron_start_pos) {
+            pron_start_rev[ this->toc[i].pron_start_pos ] = i;
+          }
         }
       }
     }
@@ -505,6 +623,12 @@ Dict::load_additional_files()
     }
     if (!this->jword_buf) {
       this->jword_buf = (byte *)loadmem((path + SX_JWORD).c_str());
+    }
+    if (!this->example_buf) {
+      this->example_buf = (byte *)loadmem((path + SX_EXAMPLE).c_str());
+    }
+    if (!this->pron_buf) {
+      this->pron_buf = (byte *)loadmem((path + SX_PRON).c_str());
     }
 
     if (!this->entry_suffix_array) {
@@ -517,6 +641,18 @@ Dict::load_additional_files()
       this->jword_suffix_array = (int *)loadmem((path + SX_JWORD_SARRAY).c_str());
       if (this->jword_suffix_array) {
         this->jword_suffix_array_length = mem_size((byte *)this->jword_suffix_array) / sizeof(int);
+      }
+    }
+    if (!this->example_suffix_array) {
+      this->example_suffix_array = (int *)loadmem((path + SX_EXAMPLE_SARRAY).c_str());
+      if (this->example_suffix_array) {
+        this->example_suffix_array_length = mem_size((byte *)this->example_suffix_array) / sizeof(int);
+      }
+    }
+    if (!this->pron_suffix_array) {
+      this->pron_suffix_array = (int *)loadmem((path + SX_PRON_SARRAY).c_str());
+      if (this->pron_suffix_array) {
+        this->pron_suffix_array_length = mem_size((byte *)this->pron_suffix_array) / sizeof(int);
       }
     }
   }
@@ -538,11 +674,11 @@ void render_ej(lookup_result result, const RE2& re)
     //std::cout << "\x1b[4m" << entry_word << "\x1b[24m" << std::endl; // underline
     std::cout << "\x1b[34m"; // <blue>
     std::cout << "\x1b[1m" << entry_word << "\x1b[22m"; // <bold>entry_word</bold>
-    if (result.pron) std::cout << " [" << result.pron << "]";
+    if (result.pron && result.pron[0]) std::cout << " [" << result.pron << "]";
     std::cout << "\x1b[39m"; // </blue>
   } else {
     std::cout << entry_word;
-    if (result.pron) std::cout << " [" << result.pron << "]";
+    if (result.pron && result.pron[0]) std::cout << " [" << result.pron << "]";
   }
   std::cout << std::endl;
 
@@ -557,7 +693,7 @@ void render_ej(lookup_result result, const RE2& re)
     }
     std::cout << jword << std::endl;
   }
-  if (result.example) {
+  if (result.example && result.example[0]) {
     std::string example(indent + (const char *)result.example);
     RE2::GlobalReplace(&example, "\n", "\n"+indent);
     std::cout << example << std::endl;
