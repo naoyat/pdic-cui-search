@@ -10,6 +10,8 @@ extern bool verbose_mode;
 
 int main(int argc, char **argv)
 {
+  std::cout << "PDIC CUI Search ver 0.5 (c)2012 @naoya_t. All Rights Reserved." << std::endl;
+  std::cout << "読み込み中..." << std::endl;
   shell_init();
 
   if (argc >= 2) {
@@ -77,6 +79,6 @@ int main(int argc, char **argv)
 
   shell_destroy();
 
-  printf("bye.\n");
+  std::cout << "bye!" << std::endl;
   return 0;
 }
