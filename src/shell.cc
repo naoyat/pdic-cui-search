@@ -81,7 +81,7 @@ void load_rc()
       do_command(line);
     }
   } else {
-    printf(".pdicrc not found\n");
+    std::cout << "// .pdicrc が見つかりません。" << std::endl;
   }
   fclose(fp);
 }
@@ -99,7 +99,7 @@ std::vector<int> resolve_aliases(const std::string& name)
       dict_ids.insert(dict_ids.end(), all(ids));
     }
   } else {
-    printf("ERROR: '%s' not found.\n", name.c_str());
+    std::cout << "// [ERROR] " << name << " が見つかりません。" << std::endl;
   }
 
   return dict_ids;
@@ -118,84 +118,70 @@ bool do_use(std::string name)
   }
 }
 
-void do_lookup(char *needle, int needle_len)
+void do_normal_lookup(char *needle, int needle_len)
 {
   if (!needle_len) needle_len = strlen(needle);
 
-  if (verbose_mode) {
-    if (current_dict_ids.size() == 0) {
-      printf("no dictionary selected\n");
-      return;
-    }
-    std::cout << "LOOKUP: " << current_dict_name << " " << current_dict_ids << std::endl;
+  if (current_dict_ids.size() == 0) {
+    std::cout << "// 辞書が選択されていません。" << std::endl;
+    return;
   }
 
-  match_count = 0;
+  reset_match_count();
+
   RE2 pattern((const char*)needle);
   lookup_result_vec result = normal_lookup((byte *)needle, needle_len);
+  lap_match_count();
 
-  int match_count_at_end = match_count;
-  if (!direct_dump_mode) traverse(result, it) render_ej(*it, pattern);
-
-  if (verbose_mode) {
-    std::cout << "// matched " << match_count_at_end << " item(s)." << std::endl;
+  if (!direct_dump_mode) {
+    traverse(result, it) render_ej(*it, pattern);
   }
+  say_match_count();
 }
 
 void do_sarray_lookup(char *needle, int needle_len)
 {
   if (!needle_len) needle_len = strlen(needle);
-
   if (needle[needle_len-1] == '*') {
     needle[needle_len-1] = 0;
   }
 
-  if (verbose_mode) {
-    if (current_dict_ids.size() == 0) {
-      printf("no dictionary selected\n");
-      return;
-    }
-    std::cout << "SARRAY: " << current_dict_name << " " << current_dict_ids << std::endl;
+  if (current_dict_ids.size() == 0) {
+    std::cout << "// 辞書が選択されていません。" << std::endl;
+    return;
   }
 
-  match_count = 0;
+  reset_match_count();
 
   RE2 pattern((const char *)needle);
   lookup_result_vec result = sarray_lookup((byte*)needle);
+  lap_match_count();
 
-  int match_count_at_end = match_count;
-  if (!direct_dump_mode) traverse(result, it) render_ej(*it, pattern);
-
-  if (verbose_mode) {
-    std::cout << "// matched " << match_count_at_end << " item(s)." << std::endl;
+  if (!direct_dump_mode) {
+    traverse(result, it) render_ej(*it, pattern);
   }
+  say_match_count();
 }
 
 void do_regexp_lookup(char *needle, int needle_len)
 {
   if (!needle_len) needle_len = strlen(needle);
-
   RE2 pattern(re2::StringPiece(needle, needle_len));
 
-  if (verbose_mode) {
-    if (current_dict_ids.size() == 0) {
-      printf("no dictionary selected\n");
-      return;
-    }
-    std::cout << "REGEXP: " << current_dict_name << " " << current_dict_ids << std::endl;
-    //printf("%d\n", re2::RE2::PartialMatch("abcdefghijklmnopqrstuvwxyz", pattern));
+  if (current_dict_ids.size() == 0) {
+    std::cout << "// 辞書が選択されていません。" << std::endl;
+    return;
   }
 
-  match_count = 0;
+  reset_match_count();
 
   lookup_result_vec result = regexp_lookup(pattern);
+  lap_match_count();
 
-  int match_count_at_end = match_count;
-  if (!direct_dump_mode) traverse(result, it) render_ej(*it, pattern);
-
-  if (verbose_mode) {
-    std::cout << "// matched " << match_count_at_end << " item(s)." << std::endl;
+  if (!direct_dump_mode) {
+    traverse(result, it) render_ej(*it, pattern);
   }
+  say_match_count();
 }
 
 
@@ -282,61 +268,61 @@ bool do_command(char *cmdstr)
   std::vector<std::string> cmd = split(cmdstr);
 
   if (cmd[0] == "quit" || cmd[0] == "bye") {
-    printf("bye.\n");
+    std::cout << "しばらくお待ちください..." << std::endl;
     return false;
   }
   else if (cmd[0] == "verbose") {
-    printf("verbose mode.\n");
+    std::cout << "verbose mode." << std::endl;
     verbose_mode = true;
   }
   else if (cmd[0] == "quiet") {
-    printf("quiet mode.\n");
+    std::cout << "quiet mode." << std::endl;
     verbose_mode = false;
   }
   else if (cmd[0] == "direct") {
-    printf("direct dump mode.\n");
+    std::cout << "direct dump mode." << std::endl;
     direct_dump_mode = true;
   }
   else if (cmd[0] == "indirect") {
-    printf("indirect dump mode.\n");
+    std::cout << "indirect dump mode." << std::endl;
     direct_dump_mode = false;
   }
   else if (cmd[0] == "whole") {
-    printf("whole mode.\n");
+    std::cout << "whole mode." << std::endl;
     whole_mode = true;
   }
   else if (cmd[0] == "entry") {
-    printf("entry mode.\n");
+    std::cout << "entry mode." << std::endl;
     whole_mode = false;
   }
   else if (cmd[0] == "color") {
-    printf("color mode.\n");
+    std::cout << "color mode." << std::endl;
     color_mode = true;
   }
   else if (cmd[0] == "plain") {
-    printf("plain mode.\n");
+    std::cout << "plain mode." << std::endl;
     color_mode = false;
   }
   else if (cmd[0] == "newline") {
     if (cmd.size() == 2) {
       if (cmd[1] == "on") {
-        printf("newline = on\n");
+        std::cout << "newline = on" << std::endl;
         more_newline = true;
       } else if (cmd[1] == "off") {
-        printf("newline = off\n");
+        std::cout << "newline = off" << std::endl;
         more_newline = false;
       } else {
-        printf("[command] newline {on|off} <path>\n");
+        std::cout << "[command] newline {on|off} <path>" << std::endl;
       }
     } else {
-      printf("[command] newline {on|off} <path>\n");
+      std::cout << "[command] newline {on|off} <path>" << std::endl;
     }
   }
   else if (cmd[0] == "add") {
     if (cmd.size() == 3 && cmd[1] == "loadpath") {
       loadpaths.push_back(cmd[2]);
     } else {
-      printf("[command] add loadpath <path>\n");
+      std::cout << "[command] add loadpath <path>" << std::endl;
     }
   }
   else if (cmd[0] == "group" && cmd.size() >= 2) {
@@ -349,7 +335,7 @@ bool do_command(char *cmdstr)
       }
       do_alias(groupname, names);
     } else {
-      printf("[command] group <groupname> = <name_1> <name_2> ... <name_n>\n");
+      std::cout << "[command] group <groupname> = <name_1> <name_2> ... <name_n>" << std::endl;
     }
   }
   else if (cmd[0] == "load") {
@@ -364,10 +350,10 @@ bool do_command(char *cmdstr)
           do_alias(cmd[i], name);
         }
       } else {
-        printf("ERROR: file %s not found in loadpaths\n", cmd[1].c_str());
+        std::cout << "// [ERROR] ファイル " << cmd[1] << " が読み込みパスに見つかりません。" << std::endl;
       }
     } else {
-      printf("[command] load <filename>\n");
+      std::cout << "[command] load <filename>" << std::endl;
     }
   }
   else if (cmd[0] == "use") {
@@ -376,10 +362,10 @@ bool do_command(char *cmdstr)
       if (found(aliases, name)) {
         do_use(name);
       } else {
-        printf("ERROR: '%s' not found.\n", name.c_str());
+        std::cout << "// [ERROR] '" << name << "' が見つかりません。" << std::endl;
       }
     } else {
-      printf("[command] use <name>\n");
+      std::cout << "[command] use <name>" << std::endl;
     }
   }
   else if (cmd[0] == "list") {
@@ -408,9 +394,9 @@ bool do_command(char *cmdstr)
   }
   else if (cmd[0] == "dump") {
     if (cmd.size() == 1) {
-      printf("[command] dump {header|index|words|datablock <id>|all}\n");
+      std::cout << "[command] dump {header|index|words|datablock <id>|all}" << std::endl;
     } else if (current_dict_ids.size() == 0) {
-      printf("ERROR: no dictionary selected\n");
+      std::cout << "// 辞書が選択されていません。" << std::endl;
     } else {
       if (verbose_mode) {
         std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
@@ -427,19 +413,16 @@ bool do_command(char *cmdstr)
           index->iterate_datablock(ix, &dump_entry, NULL);
         } else if (what_to_dump == "words") {
           index->iterate_all_datablocks(&dump_entry, NULL);
-        } else if (what_to_dump == "count") {
-          printf("[%d]", *current_dict_id);
-          calculate_space_for_index(index);
         } else if (what_to_dump == "all") {
           index->iterate_all_datablocks(&dump_ej, NULL);
         } else {
-          printf("ERROR: I don't know how to dump '%s'...\n", what_to_dump.c_str());
+          std::cout << "// [ERROR] I don't know how to dump '" << what_to_dump << "'..." << std::endl;
         }
       }
     }
   }
   else if (cmd[0] == "lookup") {
-    do_lookup(cmdstr + 7);
+    do_normal_lookup(cmdstr + 7);
   }
   else if (cmd[0] == "sarray") {
     do_sarray_lookup(cmdstr + 7);
