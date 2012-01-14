@@ -7,6 +7,7 @@
 #include "charcode.h"
 #include "utf8.h"
 #include "util.h"
+#include "util_stl.h"
 #include "types.h"
 
 PDICDatafield::PDICDatafield(int start_pos,
@@ -47,6 +48,11 @@ PDICDatafield::PDICDatafield(int start_pos,
 
   this->_entry_word_utf8    = NULL;
   this->_jword_utf8         = NULL;
+
+  this->_ext_flags          = 0; // not read yet
+  this->_ext_start_pos      = NULL;
+  this->_pron_utf8          = NULL;
+  this->_example_utf8       = NULL;
 }
 
 PDICDatafield::~PDICDatafield()
@@ -57,6 +63,15 @@ PDICDatafield::~PDICDatafield()
   }
   if (_entry_word_utf8) free((void *)_entry_word_utf8);
   if (_jword_utf8) free((void *)_jword_utf8);
+  if (_pron_utf8) free((void *)_pron_utf8);
+  if (_example_utf8) free((void *)_example_utf8);
+
+  if (_ext_flags) {
+    traverse(_ext,data) {
+      free((void *)data->second);
+    }
+    _ext.clear();
+  }
 }
 
 void
@@ -88,6 +103,70 @@ PDICDatafield::entry_word_utf8()
   return _entry_word_utf8;
 }
 
+int
+PDICDatafield::read_extension()
+{
+  if (_ext_flags) return _ext_flags;
+
+  if (!_ext_start_pos) {
+    int jword_size = strlen((char *)data);
+    _ext_start_pos = data + jword_size + 1;
+  }
+
+  _ext_flags = EXT_IS_READ;
+  _ext.clear();
+
+  for (byte *p=_ext_start_pos; p < data+data_size;) {
+    int ext_attrib = *p++;
+
+    byte *ext_data = NULL;
+    int ext_data_size = 0;
+
+    if (ext_attrib & 0x80) { // 拡張終了
+      break;
+    } else if (ext_attrib & 0x10) { // バイナリデータ
+      ext_data_size = u16val(p); p += 2;
+      ext_data = p; p += ext_data_size;
+    } else {
+      ext_data = p; ext_data_size = strlen((char *)ext_data);
+      p += ext_data_size + 1;
+    }
+
+    byte *ext_data_utf8 = NULL;
+    switch (charcode) {
+      case CHARCODE_BOCU1:
+        ext_data_utf8 = bocu1_to_utf8(ext_data, ext_data_size);
+        break;
+      case CHARCODE_SHIFTJIS:
+        ext_data_utf8 = sjis_to_utf8(ext_data, ext_data_size);
+        break;
+      default:
+        ext_data_utf8 = clone_cstr(ext_data, ext_data_size, false);
+        break;
+    }
+
+    switch (ext_attrib & 0x0f) {
+      case EXT_EXAMPLE: // 用例
+        _ext[EXT_EXAMPLE] = ext_data_utf8;
+        _ext_flags |= EXT_HAS_EXAMPLE;
+        break;
+      case EXT_PRON: // 発音記号
+        _ext[EXT_PRON] = ext_data_utf8;
+        _ext_flags |= EXT_HAS_PRON;
+        break;
+      case EXT_RESERVED: // 未定義
+        break;
+      case EXT_LINKDATA: // リンクデータ
+        _ext[EXT_LINKDATA] = ext_data_utf8;
+        _ext_flags |= EXT_HAS_LINKDATA;
+        break;
+      default:
+        break;
+    }
+  }
+  return _ext_flags;
+}
+
 byte *
 PDICDatafield::jword_utf8()
 {
@@ -98,8 +177,10 @@ PDICDatafield::jword_utf8()
       jword_size = strlen((char *)jword);
       //ofs += jword_datalength + 1;
       //printf("\n <%d: %d %d %02x>", field_id,  field_length, compress_length, entry_word_attrib);
+      _ext_start_pos = jword + jword_size + 1;
     } else {
       jword_size = data_size;
+      _ext_start_pos = (byte*)NULL;
     }
 
     switch (charcode) {
@@ -116,3 +197,26 @@ PDICDatafield::jword_utf8()
   }
   return _jword_utf8;
 }
+
+byte *
+PDICDatafield::example_utf8() // 用例
+{
+  if (entry_word_attrib & 0x10) {
+    if (read_extension() & EXT_HAS_EXAMPLE) {
+      return _ext[EXT_EXAMPLE];
+    }
+  }
+  return (byte*)NULL;
+}
+
+byte *
+PDICDatafield::pron_utf8() // 発音記号
+{
+  if (entry_word_attrib & 0x10) {
+    if (read_extension() & EXT_HAS_PRON) {
+      return _ext[EXT_PRON];
+    }
+  }
+  return (byte*)NULL;
+}
+

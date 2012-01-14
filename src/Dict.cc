@@ -249,7 +249,11 @@ void dump_ej(PDICDatafield *datafield)
 {
   byte *entry_word = datafield->entry_word_utf8();
   byte *jword      = datafield->jword_utf8();
+  byte *example    = datafield->example_utf8();
+  byte *pron       = datafield->pron_utf8();
   render_ej( std::make_pair(entry_word,jword), datafield->criteria->re2_pattern );
+  if (example) printf("  // example: %s\n", example);
+  if (pron) printf("  // pron: [%s]\n", pron);
   ++_match_count;
 }
 void dump_entry(PDICDatafield *datafield)
