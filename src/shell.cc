@@ -37,12 +37,13 @@ std::map<std::string,int> nametable; // name -> dict_id
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
 
-bool color_mode = false;
-bool verbose_mode = false;
-bool more_newline = false;
-bool direct_dump_mode = false;
-bool whole_mode = false;
-int match_count;
+extern bool direct_dump_mode;
+extern bool color_mode;
+extern bool more_newline;
+extern bool verbose_mode;
+extern bool whole_mode;
+extern int render_count_limit;
+//extern int match_count, render_count;
 
 void shell_init()
 {
