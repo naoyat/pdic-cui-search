@@ -351,10 +351,15 @@ void dump_entry(PDICDatafield *datafield)
 void dump_to_vector(PDICDatafield *datafield)
 {
   // vector<pair<string,string> > dump_result;
-  byte *entry_word = clone_cstr(datafield->entry_word_utf8());
-  byte *jword      = clone_cstr(datafield->jword_utf8());
-  byte *example    = clone_cstr(datafield->example_utf8());
-  byte *pron       = clone_cstr(datafield->pron_utf8());
+  byte *entry_word = datafield->entry_word_utf8();
+  byte *jword      = datafield->jword_utf8();
+  byte *example    = datafield->example_utf8();
+  byte *pron       = datafield->pron_utf8();
+
+  if (entry_word) entry_word = clone_cstr(entry_word);
+  if (jword) jword = clone_cstr(jword);
+  if (example) example = clone_cstr(example);
+  if (pron) pron = clone_cstr(pron);
 
   dump_result.push_back( (lookup_result){entry_word,jword,example,pron} );
   ++_match_count;
