@@ -25,6 +25,8 @@ class Criteria;
 #define SX_PRON           ".pron"
 #define SX_PRON_SARRAY    ".pron.sf"
 
+#define DEFAULT_RENDER_COUNT_LIMIT 150
+
 //typedef std::pair<std::string,std::string> lookup_result;
 typedef std::pair<byte*,byte*> lookup_result;
 typedef std::vector<lookup_result> lookup_result_vec;

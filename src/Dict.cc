@@ -26,12 +26,12 @@
 
 extern std::vector<std::string> loadpaths;
 
-bool color_mode = false;
 bool verbose_mode = false;
-bool more_newline = false;
 bool direct_dump_mode = false;
-bool whole_mode = false;
-int render_count_limit = 150;
+bool full_search_mode = false;
+bool ansi_coloring_mode = false;
+bool more_newline_mode = false;
+int render_count_limit = DEFAULT_RENDER_COUNT_LIMIT;
 
 int _match_count, _render_count;
 int _search_lap_usec, _render_lap_usec;
@@ -378,7 +378,7 @@ Dict::sarray_lookup(byte *needle)
   std::set<int> matched_word_ids;
   std::set<int> entry_matches = this->search_in_entry_sarray(needle);
   matched_word_ids.insert(all(entry_matches));
-  if (whole_mode) {
+  if (full_search_mode) {
     std::set<int> jword_matches = this->search_in_jword_sarray(needle);
     matched_word_ids.insert(all(jword_matches));
   }
@@ -412,7 +412,7 @@ Dict::regexp_lookup(const RE2& re)
   for (int i=0; i<toc_length; ++i) {
     const char *entry_word = (const char *)entry_buf + toc[i].entry_start_pos;
     const char *jword = (const char *)jword_buf + toc[i].jword_start_pos;
-    if (RE2::PartialMatch(entry_word, re) || (whole_mode && RE2::PartialMatch(jword, re))) {
+    if (RE2::PartialMatch(entry_word, re) || (full_search_mode && RE2::PartialMatch(jword, re))) {
       if (direct_dump_mode) {
         render_ej( std::make_pair((byte*)entry_word,(byte*)jword), re );
       } else {
@@ -510,7 +510,7 @@ void render_ej(lookup_result result, const RE2& re)
   if (_render_count >= render_count_limit) return;
 
   std::string entry_word((const char *)result.first);
-  if (color_mode) {
+  if (ansi_coloring_mode) {
     RE2::GlobalReplace(&entry_word, re, "\x1b[31m\\0\x1b[34m"); // red
     //std::cout << "\x1b[4m" << entry_word << "\x1b[24m" << std::endl; // underline
     std::cout << "\x1b[1m\x1b[34m" << entry_word << "\x1b[39m\x1b[22m" << std::endl; // bold-blue
@@ -523,13 +523,13 @@ void render_ej(lookup_result result, const RE2& re)
     std::string jword(indent + (const char *)result.second);
     //RE2::GlobalReplace(&jword, "◆", "\n◆");
     RE2::GlobalReplace(&jword, "\n", "\n"+indent);
-    if (color_mode) {
+    if (ansi_coloring_mode) {
       RE2::GlobalReplace(&jword, re, "\x1b[31m\\0\x1b[39m"); // red
     }
     std::cout << jword << std::endl;
   }
 
-  if (more_newline) std::cout << std::endl;
+  if (more_newline_mode) std::cout << std::endl;
 
   ++_render_count;
 }

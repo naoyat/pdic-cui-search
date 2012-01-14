@@ -37,13 +37,12 @@ std::map<std::string,int> nametable; // name -> dict_id
 std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
 
-extern bool direct_dump_mode;
-extern bool color_mode;
-extern bool more_newline;
 extern bool verbose_mode;
-extern bool whole_mode;
+extern bool direct_dump_mode;
+extern bool full_search_mode;
+extern bool ansi_coloring_mode;
+extern bool more_newline_mode;
 extern int render_count_limit;
-//extern int match_count, render_count;
 
 void shell_init()
 {
@@ -267,55 +266,43 @@ bool do_command(char *cmdstr)
 {
   std::vector<std::string> cmd = split(cmdstr);
 
-  if (cmd[0] == "quit" || cmd[0] == "bye") {
+  if (cmd[0][0] == 'q' /*|| cmd[0] == "quit"*/ || cmd[0] == "bye") {
     std::cout << "しばらくお待ちください..." << std::endl;
     return false;
   }
-  else if (cmd[0] == "verbose") {
-    std::cout << "verbose mode." << std::endl;
-    verbose_mode = true;
-  }
-  else if (cmd[0] == "quiet") {
-    std::cout << "quiet mode." << std::endl;
-    verbose_mode = false;
-  }
-  else if (cmd[0] == "direct") {
-    std::cout << "direct dump mode." << std::endl;
-    direct_dump_mode = true;
-  }
-  else if (cmd[0] == "indirect") {
-    std::cout << "indirect dump mode." << std::endl;
-    direct_dump_mode = false;
-  }
-  else if (cmd[0] == "whole") {
-    std::cout << "whole mode." << std::endl;
-    whole_mode = true;
-  }
-  else if (cmd[0] == "entry") {
-    std::cout << "entry mode." << std::endl;
-    whole_mode = false;
-  }
-  else if (cmd[0] == "color") {
-    std::cout << "color mode." << std::endl;
-    color_mode = true;
-  }
-  else if (cmd[0] == "plain") {
-    std::cout << "plain mode." << std::endl;
-    color_mode = false;
-  }
-  else if (cmd[0] == "newline") {
-    if (cmd.size() == 2) {
-      if (cmd[1] == "on") {
-        std::cout << "newline = on" << std::endl;
-        more_newline = true;
-      } else if (cmd[1] == "off") {
-        std::cout << "newline = off" << std::endl;
-        more_newline = false;
-      } else {
-        std::cout << "[command] newline {on|off} <path>" << std::endl;
+  else if (cmd[0] == "set") {
+    if (cmd.size() >= 3) {
+      int value_ix = 2; if (cmd[2] == "=") ++value_ix;
+      bool onoff = cmd[value_ix] == "on";
+      const char *onoff_str = onoff ? "ON" : "OFF";
+      if (cmd[1] == "verbose") {
+        verbose_mode = onoff;
+        std::cout << "verbose mode = " << onoff_str << std::endl;
+      }
+      else if (cmd[1] == "direct") {
+        direct_dump_mode = onoff;
+        std::cout << "direct dump mode = " << onoff_str << std::endl;
+      }
+      else if (cmd[1] == "full" || cmd[1] == "full_search") {
+        full_search_mode = onoff;
+        std::cout << "full search mode = " << onoff_str << std::endl;
+      }
+      else if (cmd[1] == "coloring" || cmd[1] == "ansi_coloring") {
+        ansi_coloring_mode = onoff;
+        std::cout << "ANSI coloring mode = " << onoff_str << std::endl;
+      }
+      else if (cmd[1] == "newline" || cmd[1] == "more_newline") {
+        more_newline_mode = onoff;
+        std::cout << "newline = " << onoff_str << std::endl;
+      }
+      else if (cmd[1] == "limit" || cmd[1] == "render_limit" || cmd[1] == "render_count_limit") {
+        int num = atoi( cmd[value_ix].c_str() );
+        render_count_limit = (num > 0) ? num : DEFAULT_RENDER_COUNT_LIMIT;
+        std::cout << "render count limit = " << render_count_limit << std::endl;
       }
     } else {
-      std::cout << "[command] newline {on|off} <path>" << std::endl;
+      std::cout << "[command] set {limit} = <number>" << std::endl;
+      std::cout << "[command] set {verbose|direct|full|coloring|newline} = {on|off}" << std::endl;
     }
   }
   else if (cmd[0] == "add") {

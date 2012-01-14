@@ -2,15 +2,23 @@
 ; コマンドを普通に並べるだけ。REPLからコマンド入力する時のように先頭に . を追加する必要はない。
 
 add loadpath .
-add loadpath jiro131u
+add loadpath /Users/MYNAME/PDIC
+add loadpath /Users/MYNAME/PDIC/toc
 
-load EIJI-131.DIC eijiro e
-load WAEI-131.DIC waeijiro w
-load REIJI131.DIC reijiro r
-load RYAKU131.DIC ryakujiro a
+load EIJI-132.DIC eijiro e
+load WAEI-132.DIC waeijiro w
+load REIJI132.DIC reijiro r
+load RYAKU132.DIC ryakujiro a
 
-group all = eijiro waeijiro reijiro ryakujiro
+group 英辞郎132 = eijiro waeijiro reijiro ryakujiro
 
-use all
-lookup japan
-lookup 日本
+use 英辞郎132
+
+;lookup japan
+;lookup 日本
+
+;結果表示数の上限
+set verbose = on
+set direct = on
+set coloring = on
+set limit = 100
