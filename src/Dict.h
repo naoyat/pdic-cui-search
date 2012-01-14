@@ -28,7 +28,17 @@ class Criteria;
 #define DEFAULT_RENDER_COUNT_LIMIT 150
 
 //typedef std::pair<std::string,std::string> lookup_result;
-typedef std::pair<byte*,byte*> lookup_result;
+//typedef std::pair<byte*,byte*> lookup_result;
+typedef struct {
+  byte *entry_word;
+  byte *jword;
+  byte *example;
+  byte *pron;
+} lookup_result;
+
+bool lookup_result_asc( const lookup_result& left, const lookup_result& right );
+bool lookup_result_desc( const lookup_result& left, const lookup_result& right );
+
 typedef std::vector<lookup_result> lookup_result_vec;
 
 typedef struct {

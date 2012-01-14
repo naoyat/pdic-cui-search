@@ -24,6 +24,15 @@
 #include "cout.h"
 #endif
 
+bool lookup_result_asc( const lookup_result& left, const lookup_result& right)
+{
+  return bstrcmp(left.entry_word, right.entry_word) < 0;
+}
+bool lookup_result_desc( const lookup_result& left, const lookup_result& right )
+{
+  return bstrcmp(left.entry_word, right.entry_word) > 0;
+}
+
 extern std::vector<std::string> loadpaths;
 
 bool verbose_mode = false;
@@ -251,9 +260,8 @@ void dump_ej(PDICDatafield *datafield)
   byte *jword      = datafield->jword_utf8();
   byte *example    = datafield->example_utf8();
   byte *pron       = datafield->pron_utf8();
-  render_ej( std::make_pair(entry_word,jword), datafield->criteria->re2_pattern );
-  if (example) printf("  // example: %s\n", example);
-  if (pron) printf("  // pron: [%s]\n", pron);
+
+  render_ej( (lookup_result){entry_word,jword,example,pron}, datafield->criteria->re2_pattern );
   ++_match_count;
 }
 void dump_entry(PDICDatafield *datafield)
@@ -265,10 +273,11 @@ void dump_to_vector(PDICDatafield *datafield)
 {
   // vector<pair<string,string> > dump_result;
   byte *entry_word = clone_cstr(datafield->entry_word_utf8());
-  byte *jword = clone_cstr(datafield->jword_utf8());
+  byte *jword      = clone_cstr(datafield->jword_utf8());
+  byte *example    = clone_cstr(datafield->example_utf8());
+  byte *pron       = clone_cstr(datafield->pron_utf8());
 
-  //  dump_result.push_back( std::make_pair((byte*)entry_word.c_str(), (byte*)jword.c_str()) );
-  dump_result.push_back( std::make_pair(entry_word,jword) );
+  dump_result.push_back( (lookup_result){entry_word,jword,example,pron} );
   ++_match_count;
 }
 
@@ -351,8 +360,11 @@ Dict::search_in_sarray(byte *buf, std::map<int,int>& rev, int *sarray, int sarra
       int word_id = found(rev,offset) ? rev[offset] : -1;
       if (word_id >= 0) {
         if (direct_dump_mode) {
-          render_ej( std::make_pair((byte*)entry_buf + toc[word_id].entry_start_pos,
-                                    (byte*)jword_buf + toc[word_id].jword_start_pos),
+          render_ej( (lookup_result){
+              (byte*)entry_buf + toc[word_id].entry_start_pos,
+                  (byte*)jword_buf + toc[word_id].jword_start_pos,
+                  NULL,
+                  NULL},
                      pattern );
         //entry_word,(byte*)NULL), pattern );
         //std::cout << "- " << head << std::endl;
@@ -390,8 +402,11 @@ Dict::sarray_lookup(byte *needle)
 
   if (!direct_dump_mode) {
     traverse(matched_word_ids,word_id) {
-      result.push_back( std::make_pair((byte*)entry_buf + toc[*word_id].entry_start_pos,
-                                       (byte*)jword_buf + toc[*word_id].jword_start_pos) );
+      result.push_back( (lookup_result){
+            (byte*)entry_buf + toc[*word_id].entry_start_pos,
+                (byte*)jword_buf + toc[*word_id].jword_start_pos,
+                NULL,
+                NULL} );
     }
     _match_count += matched_word_ids.size();
   }
@@ -419,9 +434,9 @@ Dict::regexp_lookup(const RE2& re)
     const char *jword = (const char *)jword_buf + toc[i].jword_start_pos;
     if (RE2::PartialMatch(entry_word, re) || (full_search_mode && RE2::PartialMatch(jword, re))) {
       if (direct_dump_mode) {
-        render_ej( std::make_pair((byte*)entry_word,(byte*)jword), re );
+        render_ej( (lookup_result){(byte*)entry_word,(byte*)jword,NULL,NULL}, re );
       } else {
-        result.push_back( std::make_pair((byte*)entry_word, (byte*)jword) );
+        result.push_back( (lookup_result){(byte*)entry_word,(byte*)jword,NULL,NULL} );
       }
       ++matched_entries_count;
     }
@@ -514,24 +529,35 @@ void render_ej(lookup_result result, const RE2& re)
 {
   if (_render_count >= render_count_limit) return;
 
-  std::string entry_word((const char *)result.first);
+  std::string entry_word((const char *)result.entry_word);
   if (ansi_coloring_mode) {
     RE2::GlobalReplace(&entry_word, re, "\x1b[31m\\0\x1b[34m"); // red
     //std::cout << "\x1b[4m" << entry_word << "\x1b[24m" << std::endl; // underline
-    std::cout << "\x1b[1m\x1b[34m" << entry_word << "\x1b[39m\x1b[22m" << std::endl; // bold-blue
+    std::cout << "\x1b[34m"; // <blue>
+    std::cout << "\x1b[1m" << entry_word << "\x1b[22m"; // <bold>entry_word</bold>
+    if (result.pron) std::cout << " [" << result.pron << "]";
+    std::cout << "\x1b[39m"; // </blue>
   } else {
-    std::cout << entry_word << std::endl;
+    std::cout << entry_word;
+    if (result.pron) std::cout << " [" << result.pron << "]";
   }
+  std::cout << std::endl;
 
-  if (result.second && result.second[0]) {
-    std::string indent = "   ";
-    std::string jword(indent + (const char *)result.second);
+  std::string indent = "   ";
+
+  if (result.jword && result.jword[0]) {
+    std::string jword(indent + (const char *)result.jword);
     //RE2::GlobalReplace(&jword, "◆", "\n◆");
     RE2::GlobalReplace(&jword, "\n", "\n"+indent);
     if (ansi_coloring_mode) {
       RE2::GlobalReplace(&jword, re, "\x1b[31m\\0\x1b[39m"); // red
     }
     std::cout << jword << std::endl;
+  }
+  if (result.example) {
+    std::string example(indent + (const char *)result.example);
+    RE2::GlobalReplace(&example, "\n", "\n"+indent);
+    std::cout << example << std::endl;
   }
 
   if (more_newline_mode) std::cout << std::endl;
