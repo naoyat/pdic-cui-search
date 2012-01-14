@@ -461,7 +461,7 @@ lookup_result_vec
 Dict::sarray_lookup(byte *needle)
 {
   if (!toc || !entry_buf) {
-    std::cout << "// [NOTICE] 正規表現検索には事前のインデックス作成が必要です。" << std::endl;
+    std::cout << "// [NOTICE] suffix-array検索には事前のインデックス作成が必要です。" << std::endl;
     std::cout << "//  → .make toc" << std::endl;
     return lookup_result_vec();
   }
