@@ -150,7 +150,7 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
 
   int lo=0, hi=offsets_len;
   while (lo <= hi) {
-    int mid = (lo + hi) / 2;
+    int mid = ((unsigned int)lo + (unsigned int)hi) >> 1;
 
     cmp = exact_match ? bstrcmp(buf+offsets[mid], needle) : bstrncmp(buf+offsets[mid], needle, needle_len);
 #ifdef VERBOSE
@@ -170,7 +170,7 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
       // looking for neg-max
       lo = neg_max, hi = mid - 1;
       while (lo < hi) {
-        mid = (lo + hi + 1) / 2;
+        mid = ((unsigned int)lo + (unsigned int)hi + 1) >> 1;
         //printf(" (%d %d %d)\n", lo,mid,hi);
         cmp = exact_match ? bstrcmp(buf+offsets[mid], needle) : bstrncmp(buf+offsets[mid], needle, needle_len);
 #ifdef DEBUG
@@ -188,7 +188,7 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
       // looking for pos-min
       lo = mid + 1, hi = pos_min;
       while (lo < hi) {
-        mid = (lo + hi) / 2;
+        mid = ((unsigned int)lo + (unsigned int)hi) >> 1;
         cmp = exact_match ? bstrcmp(buf+offsets[mid], needle) : bstrncmp(buf+offsets[mid], needle, needle_len);
 #ifdef DEBUG
   ++cmp_count;
