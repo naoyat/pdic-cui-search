@@ -321,7 +321,9 @@ bool do_command(char *cmdstr)
             if (1 <= line && line <= last) lines.insert(line-1);
           }
         }
+#ifdef DEBUG
         std::cout << "lines: " << lines << std::endl;
+#endif
         render_current_result(lines);
       } else {
         render_current_result();
