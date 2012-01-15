@@ -20,6 +20,7 @@
 #include "utf8.h"
 
 #include "charcode.h"
+#include "ansi_color.h"
 
 #ifdef DEBUG
 #include "cout.h"
@@ -64,15 +65,15 @@ void say_match_count()
   std::pair<int,int> render_lap = time_usec();
   _render_lap_usec = render_lap.first;
 
-  printf("\n// matched %d item", _match_count); if (_match_count >= 2) putchar('s');
-  if (_render_count < _match_count) printf(" (rendered %d items)", _render_count);
+  printf(ANSI_FGCOLOR_GREEN "// 結果%d件", _match_count); // if (_match_count >= 2) putchar('s');
+  if (_render_count < _match_count) printf(" (うち%d件表示)", _render_count);
   if (direct_dump_mode) {
-    printf(", search&render:%.3fmsec", 0.001 * _search_lap_usec);
+    printf(", 検索+表示:%.3fミリ秒", 0.001 * _search_lap_usec);
   } else {
-    printf(", search:%.3fmsec", 0.001 * _search_lap_usec);
-    printf(", render:%.3fmsec", 0.001 * _render_lap_usec);
+    printf(", 検索:%.3fミリ秒", 0.001 * _search_lap_usec);
+    printf(", 表示:%.3fミリ秒", 0.001 * _render_lap_usec);
   }
-  printf(".\n");
+  printf(".\n" ANSI_FGCOLOR_DEFAULT);
 }
 
 
@@ -351,7 +352,6 @@ void dump_entry(PDICDatafield *datafield)
 }
 void dump_to_vector(PDICDatafield *datafield)
 {
-  // vector<pair<string,string> > dump_result;
   byte *entry_word = datafield->entry_word_utf8();
   byte *jword      = datafield->jword_utf8();
   byte *example    = datafield->example_utf8();
@@ -597,8 +597,10 @@ Dict::load_additional_files()
   for (int i=0; i<loadpaths.size(); ++i) {
     std::string path = loadpaths[i] + "/" + this->suffix();
 
-    if (!this->toc) {
-      this->toc = (Toc *)loadmem((path + SX_TOC).c_str());
+    if (this->toc) {
+      // 読み込み済みなので無視
+    } else {
+      this->toc = (Toc *)loadmem((path + SX_TOC).c_str()); // < 10usec
       if (this->toc) {
         this->toc_length = mem_size((byte *)this->toc) / sizeof(Toc);
 
@@ -607,19 +609,17 @@ Dict::load_additional_files()
         this->example_start_rev.clear();
         this->pron_start_rev.clear();
 
+        // EIJI-132 で -O3なしで 6sec前後, -O3ありで 889msec
         for (int i=0; i<this->toc_length; ++i) {
-          if (this->toc[i].entry_start_pos) {
-            entry_start_rev[ this->toc[i].entry_start_pos ] = i;
-          }
-          if (this->toc[i].jword_start_pos) {
-            jword_start_rev[ this->toc[i].jword_start_pos ] = i;
-          }
-          if (this->toc[i].example_start_pos) {
-            example_start_rev[ this->toc[i].example_start_pos ] = i;
-          }
-          if (this->toc[i].pron_start_pos) {
-            pron_start_rev[ this->toc[i].pron_start_pos ] = i;
-          }
+          Toc *toc = &this->toc[i];
+          if (toc->entry_start_pos)
+            entry_start_rev[ toc->entry_start_pos ] = i;
+          if (toc->jword_start_pos)
+            jword_start_rev[ toc->jword_start_pos ] = i;
+          if (toc->example_start_pos)
+            example_start_rev[ toc->example_start_pos ] = i;
+          if (toc->pron_start_pos)
+            pron_start_rev[ toc->pron_start_pos ] = i;
         }
       }
     }
@@ -676,12 +676,12 @@ void render_ej(lookup_result result, const RE2& re)
 
   std::string entry_word((const char *)result.entry_word);
   if (ansi_coloring_mode) {
-    RE2::GlobalReplace(&entry_word, re, "\x1b[31m\\0\x1b[34m"); // red
     //std::cout << "\x1b[4m" << entry_word << "\x1b[24m" << std::endl; // underline
-    std::cout << "\x1b[34m"; // <blue>
-    std::cout << "\x1b[1m" << entry_word << "\x1b[22m"; // <bold>entry_word</bold>
+    std::cout << ANSI_FGCOLOR_BLUE; // <blue>
+    RE2::GlobalReplace(&entry_word, re, ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_BLUE); // red
+    std::cout << ANSI_BOLD_ON << entry_word << ANSI_BOLD_OFF; // <bold>entry_word</bold>
     if (result.pron && result.pron[0]) std::cout << " [" << result.pron << "]";
-    std::cout << "\x1b[39m"; // </blue>
+    std::cout << ANSI_FGCOLOR_DEFAULT; // </blue>
   } else {
     std::cout << entry_word;
     if (result.pron && result.pron[0]) std::cout << " [" << result.pron << "]";

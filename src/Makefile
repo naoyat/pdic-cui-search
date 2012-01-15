@@ -2,8 +2,8 @@
 .SUFFIXES: .cc .o
 
 CPP = g++
-#CPPFLAGS = -O3
-CPPFLAGS = -g
+CPPFLAGS = -O3
+#CPPFLAGS = -g
 
 .cc.o: $*.h
 	$(CPP) $(CPPFLAGS) -c $*.cc
@@ -46,7 +46,7 @@ clean:
 
 Criteria.o: Criteria.cc Criteria.h  PDICDatafield.h bocu1.h charcode.h dump.h types.h util.h
 Dict.o: Dict.cc Dict.h  Criteria.h PDICHeader.h PDICIndex.h PDICDatablock.cc PDICDatafield.h \
-        bocu1.h charcode.h filemem.h timeutil.h util_stl.h utf8.h types.h
+        ansi_color.h bocu1.h charcode.h filemem.h timeutil.h util_stl.h utf8.h types.h 
 PDICDatablock.o: PDICDatablock.cc PDICDatablock.h  Criteria.h PDICDatafield.h PDICHeader.h PDICIndex.h bocu1.h charcode.h util.h types.h
 PDICDatafield.o: PDICDatafield.cc PDICDatafield.h  bocu1.h charcode.h utf8.h util.h
 PDICHeader.o: PDICHeader.cc PDICHeader.h  dump.h util.h
