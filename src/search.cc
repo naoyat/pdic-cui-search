@@ -129,7 +129,7 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
   cmp_count = 0;
 #endif
 
-  if (!needle || !needle[0]) return std::make_pair(false, std::make_pair(-1, 0));
+  if (!offsets_len || !needle || !needle[0]) return std::make_pair(false, std::make_pair(-1, 0));
 
   int needle_len = strlen((char *)needle);
 
