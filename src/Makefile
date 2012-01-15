@@ -2,7 +2,8 @@
 .SUFFIXES: .cc .o
 
 CPP = g++
-CPPFLAGS = -O3 -DDEBUG
+#CPPFLAGS = -O3
+CPPFLAGS = -g
 
 .cc.o: $*.h
 	$(CPP) $(CPPFLAGS) -c $*.cc
@@ -15,6 +16,22 @@ TEST_OBJECTS = Dict_gtest.o PDICIndex_gtest.o filemem_gtest.o search_gtest.o she
 TEST_DATA = filemem_gtest.dat
 TEST_OUTPUTS = filemem_gtest.savemem
 
+debug: pdic
+	gdb pdic
+
+shell: pdic
+	if [ x`which rlwrap` = x ]; then ./pdic ; else rlwrap ./pdic ; fi
+
+install: pdic
+	cp pdic /usr/local/bin/
+
+test: pdic_gtest
+	./pdic_gtest
+	rm -f $(TEST_OUTPUTS)
+
+test_eijiro: eijiro_gtest
+	./eijiro_gtest
+
 pdic: main.o $(OBJECTS)
 	$(CPP) $(CPPFLAGS) -o pdic main.o $(OBJECTS) -liconv -lre2
 
@@ -23,16 +40,6 @@ pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 
 eijiro_gtest: gtest_main.o $(OBJECTS) eijiro_gtest.o
 	$(CPP) $(CPPFLAGS) -o eijiro_gtest gtest_main.o $(OBJECTS) eijiro_gtest.o -lgtest -liconv -lre2
-
-shell: pdic
-	if [ x`which rlwrap` = x ]; then ./pdic ; else rlwrap ./pdic ; fi
-
-test: pdic_gtest
-	./pdic_gtest
-	rm -f $(TEST_OUTPUTS)
-
-test_eijiro: eijiro_gtest
-	./eijiro_gtest
 
 clean:
 	rm -f pdic pdic_gtest *.o *~
