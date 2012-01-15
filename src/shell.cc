@@ -19,6 +19,7 @@
 #include "timeutil.h"
 #include "util.h"
 #include "util_stl.h"
+#include "ansi_color.h"
 
 #include <re2/re2.h>
 #include <re2/stringpiece.h>
@@ -47,15 +48,17 @@ extern int render_count, render_count_limit;
 
 lookup_result_vec current_result_vec;
 RE2* current_pattern;
+std::pair<std::string,std::string> current_query;
 extern std::set<void*> clone_ptrs;
-void d_(const char *cap)
+void render_status()
 {
-  std::cout << "// " << cap;
-  std::cout << "current_result_vec.size()=" << current_result_vec.size() << ", ";
-  if (current_pattern)
-    std::cout << "current_pattern=/" << current_pattern->pattern() << "/, ";
-  std::cout << "clone_ptrs.size()=" << clone_ptrs.size();
-  std::cout << std::endl;
+  if (current_pattern) {
+    std::cout << ANSI_FGCOLOR_GREEN "// 最後に行われた検索: (" << current_query.first << ") \"" << current_query.second << "\"" ANSI_FGCOLOR_DEFAULT << std::endl;
+    //std::cout << "// 最後に行われた検索: /" << current_pattern->pattern() << "/" << std::endl;
+    std::cout << ANSI_FGCOLOR_GREEN "// 現在保持している結果: " << current_result_vec.size() << "件" ANSI_FGCOLOR_DEFAULT << std::endl;
+  }
+  //std::cout << "clone_ptrs.size()=" << clone_ptrs.size();
+  //std::cout << std::endl;
 }
 
 void shell_init()
@@ -135,12 +138,10 @@ bool do_use(std::string name)
 
 void render_current_result()
 {
-  d_("render_current_result");
   traverse(current_result_vec, it) render_result(*it, current_pattern);
 }
 void render_current_result(const std::set<int>& range)
 {
-  d_("render_current_result");
   traverse(range, it) {
     lookup_result *result = current_result_vec[*it];
     render_count = 0;
@@ -151,7 +152,6 @@ void render_current_result(const std::set<int>& range)
 
 void do_normal_lookup(char *needle, int needle_len)
 {
-  d_("do_normal_lookup");
   if (!needle_len) needle_len = strlen(needle);
 
   if (current_dict_ids.size() == 0) {
@@ -176,7 +176,6 @@ void do_normal_lookup(char *needle, int needle_len)
 
 void do_sarray_lookup(char *needle, int needle_len)
 {
-  d_("do_sarray_lookup");
   if (!needle_len) needle_len = strlen(needle);
   if (needle[needle_len-1] == '*') {
     needle[needle_len-1] = 0;
@@ -198,7 +197,6 @@ void do_sarray_lookup(char *needle, int needle_len)
 
 void do_regexp_lookup(char *needle, int needle_len)
 {
-  d_("do_regexp_lookup");
   if (!needle_len) needle_len = strlen(needle);
 
   if (current_dict_ids.size() == 0) {
@@ -225,6 +223,7 @@ lookup_result_vec normal_lookup(byte *needle, int needle_len)
     needle[needle_len-1] = 0;
     exact_match = false;
   }
+  current_query = std::make_pair(exact_match ? "exact" : "match-forward", (const char *)needle);
 
   lookup_result_vec total_result_vec;
   traverse(current_dict_ids, current_dict_id) {
@@ -237,6 +236,8 @@ lookup_result_vec normal_lookup(byte *needle, int needle_len)
 
 lookup_result_vec sarray_lookup(byte *needle, int needle_len)
 {
+  current_query = std::make_pair("suffix-array", (const char *)needle);
+
   lookup_result_vec total_result_vec;
   traverse(current_dict_ids, current_dict_id) {
     lookup_result_vec result_vec = dicts[*current_dict_id]->sarray_lookup(needle);
@@ -248,6 +249,8 @@ lookup_result_vec sarray_lookup(byte *needle, int needle_len)
 
 lookup_result_vec regexp_lookup(RE2 *current_pattern)
 {
+  current_query = std::make_pair("regexp", current_pattern->pattern());
+
   lookup_result_vec total_result_vec;
   traverse(current_dict_ids, current_dict_id) {
     lookup_result_vec result_vec = dicts[*current_dict_id]->regexp_lookup(current_pattern);
@@ -296,6 +299,9 @@ bool do_command(char *cmdstr)
     std::cout << "しばらくお待ちください..." << std::endl;
     return false;
   }
+  else if (cmd[0] == "status") {
+    render_status();
+  }
   else if (cmd[0] == "last" || cmd[0] == "again") {
     int last = current_result_vec.size();
     if (last > 0) {
@@ -333,6 +339,7 @@ bool do_command(char *cmdstr)
   }
   else if (cmd[0] == "set") {
     if (cmd.size() >= 3) {
+      std::cout << ANSI_FGCOLOR_GREEN << "// ";
       int value_ix = 2; if (cmd[2] == "=") ++value_ix;
       bool onoff = cmd[value_ix] == "on";
       const char *onoff_str = onoff ? "ON" : "OFF";
@@ -365,6 +372,7 @@ bool do_command(char *cmdstr)
         render_count_limit = (num > 0) ? num : DEFAULT_RENDER_COUNT_LIMIT;
         std::cout << "render count limit = " << render_count_limit << std::endl;
       }
+      std::cout << ANSI_FGCOLOR_DEFAULT;
     } else {
       std::cout << "[command] set {limit} = <number>" << std::endl;
       std::cout << "[command] set {verbose|separator|direct|full|coloring|newline} = {on|off}" << std::endl;

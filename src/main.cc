@@ -4,13 +4,14 @@
 
 #include "shell.h"
 #include "dump.h"
+#include "ansi_color.h"
 
 extern std::string current_dict_name;
 extern bool verbose_mode;
 
 int main(int argc, char **argv)
 {
-  std::cout << "PDIC CUI Search ver 0.5 (c)2012 @naoya_t. All Rights Reserved." << std::endl;
+  std::cout << ANSI_UNDERLINE_ON "PDIC CUI Search ver 0.5 (c)2012 @naoya_t. All Rights Reserved." ANSI_UNDERLINE_OFF << std::endl;
   std::cout << "読み込み中..." << std::endl;
   shell_init();
 
@@ -28,6 +29,10 @@ int main(int argc, char **argv)
     if (linelen == 0) continue;
 
     switch (line[0]) {
+      case '?':
+        // help...
+        break;
+
       case '.': // command mode
         if (linelen > 1) {
           if (verbose_mode) {

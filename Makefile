@@ -1,10 +1,10 @@
-all: src/pdic
+all: src/pdicsh
 
-src/pdic:
-	cd src ; make pdic ; cd ..
+src/pdicsh:
+	cd src ; make pdicsh ; cd ..
 
-shell: src/pdic
-	src/pdic
+shell: src/pdicsh
+	src/pdicsh
 
 test:
 	cd src ; make test ; cd ..
@@ -12,6 +12,6 @@ test:
 clean:
 	cd src ; make clean ; cd ..
 
-install: src/pdic
-	cp src/pdic /usr/local/bin/
+install: src/pdicsh
+	cp src/pdicsh /usr/local/bin/
 
