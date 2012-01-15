@@ -398,7 +398,9 @@ bool do_command(char *cmdstr)
       std::cout << "// 辞書が選択されていません。" << std::endl;
     } else {
       if (verbose_mode) {
+#ifdef DEBUG
         std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
+#endif
       }
       traverse(current_dict_ids, current_dict_id) {
         PDICIndex *index = dicts[*current_dict_id]->index;
