@@ -2,7 +2,8 @@
 .SUFFIXES: .cc .o
 
 CPP = g++
-CPPFLAGS = -g -O2 -DDEBUG -DVERBOSE
+#CPPFLAGS = -g -O2 -DDEBUG -DVERBOSE
+CPPFLAGS = -O3
 
 .cc.o: $*.h
 	$(CPP) $(CPPFLAGS) -c $*.cc
@@ -15,8 +16,8 @@ TEST_OBJECTS = Dict_gtest.o PDICIndex_gtest.o filemem_gtest.o search_gtest.o she
 TEST_DATA = filemem_gtest.dat
 TEST_OUTPUTS = filemem_gtest.savemem
 
-pdic: main.o $(OBJECTS)
-	$(CPP) $(CPPFLAGS) -o pdic main.o $(OBJECTS) -liconv -lre2
+pdicsh: main.o $(OBJECTS)
+	$(CPP) $(CPPFLAGS) -o pdicsh main.o $(OBJECTS) -liconv -lre2
 
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 	$(CPP) $(CPPFLAGS) -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv -lre2
@@ -24,14 +25,14 @@ pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 eijiro_gtest: gtest_main.o $(OBJECTS) eijiro_gtest.o
 	$(CPP) $(CPPFLAGS) -o eijiro_gtest gtest_main.o $(OBJECTS) eijiro_gtest.o -lgtest -liconv -lre2
 
-debug: pdic
-	gdb pdic
+debug: pdicsh
+	gdb pdicsh
 
-shell: pdic
-	if [ x`which rlwrap` = x ]; then ./pdic ; else rlwrap ./pdic ; fi
+shell: pdicsh
+	if [ x`which rlwrap` = x ]; then ./pdicsh ; else rlwrap ./pdicsh ; fi
 
-install: pdic
-	cp pdic /usr/local/bin/
+install: pdicsh
+	cp pdicsh /usr/local/bin/
 
 test: pdic_gtest
 	./pdic_gtest
@@ -41,7 +42,7 @@ test_eijiro: eijiro_gtest
 	./eijiro_gtest
 
 clean:
-	rm -f pdic pdic_gtest *.o *~
+	rm -f pdicsh pdic_gtest *.o *~
 
 Criteria.o: Criteria.cc Criteria.h  PDICDatafield.h bocu1.h charcode.h dump.h types.h util.h
 Dict.o: Dict.cc Dict.h  Criteria.h PDICHeader.h PDICIndex.h PDICDatablock.cc PDICDatafield.h \
