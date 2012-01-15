@@ -35,7 +35,7 @@ byte *clone_cstr(byte *data, int length, bool gc)
   if (!length) length = strlen((char *)data);
 
   void *newstr = clone((void *)data, length+1, gc);
-  data[length] = 0;
+  newstr[length] = 0;
 
   return (byte *)newstr;
 }
