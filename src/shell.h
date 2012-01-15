@@ -2,6 +2,7 @@
 #define SHELL_H
 
 #include <string>
+#include <set>
 #include <vector>
 #include <utility>
 #include <re2/re2.h>
@@ -41,6 +42,9 @@ void do_regexp_lookup(char *needle, int needle_len=0);
 // lookup
 lookup_result_vec normal_lookup(byte *needle, int needle_len=0);
 lookup_result_vec sarray_lookup(byte *needle, int needle_len=0);
-lookup_result_vec regexp_lookup(const RE2& pattern);
+lookup_result_vec regexp_lookup(RE2 *pattern);
+
+void render_current_result();
+void render_current_result(const std::set<int>& range);
 
 #endif

@@ -15,9 +15,10 @@
 #include "PDICDatafield.h"
 #include "PDICIndex.h" // string_for_index()
 
-Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match) :
-    re2_pattern(std::string("(?i)")+(char*)needle_utf8)
+Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match)
 {
+  this->re2_pattern = new RE2(std::string("(?i)") + (char*)needle_utf8);
+
   this->needle_utf8 = needle_utf8;
   this->needle_for_index_utf8 = (byte*)NULL;
 
@@ -48,10 +49,10 @@ Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match) :
 }
 Criteria::~Criteria()
 {
-  //free_cloned_buffer(needle_utf8);
   free((void *)needle);
   if (needle_for_index) free((void *)needle_for_index);
   if (needle_for_index_utf8) free((void *)needle_for_index_utf8);
+  delete re2_pattern;
 }
 
 bool

@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <re2/re2.h>
 
+#include "util.h"
 #include "types.h"
 
 class PDICIndex;
@@ -34,12 +35,12 @@ typedef struct {
   byte *jword;
   byte *example;
   byte *pron;
-} lookup_result;
+} lookup_result, *lookup_result_ptr;
 
-bool lookup_result_asc( const lookup_result& left, const lookup_result& right );
-bool lookup_result_desc( const lookup_result& left, const lookup_result& right );
+bool lookup_result_asc( const lookup_result_ptr& left, const lookup_result_ptr& right );
+bool lookup_result_desc( const lookup_result_ptr& left, const lookup_result_ptr& right );
 
-typedef std::vector<lookup_result> lookup_result_vec;
+typedef std::vector<lookup_result*> lookup_result_vec;
 
 typedef struct {
   int pdic_datafield_pos; // in filemem (PDICDatablock)
@@ -93,23 +94,34 @@ private:
 public:
   lookup_result_vec normal_lookup(byte *needle, bool exact_match);
   lookup_result_vec sarray_lookup(byte *needle);
-  lookup_result_vec regexp_lookup(const RE2& re);
+  lookup_result_vec regexp_lookup(RE2 *re);
 };
 
 // match count
 void reset_match_count();
+void reset_render_count();
 void lap_match_count();
 void say_match_count();
+void say_render_count();
 
 // render
-void render_ej(lookup_result result, const RE2& re);
+void render_result(lookup_result *result, RE2 *re);
+inline void save_result(lookup_result_vec& result_vec, lookup_result *result)
+{
+  if (result->entry_word && result->entry_word[0]) result->entry_word = clone_cstr(result->entry_word);
+  if (result->jword && result->jword[0]) result->jword = clone_cstr(result->jword);
+  if (result->example && result->example[0]) result->example = clone_cstr(result->example);
+  if (result->pron && result->pron[0]) result->pron = clone_cstr(result->pron);
+
+  result_vec.push_back((lookup_result *)clone(result, sizeof(lookup_result), true));
+}
 
 // CALLBACKS
-void dump_ej(PDICDatafield *datafield);
-void dump_entry(PDICDatafield *datafield);
-void dump_to_vector(PDICDatafield *datafield);
+void cb_dump_entry(PDICDatafield *datafield);
+void cb_dump(PDICDatafield *datafield);
+void cb_save(PDICDatafield *datafield);
 
-void estimate_buf_size(PDICDatafield *datafield);
-void stock_entry_words(PDICDatafield *datafield);
+void cb_estimate_buf_size(PDICDatafield *datafield);
+void cb_stock_entry_words(PDICDatafield *datafield);
 
 #endif;

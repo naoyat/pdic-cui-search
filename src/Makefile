@@ -2,8 +2,7 @@
 .SUFFIXES: .cc .o
 
 CPP = g++
-CPPFLAGS = -O3
-#CPPFLAGS = -g
+CPPFLAGS = -g -O2 -DDEBUG -DVERBOSE
 
 .cc.o: $*.h
 	$(CPP) $(CPPFLAGS) -c $*.cc
@@ -15,6 +14,15 @@ OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o Di
 TEST_OBJECTS = Dict_gtest.o PDICIndex_gtest.o filemem_gtest.o search_gtest.o shell_gtest.o utf8_gtest.o util_gtest.o
 TEST_DATA = filemem_gtest.dat
 TEST_OUTPUTS = filemem_gtest.savemem
+
+pdic: main.o $(OBJECTS)
+	$(CPP) $(CPPFLAGS) -o pdic main.o $(OBJECTS) -liconv -lre2
+
+pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
+	$(CPP) $(CPPFLAGS) -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv -lre2
+
+eijiro_gtest: gtest_main.o $(OBJECTS) eijiro_gtest.o
+	$(CPP) $(CPPFLAGS) -o eijiro_gtest gtest_main.o $(OBJECTS) eijiro_gtest.o -lgtest -liconv -lre2
 
 debug: pdic
 	gdb pdic
@@ -31,15 +39,6 @@ test: pdic_gtest
 
 test_eijiro: eijiro_gtest
 	./eijiro_gtest
-
-pdic: main.o $(OBJECTS)
-	$(CPP) $(CPPFLAGS) -o pdic main.o $(OBJECTS) -liconv -lre2
-
-pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
-	$(CPP) $(CPPFLAGS) -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv -lre2
-
-eijiro_gtest: gtest_main.o $(OBJECTS) eijiro_gtest.o
-	$(CPP) $(CPPFLAGS) -o eijiro_gtest gtest_main.o $(OBJECTS) eijiro_gtest.o -lgtest -liconv -lre2
 
 clean:
 	rm -f pdic pdic_gtest *.o *~

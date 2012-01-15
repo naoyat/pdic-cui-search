@@ -26,13 +26,13 @@
 #include "cout.h"
 #endif
 
-bool lookup_result_asc( const lookup_result& left, const lookup_result& right)
+bool lookup_result_asc( const lookup_result_ptr& left, const lookup_result_ptr& right)
 {
-  return bstrcmp(left.entry_word, right.entry_word) < 0;
+  return bstrcmp(left->entry_word, right->entry_word) < 0;
 }
-bool lookup_result_desc( const lookup_result& left, const lookup_result& right )
+bool lookup_result_desc( const lookup_result_ptr& left, const lookup_result_ptr& right )
 {
-  return bstrcmp(left.entry_word, right.entry_word) > 0;
+  return bstrcmp(left->entry_word, right->entry_word) > 0;
 }
 
 extern std::vector<std::string> loadpaths;
@@ -45,13 +45,20 @@ bool ansi_coloring_mode = false;
 bool more_newline_mode = false;
 int render_count_limit = DEFAULT_RENDER_COUNT_LIMIT;
 
-int _match_count, _render_count;
+int match_count, render_count;
 int _search_lap_usec, _render_lap_usec;
+
+lookup_result_vec _result_vec;
 
 void reset_match_count()
 {
   time_reset();
-  _match_count = _render_count = 0;
+  match_count = 0;
+}
+void reset_render_count()
+{
+  time_reset();
+  render_count = 0;
 }
 void lap_match_count()
 {
@@ -65,8 +72,8 @@ void say_match_count()
   std::pair<int,int> render_lap = time_usec();
   _render_lap_usec = render_lap.first;
 
-  printf(ANSI_FGCOLOR_GREEN "// 結果%d件", _match_count); // if (_match_count >= 2) putchar('s');
-  if (_render_count < _match_count) printf(" (うち%d件表示)", _render_count);
+  printf(ANSI_FGCOLOR_GREEN "// 結果%d件", match_count); // if (_match_count >= 2) putchar('s');
+  if (render_count < match_count) printf(" (うち%d件表示)", render_count);
   if (direct_dump_mode) {
     printf(", 検索+表示:%.3fミリ秒", 0.001 * _search_lap_usec);
   } else {
@@ -75,24 +82,27 @@ void say_match_count()
   }
   printf(".\n" ANSI_FGCOLOR_DEFAULT);
 }
+void say_render_count()
+{
+  std::pair<int,int> render_lap = time_usec();
+  _render_lap_usec = render_lap.first;
+
+  printf(ANSI_FGCOLOR_GREEN "// 結果%d件", match_count); // if (_match_count >= 2) putchar('s');
+  if (render_count < match_count) printf(" (うち%d件表示)", render_count);
+  printf(", 表示:%.3fミリ秒", 0.001 * _render_lap_usec);
+  printf(".\n" ANSI_FGCOLOR_DEFAULT);
+}
 
 
 Dict::Dict(const std::string& name, byte *filemem)//, const std::string& path)
 {
-  this->index = new PDICIndex(filemem);
+  index = new PDICIndex(filemem);
   this->name = name;
   this->filemem = filemem;
-  //this->path = path;
 
-  this->toc = (Toc *)NULL;
-  this->entry_buf = (byte *)NULL;
-  this->entry_suffix_array = (int *)NULL;
-  this->jword_buf = (byte *)NULL;
-  this->jword_suffix_array = (int *)NULL;
-  this->example_buf = (byte *)NULL;
-  this->example_suffix_array = (int *)NULL;
-  this->pron_buf = (byte *)NULL;
-  this->pron_suffix_array = (int *)NULL;
+  toc = (Toc *)NULL;
+  entry_buf = jword_buf = example_buf = pron_buf = (byte *)NULL;
+  entry_suffix_array = jword_suffix_array = example_suffix_array = pron_suffix_array = (int *)NULL;
 
   _suffix = new char[name.size()+1];
   strcpy(_suffix, basename((char *)name.c_str()));
@@ -101,7 +111,7 @@ Dict::Dict(const std::string& name, byte *filemem)//, const std::string& path)
     _suffix[len - 4] = 0;
   }
 
-  this->load_additional_files();
+  load_additional_files();
 }
 
 Dict::~Dict()
@@ -111,7 +121,7 @@ Dict::~Dict()
   delete _suffix;
   delete index;
 
-  this->unload_additional_files();
+  unload_additional_files();
 }
 
 // global (only for callback routines)
@@ -126,7 +136,7 @@ int _pron_buf_size = 0, _pron_buf_offset = 0;
 int _count = 0;
 std::vector<Toc> _toc; // 各見出し語の開始位置など(entry_buf + entry_start_pos[i])
 
-void estimate_buf_size(PDICDatafield *datafield)
+void cb_estimate_buf_size(PDICDatafield *datafield)
 {
   byte *entry_utf8 = datafield->entry_word_utf8();
   if (entry_utf8 && entry_utf8[0]) {
@@ -155,7 +165,7 @@ void estimate_buf_size(PDICDatafield *datafield)
   }
 }
 
-void stock_entry_words(PDICDatafield *datafield)
+void cb_stock_entry_words(PDICDatafield *datafield)
 {
   Toc toc;
 
@@ -218,7 +228,7 @@ Dict::make_toc()
   _count = 0;
   _entry_buf_size = _jword_buf_size = _example_buf_size = _pron_buf_size = 1;
 
-  index->iterate_all_datablocks(&estimate_buf_size, NULL);
+  index->iterate_all_datablocks(&cb_estimate_buf_size, NULL);
   //printf("サイズ: entry:%d jword:%d\n", _entry_buf_size, _jword_buf_size);
 
   _entry_buf = (byte *)malloc(_entry_buf_size);
@@ -259,7 +269,7 @@ Dict::make_toc()
   _entry_buf[0] = _jword_buf[0] = _example_buf[0] = _pron_buf[0] = 0;
   _entry_buf_offset = _jword_buf_offset = _example_buf_offset = _pron_buf_offset = 1;
 
-  index->iterate_all_datablocks(&stock_entry_words, NULL);
+  index->iterate_all_datablocks(&cb_stock_entry_words, NULL);
 
   std::pair<int,int> time = time_usec();
   printf("データ抽出: %d words, {%d + %d + %d + %d}; real:%.3fmsec process:%.3fmsec\n",
@@ -332,39 +342,48 @@ Dict::make_toc()
   return toc_len;
 }
 
-
-lookup_result_vec dump_result;
-
-void dump_ej(PDICDatafield *datafield)
+/*
+inline void save_result(const lookup_result_vec& result_vec, lookup_result result)
 {
-  byte *entry_word = datafield->entry_word_utf8();
-  byte *jword      = datafield->jword_utf8();
-  byte *example    = datafield->example_utf8();
-  byte *pron       = datafield->pron_utf8();
+  if (result.entry_word && result.entry_word[0]) result.entry_word = clone_cstr(result.entry_word);
+  if (result.jword && result.jword[0]) result.jword = clone_cstr(result.jword);
+  if (result.example && result.example[0]) result.example = clone_cstr(result.example);
+  if (result.pron && result.pron[0]) result.pron = clone_cstr(result.pron);
 
-  render_ej( (lookup_result){entry_word,jword,example,pron}, datafield->criteria->re2_pattern );
-  ++_match_count;
+  result_vec.push_back(result);
 }
-void dump_entry(PDICDatafield *datafield)
+*/
+void cb_dump_entry(PDICDatafield *datafield)
 {
   puts((char *)datafield->entry_word_utf8());
-  ++_match_count;
+  ++match_count;
 }
-void dump_to_vector(PDICDatafield *datafield)
+
+void cb_dump(PDICDatafield *datafield)
 {
   byte *entry_word = datafield->entry_word_utf8();
   byte *jword      = datafield->jword_utf8();
   byte *example    = datafield->example_utf8();
   byte *pron       = datafield->pron_utf8();
 
-  if (entry_word) entry_word = clone_cstr(entry_word);
-  if (jword) jword = clone_cstr(jword);
-  if (example) example = clone_cstr(example);
-  if (pron) pron = clone_cstr(pron);
-
-  dump_result.push_back( (lookup_result){entry_word,jword,example,pron} );
-  ++_match_count;
+  lookup_result result = (lookup_result){entry_word,jword,example,pron};
+  render_result(&result, datafield->criteria->re2_pattern);
+  save_result(_result_vec, &result);
+  ++match_count;
 }
+
+void cb_save(PDICDatafield *datafield)
+{
+  byte *entry_word = datafield->entry_word_utf8();
+  byte *jword      = datafield->jword_utf8();
+  byte *example    = datafield->example_utf8();
+  byte *pron       = datafield->pron_utf8();
+
+  lookup_result result = (lookup_result){entry_word,jword,example,pron};
+  save_result(_result_vec, &result);
+  ++match_count;
+}
+
 
 lookup_result_vec
 Dict::normal_lookup(byte *needle, bool exact_match)
@@ -399,8 +418,8 @@ Dict::normal_lookup(byte *needle, bool exact_match)
     //printf("lookup. from %d to %d, %d/%d...\n", from, to, to-from+1, index->_nindex);
   }
 
-  dump_result.clear();
-  
+  _result_vec.clear();
+
   for (int ix=from; ix<=to; ix++) {
     if (verbose_mode) {
       /*
@@ -414,16 +433,16 @@ Dict::normal_lookup(byte *needle, bool exact_match)
 
     PDICDatablock* datablock = new PDICDatablock(filemem, this->index, ix);
     if (direct_dump_mode) {
-      datablock->iterate(&dump_ej, criteria);
+      datablock->iterate(&cb_dump, criteria);
     } else {
-      datablock->iterate(&dump_to_vector, criteria);
+      datablock->iterate(&cb_save, criteria);
     }
     delete datablock;
   }
 not_found:
   ;
 
-  return dump_result;
+  return lookup_result_vec(all(_result_vec));
 }
 
 
@@ -444,18 +463,16 @@ Dict::search_in_sarray(byte *buf, std::map<int,int>& rev, int *sarray, int sarra
       int offset = (int)(word - buf);
       int word_id = found(rev,offset) ? rev[offset] : -1;
       if (word_id >= 0) {
+        Toc *t = &toc[word_id];
+        lookup_result result = (lookup_result){
+          (byte*)entry_buf + t->entry_start_pos,
+          (byte*)jword_buf + t->jword_start_pos,
+          (byte*)example_buf + t->example_start_pos,
+          (byte*)pron_buf + t->pron_start_pos};
         if (direct_dump_mode) {
-          render_ej( (lookup_result){
-              (byte*)entry_buf + toc[word_id].entry_start_pos,
-                  (byte*)jword_buf + toc[word_id].jword_start_pos,
-                  (byte*)example_buf + toc[word_id].example_start_pos,
-                  (byte*)pron_buf + toc[word_id].pron_start_pos},
-            pattern );
-        //entry_word,(byte*)NULL), pattern );
-        //std::cout << "- " << head << std::endl;
-        } else {
-          matched_offsets.insert(word_id);
+          render_result(&result, &pattern);
         }
+        matched_offsets.insert(word_id);
       }
     }
   }
@@ -476,7 +493,7 @@ Dict::sarray_lookup(byte *needle)
     std::cout << "====== \"" << needle << "\" in " << name << " ======" << std::endl;
   }
 
-  lookup_result_vec result;
+  _result_vec.clear();
 
   std::set<int> matched_word_ids;
   std::set<int> entry_matches = this->search_in_entry_sarray(needle);
@@ -490,22 +507,22 @@ Dict::sarray_lookup(byte *needle)
     matched_word_ids.insert(all(pron_matches));
   }
 
-  if (!direct_dump_mode) {
-    traverse(matched_word_ids,word_id) {
-      result.push_back( (lookup_result){
-          (byte*)entry_buf + toc[*word_id].entry_start_pos,
-                (byte*)jword_buf + toc[*word_id].jword_start_pos,
-                (byte*)example_buf + toc[*word_id].example_start_pos,
-                (byte*)pron_buf + toc[*word_id].pron_start_pos });
-    }
-    _match_count += matched_word_ids.size();
+  traverse(matched_word_ids,word_id) {
+    Toc *t = &toc[*word_id];
+    lookup_result result = (lookup_result){
+      (byte*)entry_buf + t->entry_start_pos,
+      (byte*)jword_buf + t->jword_start_pos,
+      (byte*)example_buf + t->example_start_pos,
+      (byte*)pron_buf + t->pron_start_pos };
+    save_result(_result_vec, &result);
   }
+  match_count += matched_word_ids.size();
 
-  return result;
+  return lookup_result_vec(all(_result_vec));
 }
 
 lookup_result_vec
-Dict::regexp_lookup(const RE2& re)
+Dict::regexp_lookup(RE2 *re)
 {
   if (!toc || !entry_buf) {
     std::cout << "// [NOTICE] 正規表現検索には事前のインデックス作成が必要です。" << std::endl;
@@ -514,10 +531,10 @@ Dict::regexp_lookup(const RE2& re)
   }
 
   if (separator_mode) {
-    std::cout << "====== /" << re.pattern() << "/ in " << name << " ======" << std::endl;
+    std::cout << "====== /" << re->pattern() << "/ in " << name << " ======" << std::endl;
   }
 
-  lookup_result_vec result;
+  _result_vec.clear();
 
   int matched_entries_count = 0;
   for (int i=0; i<toc_length; ++i) {
@@ -525,26 +542,22 @@ Dict::regexp_lookup(const RE2& re)
     const char *jword = (const char *)jword_buf + toc[i].jword_start_pos;
     const char *example = (const char *)example_buf + toc[i].example_start_pos;
     const char *pron = (const char *)pron_buf + toc[i].pron_start_pos;
-    if (RE2::PartialMatch(entry_word, re)
-        || (full_search_mode && jword[0] && RE2::PartialMatch(jword, re))
-        || (full_search_mode && example[0] && RE2::PartialMatch(example, re))
-        || (full_search_mode && pron[0] && RE2::PartialMatch(pron, re))
+    if (RE2::PartialMatch(entry_word, *re)
+        || (full_search_mode && jword[0] && RE2::PartialMatch(jword, *re))
+        || (full_search_mode && example[0] && RE2::PartialMatch(example, *re))
+        || (full_search_mode && pron[0] && RE2::PartialMatch(pron, *re))
         ) {
-      if (direct_dump_mode) {
-        render_ej( (lookup_result){(byte*)entry_word,(byte*)jword,(byte*)example,(byte*)pron}, re );
-      } else {
-        result.push_back( (lookup_result){(byte*)entry_word,(byte*)jword,(byte*)example,(byte*)pron} );
-      }
+      lookup_result result = (lookup_result){(byte*)entry_word,(byte*)jword,(byte*)example,(byte*)pron};
+      if (direct_dump_mode) render_result(&result, re);
+      save_result(_result_vec, &result);
       ++matched_entries_count;
     }
   }
 
-  _match_count += matched_entries_count;
+  match_count += matched_entries_count;
 
-  return result;
+  return lookup_result_vec(all(_result_vec));
 }
-
-
 
 void
 Dict::unload_additional_files()
@@ -570,7 +583,7 @@ Dict::unload_additional_files()
     unloadmem((byte *)pron_buf);
     pron_buf = NULL;
   }
-  
+
   if (entry_suffix_array) {
     unloadmem((byte *)entry_suffix_array);
     entry_suffix_array = (int *)NULL;
@@ -670,42 +683,42 @@ Dict::load_additional_files()
   return true;
 }
 
-void render_ej(lookup_result result, const RE2& re)
+void render_result(lookup_result *result, RE2 *re)
 {
-  if (_render_count >= render_count_limit) return;
+  if (render_count >= render_count_limit) return;
 
-  std::string entry_word((const char *)result.entry_word);
+  std::string entry_word((const char *)result->entry_word);
   if (ansi_coloring_mode) {
     //std::cout << "\x1b[4m" << entry_word << "\x1b[24m" << std::endl; // underline
     std::cout << ANSI_FGCOLOR_BLUE; // <blue>
-    RE2::GlobalReplace(&entry_word, re, ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_BLUE); // red
+    RE2::GlobalReplace(&entry_word, *re, ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_BLUE); // red
     std::cout << ANSI_BOLD_ON << entry_word << ANSI_BOLD_OFF; // <bold>entry_word</bold>
-    if (result.pron && result.pron[0]) std::cout << " [" << result.pron << "]";
+    if (result->pron && result->pron[0]) std::cout << " [" << result->pron << "]";
     std::cout << ANSI_FGCOLOR_DEFAULT; // </blue>
   } else {
     std::cout << entry_word;
-    if (result.pron && result.pron[0]) std::cout << " [" << result.pron << "]";
+    if (result->pron && result->pron[0]) std::cout << " [" << result->pron << "]";
   }
   std::cout << std::endl;
 
   std::string indent = "   ";
 
-  if (result.jword && result.jword[0]) {
-    std::string jword(indent + (const char *)result.jword);
+  if (result->jword && result->jword[0]) {
+    std::string jword(indent + (const char *)result->jword);
     //RE2::GlobalReplace(&jword, "◆", "\n◆");
     RE2::GlobalReplace(&jword, "\n", "\n"+indent);
     if (ansi_coloring_mode) {
-      RE2::GlobalReplace(&jword, re, "\x1b[31m\\0\x1b[39m"); // red
+      RE2::GlobalReplace(&jword, *re, "\x1b[31m\\0\x1b[39m"); // red
     }
     std::cout << jword << std::endl;
   }
-  if (result.example && result.example[0]) {
-    std::string example(indent + (const char *)result.example);
+  if (result->example && result->example[0]) {
+    std::string example(indent + (const char *)result->example);
     RE2::GlobalReplace(&example, "\n", "\n"+indent);
     std::cout << example << std::endl;
   }
 
   if (more_newline_mode) std::cout << std::endl;
 
-  ++_render_count;
+  ++render_count;
 }

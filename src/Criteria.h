@@ -9,7 +9,7 @@ class PDICDatafield;
 class Criteria
 {
 public:
-  RE2   re2_pattern;
+  RE2  *re2_pattern;
 
   byte *needle_utf8, *needle_for_index_utf8;
   byte *needle, *needle_for_index;
