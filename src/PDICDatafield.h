@@ -4,6 +4,12 @@
 #include <map>
 #include "types.h"
 
+#define F_COUNT    4
+#define F_ENTRY    0
+#define F_JWORD    1
+#define F_EXAMPLE  2
+#define F_PRON     3
+
 class Criteria;
 
 class PDICDatafield {
@@ -48,12 +54,13 @@ public:
 
 private:
   int read_extension();
-
-public: 
   byte *entry_word_utf8();
   byte *jword_utf8();
-  byte *pron_utf8();
   byte *example_utf8();
+  byte *pron_utf8();
+
+public:
+  byte *in_utf8(int field);
 };
 
 #define EXT_READ     0

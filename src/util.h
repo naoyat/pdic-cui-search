@@ -30,4 +30,7 @@ int pbstrncmp(const void *s1, const void *s2, size_t n);
 
 byte *strhead(byte *ptr);
 
+inline bool is_not_empty(byte *ptr) { return ptr && ptr[0]; }
+inline bool is_empty(byte *ptr) { return (!ptr) || !ptr[0]; }
+
 #endif

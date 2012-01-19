@@ -84,25 +84,6 @@ PDICDatafield::retain()
   }
 }
 
-byte *
-PDICDatafield::entry_word_utf8()
-{
-  if (!_entry_word_utf8) {
-    switch (charcode) {
-      case CHARCODE_BOCU1:
-        _entry_word_utf8 = bocu1_to_utf8(entry_word, entry_word_size);
-        break;
-      case CHARCODE_SHIFTJIS:
-        _entry_word_utf8 = sjis_to_utf8(entry_word, entry_word_size);
-        break;
-      default:
-        break;
-    }
-    if (!_entry_word_utf8) return entry_word;
-  }
-  return _entry_word_utf8;
-}
-
 int
 PDICDatafield::read_extension()
 {
@@ -168,6 +149,42 @@ PDICDatafield::read_extension()
 }
 
 byte *
+PDICDatafield::in_utf8(int field)
+{
+  switch (field) {
+    case F_ENTRY:
+      return entry_word_utf8();
+    case F_JWORD:
+      return jword_utf8();
+    case F_EXAMPLE:
+      return example_utf8();
+    case F_PRON:
+      return pron_utf8();
+    default:
+      return (byte *)NULL;
+  }
+}
+
+byte *
+PDICDatafield::entry_word_utf8()
+{
+  if (!_entry_word_utf8) {
+    switch (charcode) {
+      case CHARCODE_BOCU1:
+        _entry_word_utf8 = bocu1_to_utf8(entry_word, entry_word_size);
+        break;
+      case CHARCODE_SHIFTJIS:
+        _entry_word_utf8 = sjis_to_utf8(entry_word, entry_word_size);
+        break;
+      default:
+        break;
+    }
+    if (!_entry_word_utf8) return entry_word;
+  }
+  return _entry_word_utf8;
+}
+
+byte *
 PDICDatafield::jword_utf8()
 {
   if (!_jword_utf8) {
@@ -219,4 +236,5 @@ PDICDatafield::pron_utf8() // 発音記号
   }
   return (byte*)NULL;
 }
+
 

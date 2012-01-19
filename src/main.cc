@@ -11,7 +11,7 @@ extern bool verbose_mode;
 
 int main(int argc, char **argv)
 {
-  std::cout << ANSI_UNDERLINE_ON "PDIC CUI Search ver 0.5 (c)2012 @naoya_t. All Rights Reserved." ANSI_UNDERLINE_OFF << std::endl;
+  std::cout << ANSI_UNDERLINE_ON "PDIC CUI Search ver 0.6 (c)2012 @naoya_t. All Rights Reserved." ANSI_UNDERLINE_OFF << std::endl;
   std::cout << "読み込み中..." << std::endl;
   shell_init();
 

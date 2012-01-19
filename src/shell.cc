@@ -143,9 +143,9 @@ void render_current_result()
 void render_current_result(const std::set<int>& range)
 {
   traverse(range, it) {
-    lookup_result *result = current_result_vec[*it];
+    //lookup_result result = current_result_vec[*it];
     render_count = 0;
-    render_result(result, current_pattern);
+    render_result(current_result_vec[*it], current_pattern);
   }
   render_count = range.size();
 }
