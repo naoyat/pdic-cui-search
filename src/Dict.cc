@@ -64,6 +64,7 @@ void reset_render_count()
 {
   time_reset();
   render_count = 0;
+  render_count_limit_exceeded = false;
 }
 void lap_match_count()
 {
@@ -78,14 +79,11 @@ void say_match_count()
   _render_lap_usec = render_lap.first;
 
   printf(ANSI_FGCOLOR_GREEN);
-  if (render_count_limit_exceeded) {
-    if (stop_on_limit_mode) {
-      printf("// 検索結果の最初の%d件を表示", render_count);
-    } else {
-      printf("// 結果%d件 (うち%d件表示)", match_count, render_count);
-    }
+  if (render_count >= render_count_limit && stop_on_limit_mode) {
+    printf("// 検索結果の最初の%d件を表示", render_count);
   } else {
     printf("// 結果%d件", match_count);
+    if (render_count < match_count) printf(" (うち%d件表示)", render_count);
   }
   if (direct_dump_mode) {
     printf(", 検索+表示:%.3fミリ秒", 0.001 * _search_lap_usec);
@@ -345,7 +343,6 @@ Dict::normal_lookup(byte *needle, bool exact_match)
   }
 
   _result_vec.clear();
-  render_count_limit_exceeded = false;
 
   for (int ix=from; ix<=to; ix++) {
     if (render_count_limit_exceeded && stop_on_limit_mode) break;
@@ -428,7 +425,6 @@ Dict::sarray_lookup(byte *needle)
   }
 
   _result_vec.clear();
-  render_count_limit_exceeded = false;
 
   std::set<int> matched_word_ids;
   for (int f=0; f<F_COUNT; ++f) {
@@ -449,8 +445,9 @@ Dict::sarray_lookup(byte *needle)
       dict_buf[F_PRON]    + t->start_pos[F_PRON]
     };
     save_result(_result_vec, (lookup_result)fields);
+    ++match_count;
+    if (match_count >= render_count_limit) render_count_limit_exceeded = true;
   }
-  match_count += matched_word_ids.size();
 
   return lookup_result_vec(all(_result_vec));
 }
@@ -469,9 +466,7 @@ Dict::regexp_lookup(RE2 *re)
   }
 
   _result_vec.clear();
-  render_count_limit_exceeded = false;
 
-  int matched_entries_count = 0;
   for (int i=0; i<toc_length; ++i) {
     if (render_count_limit_exceeded && stop_on_limit_mode) break;
     byte *fields[F_COUNT] = {
@@ -487,11 +482,10 @@ Dict::regexp_lookup(RE2 *re)
                 || (fields[F_PRON][0] && RE2::PartialMatch((const char *)fields[F_PRON], *re)) )) ) {
       if (direct_dump_mode) render_result(fields, re);
       save_result(_result_vec, fields);
-      ++matched_entries_count;
+      ++match_count;
     }
+    if (match_count >= render_count_limit) render_count_limit_exceeded = true;
   }
-
-  match_count += matched_entries_count;
 
   return lookup_result_vec(all(_result_vec));
 }

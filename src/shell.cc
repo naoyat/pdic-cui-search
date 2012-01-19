@@ -53,11 +53,22 @@ std::pair<std::string,std::string> current_query;
 extern std::set<void*> clone_ptrs;
 void render_status()
 {
+  std::cout << ANSI_FGCOLOR_GREEN;
+
+  std::cout << "// verbose mode = " << (verbose_mode ? "ON" : "OFF") << std::endl;
+  std::cout << "// direct dump mode = " << (direct_dump_mode ? "ON" : "OFF") << std::endl;
+  std::cout << "// separator mode = " << (separator_mode ? "ON" : "OFF") << std::endl;
+  std::cout << "// full search mode = " << (full_search_mode ? "ON" : "OFF") << std::endl;
+  std::cout << "// ANSI coloring mode = " << (ansi_coloring_mode ? "ON" : "OFF") << std::endl;
+  std::cout << "// newline mode = " << (more_newline_mode ? "ON" : "OFF") << std::endl;
+  std::cout << "// render count limit = " << render_count_limit << ", stop on limit = " << (stop_on_limit_mode ? "ON" : "OFF") << std::endl;
+
   if (current_pattern) {
-    std::cout << ANSI_FGCOLOR_GREEN "// 最後に行われた検索: (" << current_query.first << ") \"" << current_query.second << "\"" ANSI_FGCOLOR_DEFAULT << std::endl;
+    std::cout << "// 最後に行われた検索: (" << current_query.first << ") \"" << current_query.second << "\"" << std::endl;
     //std::cout << "// 最後に行われた検索: /" << current_pattern->pattern() << "/" << std::endl;
-    std::cout << ANSI_FGCOLOR_GREEN "// 現在保持している結果: " << current_result_vec.size() << "件" ANSI_FGCOLOR_DEFAULT << std::endl;
+    std::cout << "// 現在保持している結果: " << current_result_vec.size() << "件" << std::endl;
   }
+  std::cout << ANSI_FGCOLOR_DEFAULT;
   //std::cout << "clone_ptrs.size()=" << clone_ptrs.size();
   //std::cout << std::endl;
 }
@@ -139,16 +150,22 @@ bool do_use(std::string name)
 
 void render_current_result()
 {
-  traverse(current_result_vec, it) render_result(*it, current_pattern);
+  int keep = render_count_limit;
+  render_count_limit = INT_MAX;
+  traverse(current_result_vec, it) {
+    render_result(*it, current_pattern);
+  }
+  render_count_limit = keep;
+  //render_count = current_result_vec.size();
 }
 void render_current_result(const std::set<int>& range)
 {
+  int keep = render_count_limit;
+  render_count_limit = INT_MAX;
   traverse(range, it) {
-    //lookup_result result = current_result_vec[*it];
-    render_count = 0;
     render_result(current_result_vec[*it], current_pattern);
   }
-  render_count = range.size();
+  render_count_limit = keep;
 }
 
 void do_normal_lookup(char *needle, int needle_len)
@@ -372,7 +389,7 @@ bool do_command(char *cmdstr)
         }
         else if (cmd[1] == "stop_on_limit") {
           stop_on_limit_mode = onoff;
-          mode_name = "stop_on_limit";
+          mode_name = "stop on limit";
         }
         else {
           mode_name = NULL;
