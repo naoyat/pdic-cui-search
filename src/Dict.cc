@@ -47,6 +47,8 @@ bool full_search_mode = false;
 bool ansi_coloring_mode = false;
 bool more_newline_mode = false;
 int render_count_limit = DEFAULT_RENDER_COUNT_LIMIT;
+bool render_count_limit_exceeded = false;
+bool stop_on_limit_mode = true;
 
 int match_count, render_count;
 int _search_lap_usec, _render_lap_usec;
@@ -75,8 +77,16 @@ void say_match_count()
   std::pair<int,int> render_lap = time_usec();
   _render_lap_usec = render_lap.first;
 
-  printf(ANSI_FGCOLOR_GREEN "// 結果%d件", match_count); // if (_match_count >= 2) putchar('s');
-  if (render_count < match_count) printf(" (うち%d件表示)", render_count);
+  printf(ANSI_FGCOLOR_GREEN);
+  if (render_count_limit_exceeded) {
+    if (stop_on_limit_mode) {
+      printf("// 検索結果の最初の%d件を表示", render_count);
+    } else {
+      printf("// 結果%d件 (うち%d件表示)", match_count, render_count);
+    }
+  } else {
+    printf("// 結果%d件", match_count);
+  }
   if (direct_dump_mode) {
     printf(", 検索+表示:%.3fミリ秒", 0.001 * _search_lap_usec);
   } else {
@@ -335,8 +345,10 @@ Dict::normal_lookup(byte *needle, bool exact_match)
   }
 
   _result_vec.clear();
+  render_count_limit_exceeded = false;
 
   for (int ix=from; ix<=to; ix++) {
+    if (render_count_limit_exceeded && stop_on_limit_mode) break;
     if (verbose_mode) {
       /*
       byte *utf8str = bocu1_to_utf8( index->entry_word(ix) );
@@ -379,6 +391,7 @@ Dict::search_in_sarray(int field, byte *needle)
   if (result.first) {
     RE2 pattern((const char *)needle);
     for (int i=result.second.first; i<=result.second.second; ++i) {
+      if (render_count_limit_exceeded && stop_on_limit_mode) break;
       byte *word = strhead(buf + sarray[i]);
       int offset = (int)(word - buf);
       int word_id = rev(field, offset);
@@ -415,9 +428,11 @@ Dict::sarray_lookup(byte *needle)
   }
 
   _result_vec.clear();
+  render_count_limit_exceeded = false;
 
   std::set<int> matched_word_ids;
   for (int f=0; f<F_COUNT; ++f) {
+    if (render_count_limit_exceeded && stop_on_limit_mode) break;
     if (f == F_ENTRY || full_search_mode) {
       std::set<int> matched_id_set = this->search_in_sarray(f, needle);
       matched_word_ids.insert(all(matched_id_set));
@@ -425,6 +440,7 @@ Dict::sarray_lookup(byte *needle)
   }
 
   traverse(matched_word_ids,word_id) {
+    if (render_count_limit_exceeded && stop_on_limit_mode) break;
     Toc *t = &toc[*word_id];
     byte *fields[F_COUNT] = {
       dict_buf[F_ENTRY]   + t->start_pos[F_ENTRY],
@@ -453,9 +469,11 @@ Dict::regexp_lookup(RE2 *re)
   }
 
   _result_vec.clear();
+  render_count_limit_exceeded = false;
 
   int matched_entries_count = 0;
   for (int i=0; i<toc_length; ++i) {
+    if (render_count_limit_exceeded && stop_on_limit_mode) break;
     byte *fields[F_COUNT] = {
       dict_buf[F_ENTRY]   + toc[i].start_pos[F_ENTRY],
       dict_buf[F_JWORD]   + toc[i].start_pos[F_JWORD],
@@ -562,7 +580,10 @@ Dict::load_additional_files()
 
 void render_result(lookup_result fields, RE2 *re)
 {
-  if (render_count >= render_count_limit) return;
+  if (render_count >= render_count_limit) {
+    render_count_limit_exceeded = true;
+    return;
+  }
 
   std::string entry_str((const char *)fields[F_ENTRY]);
 

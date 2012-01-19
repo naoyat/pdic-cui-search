@@ -45,6 +45,7 @@ extern bool full_search_mode;
 extern bool ansi_coloring_mode;
 extern bool more_newline_mode;
 extern int render_count, render_count_limit;
+extern bool stop_on_limit_mode;
 
 lookup_result_vec current_result_vec;
 RE2* current_pattern;
@@ -368,6 +369,10 @@ bool do_command(char *cmdstr)
         else if (cmd[1] == "newline" || cmd[1] == "more_newline") {
           more_newline_mode = onoff;
           mode_name = "newline";
+        }
+        else if (cmd[1] == "stop_on_limit") {
+          stop_on_limit_mode = onoff;
+          mode_name = "stop_on_limit";
         }
         else {
           mode_name = NULL;
