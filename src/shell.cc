@@ -340,10 +340,11 @@ bool do_command(char *cmdstr)
   else if (cmd[0] == "set") {
     if (cmd.size() >= 3) {
       int value_ix = 2; if (cmd[2] == "=") ++value_ix;
-      const char *mode_name = NULL, *value_str = NULL;
+      const char *mode_name = NULL;
+      char value_str[11] = { 0 };
       if (cmd[value_ix] == "on" || cmd[value_ix] == "off") {
         bool onoff = cmd[value_ix] == "on";
-        value_str = onoff ? "ON" : "OFF";
+        strcpy(value_str, onoff ? "ON" : "OFF");
         if (cmd[1] == "verbose") {
           verbose_mode = onoff;
           mode_name = "verbose mode";
@@ -369,17 +370,19 @@ bool do_command(char *cmdstr)
           mode_name = "newline";
         }
         else {
-          value_str = NULL;
+          mode_name = NULL;
+          value_str[0] = '\0';
         }
       } else {
         if (cmd[1] == "limit" || cmd[1] == "render_limit" || cmd[1] == "render_count_limit") {
           int num = atoi( cmd[value_ix].c_str() );
           render_count_limit = (num > 0) ? num : DEFAULT_RENDER_COUNT_LIMIT;
           mode_name = "render count limit";
-          value_str = "" + render_count_limit;
+          sprintf(value_str, "%d", render_count_limit);
         }
         else {
-          value_str = NULL;
+          mode_name = NULL;
+          value_str[0] = '\0';
         }
       }
       if (verbose_mode && mode_name != NULL) {
