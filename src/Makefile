@@ -19,6 +19,9 @@ TEST_OUTPUTS = filemem_gtest.savemem
 pdicsh: main.o $(OBJECTS)
 	$(CPP) $(CPPFLAGS) -o pdicsh main.o $(OBJECTS) -liconv -lre2
 
+pdicsh_re2: main.o $(OBJECTS)
+	$(CPP) $(CPPFLAGS) -o pdicsh_re2 main.o $(OBJECTS) libre2.a -liconv
+
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 	$(CPP) $(CPPFLAGS) -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv -lre2
 
