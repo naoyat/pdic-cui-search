@@ -22,8 +22,8 @@ pdicsh: main.o $(OBJECTS)
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 	$(CPP) $(CPPFLAGS) -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv -lre2
 
-eijiro_gtest: gtest_main.o $(OBJECTS) eijiro_gtest.o
-	$(CPP) $(CPPFLAGS) -o eijiro_gtest gtest_main.o $(OBJECTS) eijiro_gtest.o -lgtest -liconv -lre2
+EIJIRO_gtest: gtest_main.o $(OBJECTS) EIJIRO_gtest.o
+	$(CPP) $(CPPFLAGS) -o EIJIRO_gtest gtest_main.o $(OBJECTS) EIJIRO_gtest.o -lgtest -liconv -lre2
 
 debug: pdicsh
 	gdb pdicsh
@@ -38,8 +38,8 @@ test: pdic_gtest
 	./pdic_gtest
 	rm -f $(TEST_OUTPUTS)
 
-test_eijiro: eijiro_gtest
-	./eijiro_gtest
+test_eijiro: EIJIRO_gtest
+	./EIJIRO_gtest
 
 clean:
 	rm -f pdicsh pdic_gtest *.o *~
@@ -72,4 +72,4 @@ shell_gtest.o: shell_gtest.cc  shell.h
 utf8_gtest.o: utf8_gtest.cc  types.h utf8.h
 util_gtest.o: util_gtest.cc  types.h util.h
 
-eijiro_gtest.o: eijiro_gtest.cc  Dict.h shell.h
+EIJIRO_gtest.o: EIJIRO_gtest.cc  Dict.h shell.h

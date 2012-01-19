@@ -9,20 +9,16 @@
 #include "dump.h"
 
 TEST(shell, sarray_lookup) {
-  load_rc();
-  do_command("set direct = off");
-  do_command("set coloring = off");
-
+  load_rc("./gtest.pdicrc");
   bool is_available = do_use("EIJI-132");
+
   if (is_available) {
     lookup_result_vec result;
-    std::string entry_word, jword;
 
     result = sarray_lookup((byte *)"whose creativity");
     EXPECT_EQ( 3, result.size() );
-    
-    EXPECT_STREQ( "man whose creativity seems boundless", (const char *)result[0].entry_word );
-    EXPECT_STREQ( "person whose creativity seems boundless", (const char *)result[1].entry_word );
-    EXPECT_STREQ( "woman whose creativity seems boundless", (const char *)result[2].entry_word );
+    EXPECT_STREQ( "man whose creativity seems boundless", (const char *)result[0][F_ENTRY] );
+    EXPECT_STREQ( "person whose creativity seems boundless", (const char *)result[1][F_ENTRY] );
+    EXPECT_STREQ( "woman whose creativity seems boundless", (const char *)result[2][F_ENTRY] );
   }
 }

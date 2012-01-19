@@ -17,7 +17,7 @@ class PDICDatafield;
 void shell_init();
 void shell_destroy();
 
-void load_rc(char *rcpath=NULL);
+void load_rc(const char *rcpath=NULL);
 //
 // shell commands
 //

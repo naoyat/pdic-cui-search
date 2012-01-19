@@ -72,7 +72,7 @@ void shell_destroy()
   traverse(dicts, dict) delete *dict;
 }
 
-void load_rc(char *rcpath)
+void load_rc(const char *rcpath)
 {
   char buf[256];
   if (!rcpath) {
@@ -339,40 +339,54 @@ bool do_command(char *cmdstr)
   }
   else if (cmd[0] == "set") {
     if (cmd.size() >= 3) {
-      std::cout << ANSI_FGCOLOR_GREEN << "// ";
       int value_ix = 2; if (cmd[2] == "=") ++value_ix;
-      bool onoff = cmd[value_ix] == "on";
-      const char *onoff_str = onoff ? "ON" : "OFF";
-      if (cmd[1] == "verbose") {
-        verbose_mode = onoff;
-        std::cout << "verbose mode = " << onoff_str << std::endl;
+      const char *mode_name = NULL, *value_str = NULL;
+      if (cmd[value_ix] == "on" || cmd[value_ix] == "off") {
+        bool onoff = cmd[value_ix] == "on";
+        value_str = onoff ? "ON" : "OFF";
+        if (cmd[1] == "verbose") {
+          verbose_mode = onoff;
+          mode_name = "verbose mode";
+        }
+        else if (cmd[1] == "direct") {
+          direct_dump_mode = onoff;
+          mode_name = "direct dump mode";
+        }
+        else if (cmd[1] == "separator") {
+          separator_mode = onoff;
+          mode_name = "separator mode";
+        }
+        else if (cmd[1] == "full" || cmd[1] == "full_search") {
+          full_search_mode = onoff;
+          mode_name = "full search mode";
+        }
+        else if (cmd[1] == "coloring" || cmd[1] == "ansi_coloring") {
+          ansi_coloring_mode = onoff;
+          mode_name = "ANSI coloring mode";
+        }
+        else if (cmd[1] == "newline" || cmd[1] == "more_newline") {
+          more_newline_mode = onoff;
+          mode_name = "newline";
+        }
+        else {
+          value_str = NULL;
+        }
+      } else {
+        if (cmd[1] == "limit" || cmd[1] == "render_limit" || cmd[1] == "render_count_limit") {
+          int num = atoi( cmd[value_ix].c_str() );
+          render_count_limit = (num > 0) ? num : DEFAULT_RENDER_COUNT_LIMIT;
+          mode_name = "render count limit";
+          value_str = "" + render_count_limit;
+        }
+        else {
+          value_str = NULL;
+        }
       }
-      else if (cmd[1] == "direct") {
-        direct_dump_mode = onoff;
-        std::cout << "direct dump mode = " << onoff_str << std::endl;
+      if (verbose_mode && mode_name != NULL) {
+        std::cout << ANSI_FGCOLOR_GREEN;
+        std::cout << "// " << mode_name << " = " << value_str << std::endl;
+        std::cout << ANSI_FGCOLOR_DEFAULT;
       }
-      else if (cmd[1] == "separator") {
-        separator_mode = onoff;
-        std::cout << "separator mode = " << onoff_str << std::endl;
-      }
-      else if (cmd[1] == "full" || cmd[1] == "full_search") {
-        full_search_mode = onoff;
-        std::cout << "full search mode = " << onoff_str << std::endl;
-      }
-      else if (cmd[1] == "coloring" || cmd[1] == "ansi_coloring") {
-        ansi_coloring_mode = onoff;
-        std::cout << "ANSI coloring mode = " << onoff_str << std::endl;
-      }
-      else if (cmd[1] == "newline" || cmd[1] == "more_newline") {
-        more_newline_mode = onoff;
-        std::cout << "newline = " << onoff_str << std::endl;
-      }
-      else if (cmd[1] == "limit" || cmd[1] == "render_limit" || cmd[1] == "render_count_limit") {
-        int num = atoi( cmd[value_ix].c_str() );
-        render_count_limit = (num > 0) ? num : DEFAULT_RENDER_COUNT_LIMIT;
-        std::cout << "render count limit = " << render_count_limit << std::endl;
-      }
-      std::cout << ANSI_FGCOLOR_DEFAULT;
     } else {
       std::cout << "[command] set {limit} = <number>" << std::endl;
       std::cout << "[command] set {verbose|separator|direct|full|coloring|newline} = {on|off}" << std::endl;

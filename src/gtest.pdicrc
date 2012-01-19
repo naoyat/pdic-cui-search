@@ -1,0 +1,21 @@
+; テスト用pdicrc
+
+add loadpath ./jiro131u
+add loadpath ./jiro132u
+add loadpath ./indices
+
+load EIJI-131.DIC eijiro
+load WAEI-131.DIC waeijiro
+load REIJI131.DIC reijiro
+load RYAKU131.DIC ryakujiro
+
+load EIJI-132.DIC eijiro
+load WAEI-132.DIC waeijiro
+load REIJI132.DIC reijiro
+load RYAKU132.DIC ryakujiro
+
+set verbose = off
+set direct = off
+set coloring = off
+set full = off
+set limit = 10000
