@@ -99,4 +99,4 @@ void cb_save(PDICDatafield *datafield);
 void cb_estimate_buf_size(PDICDatafield *datafield);
 void cb_stock_entry_words(PDICDatafield *datafield);
 
-#endif;
+#endif
