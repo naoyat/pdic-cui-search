@@ -484,12 +484,26 @@ bool do_command(char *cmdstr)
     }
     */
   }
-  else if (cmd.size() == 2 && cmd[0] == "make" && cmd[1] == "toc") {
-    traverse(current_dict_ids, current_dict_id) {
-      Dict *dict = dicts[*current_dict_id];
-      dict->make_toc();
-      //dict->load_sarray_index();
+  else if (cmd[0] == "make") {
+    if (cmd.size() == 2) {
+      if (cmd[1] == "toc") {
+        traverse(current_dict_ids, current_dict_id) {
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_toc();
+        }
+      } else if (cmd[1] == "xml") {
+        traverse(current_dict_ids, current_dict_id) {
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_macdic_xml();
+        }
+      } else {
+        std::cout << "[command] make {toc|xml}" << std::endl;
+      }
+    } else {
+      std::cout << "[command] make {toc|xml}" << std::endl;
     }
+  }
+  else if (cmd.size() == 2 && cmd[0] == "make" && cmd[1] == "toc") {
   }
   else if (cmd[0] == "dump") {
     if (cmd.size() == 1) {

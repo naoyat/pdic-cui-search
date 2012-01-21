@@ -10,7 +10,7 @@ CPPFLAGS = -O3
 
 
 OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o Dict.o \
-          bocu1.o cout.o dump.o filemem.o search.o shell.o timeutil.o utf8.o util.o util_stl.o
+          bocu1.o cout.o dump.o filemem.o search.o shell.o timeutil.o utf8.o util.o util_stl.o macdic_xml.o
 
 TEST_OBJECTS = Dict_gtest.o PDICIndex_gtest.o filemem_gtest.o search_gtest.o shell_gtest.o utf8_gtest.o util_gtest.o
 TEST_DATA = filemem_gtest.dat
@@ -49,7 +49,7 @@ clean:
 
 Criteria.o: Criteria.cc Criteria.h  PDICDatafield.h bocu1.h charcode.h dump.h types.h util.h
 Dict.o: Dict.cc Dict.h  Criteria.h PDICHeader.h PDICIndex.h PDICDatablock.cc PDICDatafield.h \
-        ansi_color.h bocu1.h charcode.h filemem.h timeutil.h util_stl.h utf8.h types.h 
+        ansi_color.h bocu1.h charcode.h filemem.h timeutil.h util_stl.h utf8.h types.h macdic_xml.h
 PDICDatablock.o: PDICDatablock.cc PDICDatablock.h  Criteria.h PDICDatafield.h PDICHeader.h PDICIndex.h bocu1.h charcode.h util.h types.h
 PDICDatafield.o: PDICDatafield.cc PDICDatafield.h  bocu1.h charcode.h utf8.h util.h
 PDICHeader.o: PDICHeader.cc PDICHeader.h  dump.h util.h
@@ -64,6 +64,7 @@ timeutil.o: timeutil.cc timeutil.h
 utf8.o: utf8.cc utf8.h  types.h
 util.o: util.cc util.h  types.h
 util_stl.o: util_stl.cc util_stl.h
+macdic_xml.o: macdic_xml.cc macdic_xml.h
 
 main.o: main.cc shell.h
 gtest_main.o: gtest_main.cc

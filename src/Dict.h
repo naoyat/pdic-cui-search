@@ -17,6 +17,7 @@ class PDICIndex;
 class Criteria;
 
 #define SX_TOC   ".toc"
+#define SX_XML   ".xml"
 
 #define DEFAULT_RENDER_COUNT_LIMIT 150
 
@@ -56,6 +57,7 @@ public:
   char *prefix() { return _prefix; }
 
   int make_toc();
+  int make_macdic_xml();
   void unload_additional_files();
   bool load_additional_files();
 

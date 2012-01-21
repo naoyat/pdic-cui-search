@@ -18,6 +18,7 @@
 #include "timeutil.h"
 #include "util_stl.h"
 #include "utf8.h"
+#include "macdic_xml.h"
 
 #include "charcode.h"
 #include "ansi_color.h"
@@ -182,6 +183,16 @@ void cb_stock_entry_words(PDICDatafield *datafield)
   }
 
   _toc.push_back(toc);
+}
+
+int
+Dict::make_macdic_xml()
+{
+  macdic_xml_open( std::string(this->prefix()) + SX_XML );
+  index->iterate_all_datablocks(&cb_macdic_xml, NULL);
+  macdic_xml_close();
+
+  return 0;
 }
 
 int
