@@ -39,7 +39,7 @@ class Dict {
 public:
   byte *filemem;
   std::string path, name;
-  char *_suffix;
+  char *_prefix;
 
 public:
   PDICIndex *index;
@@ -53,7 +53,7 @@ public:
   Dict(const std::string& name, byte *filemem);
   ~Dict();
   std::string info() { return name + " " + path; }
-  char *suffix() { return _suffix; }
+  char *prefix() { return _prefix; }
 
   int make_toc();
   void unload_additional_files();

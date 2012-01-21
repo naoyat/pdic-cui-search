@@ -288,10 +288,10 @@ int do_load(const std::string& filename)
       Dict *new_dict = new Dict(filename, filemem);
       int new_dict_id = dicts.size();
       dicts.push_back(new_dict);
-      nametable[new_dict->suffix()] = new_dict_id;
+      nametable[new_dict->prefix()] = new_dict_id;
 
       if (verbose_mode) {
-        printf("loading %s... => { name: %s, dict_id: %d }\n", path.c_str(), new_dict->suffix(), new_dict_id);
+        printf("loading %s... => { name: %s, dict_id: %d }\n", path.c_str(), new_dict->prefix(), new_dict_id);
       }
       return new_dict_id;
     }
@@ -443,7 +443,7 @@ bool do_command(char *cmdstr)
       int dict_id = do_load(filename);
 
       if (dict_id >= 0) {
-        char *name = dicts[dict_id]->suffix();
+        char *name = dicts[dict_id]->prefix();
         //std::cout << "+" << name << std::endl;
         for (int i=2; i<cmd.size(); ++i) {
           do_alias(cmd[i], name);

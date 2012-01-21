@@ -117,11 +117,11 @@ Dict::Dict(const std::string& name, byte *filemem)//, const std::string& path)
     dict_suffix_array[field] = (int *)NULL;
   }
 
-  _suffix = new char[name.size()+1];
-  strcpy(_suffix, basename((char *)name.c_str()));
-  int len = strlen(_suffix);
-  if (strcasecmp(_suffix + len-4, ".dic") == 0) {
-    _suffix[len - 4] = 0;
+  _prefix = new char[name.size()+1];
+  strcpy(_prefix, basename((char *)name.c_str()));
+  int len = strlen(_prefix);
+  if (strcasecmp(_prefix + len-4, ".dic") == 0) {
+    _prefix[len - 4] = 0;
   }
 
   load_additional_files();
@@ -131,7 +131,7 @@ Dict::~Dict()
 {
   unloadmem(filemem); filemem = (byte*)NULL;
 
-  delete _suffix;
+  delete _prefix;
   delete index;
 
   unload_additional_files();
@@ -240,7 +240,7 @@ Dict::make_toc()
   //
   // 保存
   //
-  std::string savepath = this->suffix();
+  std::string savepath = this->prefix();
 
   // TOC
   int toc_len = _toc.size();
@@ -539,7 +539,7 @@ Dict::load_additional_files()
   unload_additional_files();
 
   for (int i=0; i<loadpaths.size(); ++i) {
-    std::string path = loadpaths[i] + "/" + this->suffix();
+    std::string path = loadpaths[i] + "/" + this->prefix();
 
     if (this->toc) {
       // 読み込み済みなので無視
@@ -566,7 +566,7 @@ Dict::load_additional_files()
   }
 
   if (verbose_mode) {
-    std::cout << this->suffix() << ": loaded sarray index successfully." << std::endl;
+    std::cout << this->prefix() << ": loaded sarray index successfully." << std::endl;
   }
 
   return true;
