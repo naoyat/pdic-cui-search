@@ -16,7 +16,7 @@ std::map<void*,std::pair<int,int> > mmap_info;
 int savemem(const char *path, byte *data, int data_size, int mode)
 {
   int fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, mode);
-  if (fd == -1) return NULL;
+  if (fd == -1) return -1;
 
   ssize_t saved_size = write(fd, (const void *)data, (size_t)data_size);
   close(fd);
