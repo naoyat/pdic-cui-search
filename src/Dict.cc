@@ -207,6 +207,9 @@ int
 Dict::make_toc()
 {
   std::cout << name << ": インデックスを作成します..." << std::endl;
+
+  this->unload_additional_files(); // 現在使用中のインデックスをアンロードしてから
+
   time_reset();
 
   // initialize
