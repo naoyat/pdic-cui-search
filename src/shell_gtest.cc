@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "shell.h"
+#include "lookup.h"
 #include "util.h"
 #include "dump.h"
 
@@ -15,7 +16,7 @@ TEST(shell, sarray_lookup) {
   if (is_available) {
     lookup_result_vec result;
 
-    result = sarray_lookup((byte *)"whose creativity");
+    result = _sarray_lookup((byte *)"whose creativity");
     EXPECT_EQ( 3, result.size() );
     EXPECT_STREQ( "man whose creativity seems boundless", (const char *)result[0][F_ENTRY] );
     EXPECT_STREQ( "person whose creativity seems boundless", (const char *)result[1][F_ENTRY] );

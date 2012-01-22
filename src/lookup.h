@@ -2,6 +2,7 @@
 #define LOOKUP_H_
 
 #include <set>
+#include <re2/re2.h>
 //class PDICIndex;
 //class PDICDatafield;
 #include "types.h"
@@ -12,12 +13,11 @@
 #define LOOKUP_EXACT_MATCH 0x0001
 #define LOOKUP_FULL        0x1111
 
-/*
+//
 lookup_result_vec _normal_lookup(byte *needle, int needle_len=0);
 lookup_result_vec _sarray_lookup(byte *needle, int needle_len=0);
 lookup_result_vec _regexp_lookup(RE2 *current_pattern);
 lookup_result_vec _full_lookup(byte *needle, int needle_len=0);
-*/
 
 void lookup(byte *needle, int needle_len, int flag);
 int current_lookup_flags();
