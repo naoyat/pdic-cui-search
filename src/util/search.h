@@ -2,12 +2,12 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_SEARCH_H_
-#define SRC_SEARCH_H_
+#ifndef UTIL_SEARCH_H_
+#define UTIL_SEARCH_H_
 
 #include <utility>
 
-#include "./types.h"
+#include "util/types.h"
 
 std::pair<byte*, int*> concat_strings(byte* strings[],
                                       int string_count,
@@ -18,4 +18,4 @@ std::pair<int*, int> make_light_suffix_array(byte* buf, int buf_size);
 bsearch_result_t search(byte* buf, int* offsets, int offsets_len,
                         byte* needle, bool exact_match);
 
-#endif  // SRC_SEARCH_H_
+#endif  // UTIL_SEARCH_H_

@@ -2,13 +2,12 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_PDICHEADER_H_
-#define SRC_PDICHEADER_H_
+#ifndef PDIC_PDICHEADER_H_
+#define PDIC_PDICHEADER_H_
 
 #include <stdio.h>
 
-#include "./types.h"
-
+#include "util/types.h"
 
 #define OLDDIC  1  // PDIC ver 1.x : OLDDIC
 #define NEWDIC1 2  // PDIC ver 2.x : NEWDIC1
@@ -129,4 +128,4 @@ class PDICHeader {
   int   _major_version, _minor_version;
 };
 
-#endif  // SRC_PDICHEADER_H_
+#endif  // PDIC_PDICHEADER_H_

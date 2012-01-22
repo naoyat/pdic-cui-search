@@ -2,8 +2,8 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_SHELL_H_
-#define SRC_SHELL_H_
+#ifndef UTIL_SHELL_H_
+#define UTIL_SHELL_H_
 
 #include <re2/re2.h>
 
@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "./types.h"
+#include "util/types.h"
 
 
 // shell
@@ -38,4 +38,4 @@ void do_alias(const std::string& alias,
 bool do_use(std::string name);
 std::vector<int> resolve_aliases(const std::string& name);
 
-#endif  // SRC_SHELL_H_
+#endif  // UTIL_SHELL_H_

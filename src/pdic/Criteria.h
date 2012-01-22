@@ -2,13 +2,12 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_CRITERIA_H_
-#define SRC_CRITERIA_H_
+#ifndef PDIC_CRITERIA_H_
+#define PDIC_CRITERIA_H_
 
 #include <re2/re2.h>
 
-#include "./types.h"
-
+#include "util/types.h"
 
 class PDICDatafield;
 
@@ -27,4 +26,4 @@ class Criteria {
   bool  exact_match;
 };
 
-#endif  // SRC_CRITERIA_H_
+#endif  // PDIC_CRITERIA_H_

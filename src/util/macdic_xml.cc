@@ -2,12 +2,12 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "./macdic_xml.h"
+#include "util/macdic_xml.h"
 
 #include <stdio.h>
 
-#include "./Dict.h"
-#include "./PDICDatafield.h"
+#include "pdic/Dict.h"
+#include "pdic/PDICDatafield.h"
 
 FILE *macdic_xml_fp = NULL;
 int macdic_xml_entry_id = 0;

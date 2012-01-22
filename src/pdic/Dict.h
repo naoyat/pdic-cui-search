@@ -2,8 +2,8 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_DICT_H_
-#define SRC_DICT_H_
+#ifndef PDIC_DICT_H_
+#define PDIC_DICT_H_
 
 #include <stdio.h>
 #include <re2/re2.h>
@@ -14,8 +14,7 @@
 #include <utility>
 #include <vector>
 
-#include "./types.h"
-
+#include "util/types.h"
 
 class PDICIndex;
 class PDICDatafield;
@@ -101,4 +100,4 @@ void cb_save(PDICDatafield *datafield);
 void cb_estimate_buf_size(PDICDatafield *datafield);
 void cb_stock_entry_words(PDICDatafield *datafield);
 
-#endif  // SRC_DICT_H_
+#endif  // PDIC_DICT_H_

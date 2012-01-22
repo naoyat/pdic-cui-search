@@ -2,15 +2,14 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_LOOKUP_H_
-#define SRC_LOOKUP_H_
+#ifndef PDIC_LOOKUP_H_
+#define PDIC_LOOKUP_H_
 
 #include <re2/re2.h>
 
 #include <set>
 
-#include "./types.h"
-
+#include "util/types.h"
 
 #define LOOKUP_NORMAL      0x0010
 #define LOOKUP_SARRAY      0x0100
@@ -47,4 +46,4 @@ inline void default_lookup(byte *needle, int needle_len = 0) {
 void render_current_result();
 void render_current_result(const std::set<int>& range);
 
-#endif  // SRC_LOOKUP_H_
+#endif  // PDIC_LOOKUP_H_

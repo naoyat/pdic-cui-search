@@ -2,31 +2,32 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "./Dict.h"
+#include "pdic/Dict.h"
 
 #include <libgen.h>
 #include <strings.h>
 #include <re2/re2.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
-#include "./ansi_color.h"
-#include "./bocu1.h"
-#include "./charcode.h"
-#include "./Criteria.h"
-#include "./filemem.h"
-#include "./macdic_xml.h"
-#include "./PDICDatablock.h"
-#include "./PDICDatafield.h"
-#include "./PDICHeader.h"
-#include "./PDICIndex.h"
-#include "./search.h"
-#include "./stlutil.h"
-#include "./timeutil.h"
-#include "./utf8.h"
-#include "./util.h"
+#include "pdic/Criteria.h"
+#include "pdic/PDICDatablock.h"
+#include "pdic/PDICDatafield.h"
+#include "pdic/PDICHeader.h"
+#include "pdic/PDICIndex.h"
 
+#include "util/ansi_color.h"
+#include "util/bocu1.h"
+#include "util/charcode.h"
+#include "util/filemem.h"
+#include "util/macdic_xml.h"
+#include "util/search.h"
+#include "util/stlutil.h"
+#include "util/timeutil.h"
+#include "util/utf8.h"
+#include "util/util.h"
 
 const char *sx_buf[F_COUNT] = {
   ".entry", ".trans", ".exmp", ".pron"

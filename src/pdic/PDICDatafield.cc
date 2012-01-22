@@ -2,19 +2,18 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "./PDICDatafield.h"
+#include "pdic/PDICDatafield.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-#include "./bocu1.h"
-#include "./charcode.h"
-#include "./Dict.h"
-#include "./stlutil.h"
-#include "./types.h"
-#include "./utf8.h"
-#include "./util.h"
-
+#include "pdic/Dict.h"
+#include "util/bocu1.h"
+#include "util/charcode.h"
+#include "util/stlutil.h"
+#include "util/types.h"
+#include "util/utf8.h"
+#include "util/util.h"
 
 PDICDatafield::PDICDatafield(int start_pos,
                              int field_length,

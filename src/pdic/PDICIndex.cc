@@ -7,14 +7,14 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "./bocu1.h"
-#include "./dump.h"
-#include "./PDICDatablock.h"
-#include "./PDICHeader.h"
-#include "./PDICIndex.h"
-#include "./search.h"
-#include "./utf8.h"
-#include "./util.h"
+#include "pdic/PDICDatablock.h"
+#include "pdic/PDICHeader.h"
+#include "pdic/PDICIndex.h"
+#include "util/bocu1.h"
+#include "util/dump.h"
+#include "util/search.h"
+#include "util/utf8.h"
+#include "util/util.h"
 
 PDICIndex::PDICIndex(byte* filemem) {
   this->filemem = filemem;

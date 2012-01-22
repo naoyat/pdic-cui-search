@@ -1,32 +1,37 @@
 .SUFFIXES:
 .SUFFIXES: .cc .o
 
-CPP = g++
-CPPFLAGS = -g -Wall -DDEBUG -DVERBOSE
-# CPPFLAGS = -O3 -DDEBUG
+CXX = g++
+CXXFLAGS=-Wall -O3 -g -DDEBUG -DVERBOSE -I.
+# CXXFLAGS = -O3 -DDEBUG
 
 .cc.o: $*.h
-	$(CPP) $(CPPFLAGS) -c $*.cc
+	$(CXX) $(CXXFLAGS) -c $*.cc
 
 
-OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o Dict.o \
-          bocu1.o dump.o filemem.o macdic_xml.o lookup.o search.o shell.o stlutil.o timeutil.o utf8.o util.o 
+OBJECTS = \
+	obj/pdic/PDICHeader.o obj/pdic/PDICIndex.o obj/pdic/PDICDatablock.o \
+	obj/pdic/PDICDatafield.o obj/pdic/Criteria.o obj/pdic/Dict.o obj/pdic/lookup.o \
+	obj/util/bocu1.o obj/util/dump.o obj/util/filemem.o obj/util/macdic_xml.o \
+	obj/util/search.o obj/util/stlutil.o obj/util/timeutil.o obj/util/utf8.o \
+	obj/util/util.o obj/util/shell.o
 
-TEST_OBJECTS = filemem_gtest.o search_gtest.o shell_gtest.o utf8_gtest.o util_gtest.o
-TEST_DATA = filemem_gtest.dat
-TEST_OUTPUTS = filemem_gtest.savemem
+TEST_OBJECTS = test/filemem_gtest.o test/search_gtest.o \
+               test/utf8_gtest.o test/util_gtest.o test/shell_gtest.o
+TEST_DATA = test/filemem_gtest.dat
+TEST_OUTPUTS = test/filemem_gtest.savemem
 
 pdicsh: main.o $(OBJECTS)
-	$(CPP) $(CPPFLAGS) -o pdicsh main.o $(OBJECTS) -liconv -lre2
+	$(CXX) $(CXXFLAGS) -o pdicsh main.o $(OBJECTS) -liconv -lre2
 
 pdicsh_re2: main.o $(OBJECTS)
-	$(CPP) $(CPPFLAGS) -o pdicsh_re2 main.o $(OBJECTS) libre2.a -liconv
+	$(CXX) $(CXXFLAGS) -o pdicsh_re2 main.o $(OBJECTS) libre2.a -liconv
 
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
-	$(CPP) $(CPPFLAGS) -o pdic_gtest gtest_main.o $(OBJECTS) $(TEST_OBJECTS) -lgtest -liconv -lre2
+	$(CXX) $(CXXFLAGS) -o pdic_gtest $(OBJECTS) $(TEST_OBJECTS) -lgtest -lgtest_main -liconv -lre2
 
 EIJIRO_gtest: gtest_main.o $(OBJECTS) EIJIRO_gtest.o
-	$(CPP) $(CPPFLAGS) -o EIJIRO_gtest gtest_main.o $(OBJECTS) EIJIRO_gtest.o -lgtest -liconv -lre2
+	$(CXX) $(CXXFLAGS) -o EIJIRO_gtest $(OBJECTS) test/EIJIRO_gtest.o -lgtest -lgtest_main -liconv -lre2
 
 debug: pdicsh
 	gdb pdicsh
@@ -45,34 +50,11 @@ test_eijiro: EIJIRO_gtest
 	./EIJIRO_gtest
 
 clean:
-	rm -f pdicsh pdic_gtest *.o *~
+	rm -f pdicsh pdic_gtest *.o */*.o *~ $(TEST_OUTPUTS)
 
-Criteria.o: Criteria.cc Criteria.h  PDICDatafield.h bocu1.h charcode.h dump.h types.h util.h
-Dict.o: Dict.cc Dict.h  Criteria.h PDICHeader.h PDICIndex.h PDICDatablock.cc PDICDatafield.h \
-        ansi_color.h bocu1.h charcode.h filemem.h stlutil.h timeutil.h utf8.h types.h macdic_xml.h
-PDICDatablock.o: PDICDatablock.cc PDICDatablock.h  Criteria.h PDICDatafield.h PDICHeader.h PDICIndex.h bocu1.h charcode.h util.h types.h
-PDICDatafield.o: PDICDatafield.cc PDICDatafield.h  bocu1.h charcode.h utf8.h util.h
-PDICHeader.o: PDICHeader.cc PDICHeader.h  dump.h util.h
-PDICIndex.o: PDICIndex.cc PDICIndex.h  PDICDatablock.h PDICHeader.h PDICIndex.h bocu1.h search.h dump.h
-bocu1.o: bocu1.cc bocu1.h  dump.h types.h utf8.h
-dump.o: dump.cc dump.h  bocu1.h dump.h types.h util.h
-filemem.o: filemem.cc filemem.h  stlutil.h types.h
-search.o: search.cc search.h  util.h
-shell.o: shell.cc shell.h  lookup.h Dict.h PDICDatafield.h PDICHeader.h PDICIndex.h stlutil.h timeutil.h types.h util.h 
-lookup.o: lookup.cc lookup.h
-stlutil.o: stlutil.cc stlutil.h
-timeutil.o: timeutil.cc timeutil.h
-utf8.o: utf8.cc utf8.h  types.h
-util.o: util.cc util.h  types.h
-macdic_xml.o: macdic_xml.cc macdic_xml.h
+lint:
+	cpplint.py main.cc util/*.h util/*.cc pdic/*.h pdic/*.cc test/*.cc
 
-main.o: main.cc shell.h
-gtest_main.o: gtest_main.cc
-
-filemem_gtest.o: filemem_gtest.cc filemem.h dump.h
-search_gtest.o: search_gtest.cc  search.h util.h
-shell_gtest.o: shell_gtest.cc  shell.h
-utf8_gtest.o: utf8_gtest.cc  types.h utf8.h
-util_gtest.o: util_gtest.cc  types.h util.h
-
-EIJIRO_gtest.o: EIJIRO_gtest.cc  Dict.h shell.h
+obj/%.o: %.cc
+	@mkdir -p $$(dirname $@)
+	$(CXX) -o $@ $(CXXFLAGS) -c $*.cc

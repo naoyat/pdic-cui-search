@@ -2,19 +2,20 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "./lookup.h"
+#include "pdic/lookup.h"
 
 #include <re2/re2.h>
 #include <re2/stringpiece.h>
 
+#include <algorithm>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "./Dict.h"
-#include "./stlutil.h"
-#include "./types.h"
-#include "./util.h"
+#include "pdic/Dict.h"
+#include "util/stlutil.h"
+#include "util/types.h"
+#include "util/util.h"
 
 std::vector<Dict*> dicts;
 std::vector<int> current_dict_ids;

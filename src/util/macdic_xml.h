@@ -2,8 +2,8 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_MACDIC_XML_H_
-#define SRC_MACDIC_XML_H_
+#ifndef UTIL_MACDIC_XML_H_
+#define UTIL_MACDIC_XML_H_
 
 #include <stdio.h>
 
@@ -15,4 +15,4 @@ int macdic_xml_open(std::string path);
 void cb_macdic_xml(PDICDatafield* datafield);
 void macdic_xml_close();
 
-#endif  // SRC_MACDIC_XML_H_
+#endif  // UTIL_MACDIC_XML_H_

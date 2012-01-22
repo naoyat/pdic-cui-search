@@ -2,13 +2,12 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "./PDICHeader.h"
+#include "pdic/PDICHeader.h"
 
 #include <stdio.h>
 
-#include "./dump.h"
-#include "./util.h"
-
+#include "util/dump.h"
+#include "util/util.h"
 
 PDICHeader::PDICHeader(byte *filemem) {
   this->filemem = filemem;

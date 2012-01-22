@@ -2,8 +2,8 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_TYPES_H_
-#define SRC_TYPES_H_
+#ifndef UTIL_TYPES_H_
+#define UTIL_TYPES_H_
 
 #include <stdint.h>
 
@@ -26,4 +26,4 @@ typedef void (action_proc)(PDICDatafield* datafield);
 
 typedef std::pair<bool, std::pair<int, int> > bsearch_result_t;
 
-#endif  // SRC_TYPES_H_
+#endif  // UTIL_TYPES_H_

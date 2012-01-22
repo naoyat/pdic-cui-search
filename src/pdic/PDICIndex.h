@@ -2,12 +2,12 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_PDICINDEX_H_
-#define SRC_PDICINDEX_H_
+#ifndef PDIC_PDICINDEX_H_
+#define PDIC_PDICINDEX_H_
 
 #include <utility>
 
-#include "./types.h"
+#include "util/types.h"
 
 class PDICHeader;
 class Criteria;
@@ -47,4 +47,4 @@ class PDICIndex {
 
 byte* string_for_index(byte* str);
 
-#endif  // SRC_PDICINDEX_H_
+#endif  // PDIC_PDICINDEX_H_

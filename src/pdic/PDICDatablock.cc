@@ -2,20 +2,20 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "./PDICDatablock.h"
+#include "pdic/PDICDatablock.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "./bocu1.h"
-#include "./charcode.h"
-#include "./Criteria.h"
-#include "./PDICDatafield.h"
-#include "./PDICHeader.h"
-#include "./PDICIndex.h"
-#include "./types.h"
-#include "./util.h"
+#include "pdic/Criteria.h"
+#include "pdic/PDICDatafield.h"
+#include "pdic/PDICHeader.h"
+#include "pdic/PDICIndex.h"
+#include "util/bocu1.h"
+#include "util/charcode.h"
+#include "util/types.h"
+#include "util/util.h"
 
 PDICDatablock::PDICDatablock(byte* filemem, PDICIndex* index, int ix) {
   this->filemem = filemem;

@@ -2,10 +2,10 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_BOCU1_H_
-#define SRC_BOCU1_H_
+#ifndef UTIL_BOCU1_H_
+#define UTIL_BOCU1_H_
 
-#include "./types.h"
+#include "util/types.h"
 
 
 // codepoints <=> bocu1
@@ -18,4 +18,4 @@ byte* bocu1_to_utf8(byte *src_bocu1, int src_size = 0);
 
 void bocu1_check(byte *bocu1_encoded_data, int size = 0);
 
-#endif  // SRC_BOCU1_H_
+#endif  // UTIL_BOCU1_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_ANSI_COLOR_H_
-#define SRC_ANSI_COLOR_H_
+#ifndef UTIL_ANSI_COLOR_H_
+#define UTIL_ANSI_COLOR_H_
 
 // reset colors & styles
 #define ANSI_RESET             "\x1b[0m"
@@ -44,4 +44,4 @@
 #define ANSI_BGCOLOR_WHITE     "\x1b[47m"
 #define ANSI_BGCOLOR_DEFAULT   "\x1b[49m"
 
-#endif  // SRC_ANSI_COLOR_H_
+#endif  // UTIL_ANSI_COLOR_H_

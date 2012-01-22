@@ -6,10 +6,10 @@
 
 #include <string>
 
-#include "./ansi_color.h"
-#include "./dump.h"
-#include "./lookup.h"
-#include "./shell.h"
+#include "pdic/lookup.h"
+#include "util/ansi_color.h"
+#include "util/dump.h"
+#include "util/shell.h"
 
 extern std::string current_dict_name;
 extern bool verbose_mode;

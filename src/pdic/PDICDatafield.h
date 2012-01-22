@@ -2,12 +2,12 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_PDICDATAFIELD_H_
-#define SRC_PDICDATAFIELD_H_
+#ifndef PDIC_PDICDATAFIELD_H_
+#define PDIC_PDICDATAFIELD_H_
 
 #include <map>
 
-#include "./types.h"
+#include "util/types.h"
 
 class Criteria;
 
@@ -65,4 +65,4 @@ class PDICDatafield {
 #define EXT_HAS_RESERVED (1 << EXT_RESERVED)
 #define EXT_HAS_LINKDATA (1 << EXT_LINKDATA)
 
-#endif  // SRC_PDICDATAFIELD_H_
+#endif  // PDIC_PDICDATAFIELD_H_

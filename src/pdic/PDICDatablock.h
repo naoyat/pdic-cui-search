@@ -2,12 +2,12 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_PDICDATABLOCK_H_
-#define SRC_PDICDATABLOCK_H_
+#ifndef PDIC_PDICDATABLOCK_H_
+#define PDIC_PDICDATABLOCK_H_
 
 #include <stdio.h>
 
-#include "./types.h"
+#include "util/types.h"
 
 class Criteria;
 class PDICIndex;
@@ -32,4 +32,4 @@ class PDICDatablock {
   bool  _isAligned;
 };
 
-#endif  // SRC_PDICDATABLOCK_H_
+#endif  // PDIC_PDICDATABLOCK_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_STLUTIL_H_
-#define SRC_STLUTIL_H_
+#ifndef UTIL_STLUTIL_H_
+#define UTIL_STLUTIL_H_
 
 #include <deque>
 #include <list>
@@ -90,4 +90,4 @@ template <typename T1, typename T2>
   return s << "(" << p.first << "," << p.second << ")";
 }
 
-#endif  // SRC_STLUTIL_H_
+#endif  // UTIL_STLUTIL_H_

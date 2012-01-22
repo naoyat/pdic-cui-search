@@ -11,16 +11,15 @@
 #include <sstream>
 #include <string>
 
-#include "./bocu1.h"
-#include "./charcode.h"
-#include "./dump.h"
-#include "./PDICDatafield.h"
-#include "./PDICHeader.h"
-#include "./PDICIndex.h"  // string_for_index()
-#include "./types.h"
-#include "./utf8.h"
-#include "./util.h"
-
+#include "pdic/PDICDatafield.h"
+#include "pdic/PDICHeader.h"
+#include "pdic/PDICIndex.h"  // string_for_index()
+#include "util/bocu1.h"
+#include "util/charcode.h"
+#include "util/dump.h"
+#include "util/types.h"
+#include "util/utf8.h"
+#include "util/util.h"
 
 Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match) {
   this->re2_pattern = new RE2(std::string("(?i)")

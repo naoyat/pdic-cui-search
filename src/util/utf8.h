@@ -2,12 +2,12 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_UTF8_H_
-#define SRC_UTF8_H_
+#ifndef UTIL_UTF8_H_
+#define UTIL_UTF8_H_
 
 #include <stdio.h>
 
-#include "./types.h"
+#include "util/types.h"
 
 
 /*
@@ -29,4 +29,4 @@ char *_iconv(const char* src, size_t src_size, const char* src_code,
 byte *sjis_to_utf8(byte* src_sjis, int size = 0);
 byte *utf8_to_sjis(byte* src_utf8, int size = 0);
 
-#endif  // SRC_UTF8_H_
+#endif  // UTIL_UTF8_H_

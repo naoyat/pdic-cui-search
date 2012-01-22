@@ -2,7 +2,7 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "./shell.h"
+#include "util/shell.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,17 +15,16 @@
 #include <string>
 #include <vector>
 
-#include "./ansi_color.h"
-#include "./Dict.h"
-#include "./filemem.h"
-#include "./lookup.h"
-#include "./PDICDatafield.h"
-#include "./PDICHeader.h"
-#include "./PDICIndex.h"
-#include "./stlutil.h"
-#include "./timeutil.h"
-#include "./util.h"
-
+#include "pdic/Dict.h"
+#include "pdic/lookup.h"
+#include "pdic/PDICDatafield.h"
+#include "pdic/PDICHeader.h"
+#include "pdic/PDICIndex.h"
+#include "util/ansi_color.h"
+#include "util/filemem.h"
+#include "util/stlutil.h"
+#include "util/timeutil.h"
+#include "util/util.h"
 
 //
 // globals

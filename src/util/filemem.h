@@ -2,10 +2,10 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_FILEMEM_H_
-#define SRC_FILEMEM_H_
+#ifndef UTIL_FILEMEM_H_
+#define UTIL_FILEMEM_H_
 
-#include "./types.h"
+#include "util/types.h"
 
 // メモリイメージをそのまま保存
 int   savemem(const char* path, byte* data, int data_size, int mode = 0600);
@@ -15,4 +15,4 @@ bool  unloadmem(byte* ptr);
 int   mem_fd(byte* ptr);
 int   mem_size(byte* ptr);
 
-#endif  // SRC_FILEMEM_H_
+#endif  // UTIL_FILEMEM_H_

@@ -2,14 +2,14 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SRC_UTIL_H_
-#define SRC_UTIL_H_
+#ifndef UTIL_UTIL_H_
+#define UTIL_UTIL_H_
 
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "./types.h"
+#include "util/types.h"
 
 inline byte* BYTE(char *str) {
   return reinterpret_cast<byte*>(str);
@@ -59,4 +59,4 @@ byte* strhead(byte* ptr);
 inline bool is_not_empty(byte* ptr) { return ptr && ptr[0]; }
 inline bool is_empty(byte* ptr) { return (!ptr) || !ptr[0]; }
 
-#endif  // SRC_UTIL_H_
+#endif  // UTIL_UTIL_H_
