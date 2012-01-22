@@ -13,8 +13,11 @@ std::vector<std::string> split(std::string str, int delim)
   const char *s = str.c_str();
   if (delim == ' ') {
     for (const char *p=s; *p; p++) {
-      if (*p == delim) s++;
-      else break;
+      if (*p == delim) {
+        s++;
+      } else {
+        break;
+      }
     }
     if (!*s) return result;
 

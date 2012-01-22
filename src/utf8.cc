@@ -33,10 +33,13 @@ byte *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
   dest_size = 0;
   for (int i=0; i<src_size; i++) {
     int codepoint = src_codepoint[i];
-    if (codepoint == 0) break;
-    else if (codepoint <= 0x7f) dest_size += 1;
-    else if (codepoint <= 0x07ff) dest_size += 2;
-    else /* if (src_codepoint[i] <= 0xffff) */ {
+    if (codepoint == 0) {
+      break;
+    } else if (codepoint <= 0x7f) {
+      dest_size += 1;
+    } else if (codepoint <= 0x07ff) {
+      dest_size += 2;
+    } else /* if (src_codepoint[i] <= 0xffff) */ {
       if (0xd800 <= codepoint && codepoint <= 0xdbff) {
         //int upper = codepoint - 0xd800;
         //int lower = src_codepoint[++i] - 0xdc00;
@@ -86,8 +89,10 @@ byte *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
     }
   }
   dest[j] = 0;
+
   return dest;
 }
+
 unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_length)
 {
   dest_length = 0;
@@ -158,7 +163,6 @@ unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_length)
   unichar *newp = (unichar *)realloc((void *)dest, sizeof(unichar)*(dest_length+1));
   return newp ? newp : dest;
 }
-
 
 char *_iconv(const char *src, size_t src_size, const char *src_code, char *dest, size_t dest_size, const char *dest_code)
 {

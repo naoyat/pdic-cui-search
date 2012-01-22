@@ -207,11 +207,9 @@ bool do_command(char *cmdstr)
   if (cmd[0][0] == 'q' /*|| cmd[0] == "quit"*/ || cmd[0] == "bye") {
     std::cout << "しばらくお待ちください..." << std::endl;
     return false;
-  }
-  else if (cmd[0] == "status") {
+  } else if (cmd[0] == "status") {
     render_status();
-  }
-  else if (cmd[0] == "last" || cmd[0] == "again") {
+  } else if (cmd[0] == "last" || cmd[0] == "again") {
     int last = current_result_vec.size();
     if (last > 0) {
       reset_render_count();
@@ -223,16 +221,13 @@ bool do_command(char *cmdstr)
             if (s < 1) s = 1;
             if (last < e) e = last;
             if (s <= e) for (line=s; line<=e; ++line) lines.insert(line-1);
-          }
-          else if (RE2::FullMatch(cmd[i],"(\\d+)-", &s))  {
+          } else if (RE2::FullMatch(cmd[i],"(\\d+)-", &s))  {
             if (s < 1) s = 1;
             if (s <= last) for (line=s; line<=last; ++line) lines.insert(line-1);
-          }
-          else if (RE2::FullMatch(cmd[i],"-(\\d+)", &e))  {
+          } else if (RE2::FullMatch(cmd[i],"-(\\d+)", &e))  {
             if (last < e) e = last;
             if (1 <= e) for (line=1; line<=e; ++line) lines.insert(line-1);
-          }
-          else if (RE2::FullMatch(cmd[i],"(\\d+)", &line)) {
+          } else if (RE2::FullMatch(cmd[i],"(\\d+)", &line)) {
             if (1 <= line && line <= last) lines.insert(line-1);
           }
         }
@@ -245,8 +240,7 @@ bool do_command(char *cmdstr)
       }
       say_render_count();
     }
-  }
-  else if (cmd[0] == "set") {
+  } else if (cmd[0] == "set") {
     if (cmd.size() >= 3) {
       int value_ix = 2; if (cmd[2] == "=") ++value_ix;
       const char *mode_name = NULL;
@@ -257,32 +251,25 @@ bool do_command(char *cmdstr)
         if (cmd[1] == "verbose") {
           verbose_mode = onoff;
           mode_name = "verbose mode";
-        }
-        else if (cmd[1] == "direct") {
+        } else if (cmd[1] == "direct") {
           direct_dump_mode = onoff;
           mode_name = "direct dump mode";
-        }
-        else if (cmd[1] == "separator") {
+        } else if (cmd[1] == "separator") {
           separator_mode = onoff;
           mode_name = "separator mode";
-        }
-        else if (cmd[1] == "full" || cmd[1] == "full_search") {
+        } else if (cmd[1] == "full" || cmd[1] == "full_search") {
           full_search_mode = onoff;
           mode_name = "full search mode";
-        }
-        else if (cmd[1] == "coloring" || cmd[1] == "ansi_coloring") {
+        } else if (cmd[1] == "coloring" || cmd[1] == "ansi_coloring") {
           ansi_coloring_mode = onoff;
           mode_name = "ANSI coloring mode";
-        }
-        else if (cmd[1] == "newline" || cmd[1] == "more_newline") {
+        } else if (cmd[1] == "newline" || cmd[1] == "more_newline") {
           more_newline_mode = onoff;
           mode_name = "newline";
-        }
-        else if (cmd[1] == "stop_on_limit") {
+        } else if (cmd[1] == "stop_on_limit") {
           stop_on_limit_mode = onoff;
           mode_name = "stop on limit";
-        }
-        else {
+        } else {
           mode_name = NULL;
           value_str[0] = '\0';
         }
@@ -292,32 +279,25 @@ bool do_command(char *cmdstr)
           render_count_limit = (num > 0) ? num : DEFAULT_RENDER_COUNT_LIMIT;
           mode_name = "render count limit";
           sprintf(value_str, "%d", render_count_limit);
-        }
-        else if (cmd[1] == "lookup") {
+        } else if (cmd[1] == "lookup") {
           mode_name = "default lookup mode";
           sprintf(value_str, "%s", cmd[value_ix].c_str());
           if (cmd[value_ix] == "exact") {
             default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
-          }
-          if (cmd[value_ix] == "forward") {
+          } else if (cmd[value_ix] == "forward") {
             default_lookup_flags = LOOKUP_NORMAL;
-          }
-          if (cmd[value_ix] == "sarray") {
+          } else if (cmd[value_ix] == "sarray") {
             default_lookup_flags = LOOKUP_SARRAY;
-          }
-          if (cmd[value_ix] == "regexp") {
+          } else if (cmd[value_ix] == "regexp") {
             default_lookup_flags = LOOKUP_REGEXP;
-          }
-          if (cmd[value_ix] == "all") {
+          } else if (cmd[value_ix] == "all") {
             default_lookup_flags = LOOKUP_NORMAL | LOOKUP_SARRAY | LOOKUP_REGEXP;
-          }
-          else {
+          } else {
             std::cout << "[command] set lookup = {exact|forward|sarray|regexp|all}" << std::endl;
             mode_name = NULL;
             //default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
           }
-        }
-        else {
+        } else {
           mode_name = NULL;
           value_str[0] = '\0';
         }
@@ -331,28 +311,25 @@ bool do_command(char *cmdstr)
       std::cout << "[command] set {limit} = <number>" << std::endl;
       std::cout << "[command] set {verbose|separator|direct|full|coloring|newline} = {on|off}" << std::endl;
     }
-  }
-  else if (cmd[0] == "add") {
+  } else if (cmd[0] == "add") {
     if (cmd.size() == 3 && cmd[1] == "loadpath") {
       loadpaths.push_back(cmd[2]);
     } else {
       std::cout << "[command] add loadpath <path>" << std::endl;
     }
-  }
-  else if (cmd[0] == "group" && cmd.size() >= 2) {
+  } else if (cmd[0] == "group" && cmd.size() >= 2) {
     if (cmd.size() >= 2) {
       std::string groupname = cmd[1];
       std::vector<std::string> names;
       for (uint i=2; i<cmd.size(); ++i) {
         if (cmd[i] == "=") continue;
-        else names.push_back(cmd[i]);
+        names.push_back(cmd[i]);
       }
       do_alias(groupname, names);
     } else {
       std::cout << "[command] group <groupname> = <name_1> <name_2> ... <name_n>" << std::endl;
     }
-  }
-  else if (cmd[0] == "load") {
+  } else if (cmd[0] == "load") {
     if (cmd.size() >= 2) {
       std::string filename = cmd[1];
       int dict_id = do_load(filename);
@@ -360,17 +337,14 @@ bool do_command(char *cmdstr)
       if (dict_id >= 0) {
         char *name = dicts[dict_id]->prefix();
         //std::cout << "+" << name << std::endl;
-        for (uint i=2; i<cmd.size(); ++i) {
-          do_alias(cmd[i], name);
-        }
+        for (uint i=2; i<cmd.size(); ++i) do_alias(cmd[i], name);
       } else {
         std::cout << "// [ERROR] ファイル " << cmd[1] << " が読み込みパスに見つかりません。" << std::endl;
       }
     } else {
       std::cout << "[command] load <filename>" << std::endl;
     }
-  }
-  else if (cmd[0] == "use") {
+  } else if (cmd[0] == "use") {
     if (cmd.size() >= 2) {
       std::string name = cmd[1];
       if (found(aliases, name)) {
@@ -381,25 +355,16 @@ bool do_command(char *cmdstr)
     } else {
       std::cout << "[command] use <name>" << std::endl;
     }
-  }
-  else if (cmd[0] == "list") {
+  } else if (cmd[0] == "list") {
     std::set<int> dict_ids(all(current_dict_ids));
     for (uint dict_id=0; dict_id<dicts.size(); ++dict_id) {
       printf("%2d%c %s\n", dict_id, (found(dict_ids,dict_id) ? '*' : ':'), dicts[dict_id]->info().c_str());
     }
-  }
-  else if (cmd[0] == "aliases") {
+  } else if (cmd[0] == "aliases") {
     traverse(aliases, alias) {
       std::cout << alias->first << ": " << join(alias->second, ", ") << std::endl;
     }
-    /*
-    traverse(nametable, name) {
-      int dict_id = name->second;
-      std::cout << name->first << ": " << dict_id << " " << dicts[dict_id]->info() << std::endl;
-    }
-    */
-  }
-  else if (cmd[0] == "make") {
+  } else if (cmd[0] == "make") {
     if (cmd.size() == 2) {
       if (cmd[1] == "toc") {
         traverse(current_dict_ids, current_dict_id) {
@@ -417,10 +382,7 @@ bool do_command(char *cmdstr)
     } else {
       std::cout << "[command] make {toc|xml}" << std::endl;
     }
-  }
-  else if (cmd.size() == 2 && cmd[0] == "make" && cmd[1] == "toc") {
-  }
-  else if (cmd[0] == "dump") {
+  } else if (cmd[0] == "dump") {
     if (cmd.size() == 1) {
       std::cout << "[command] dump {header|index|words|datablock <id>|all}" << std::endl;
     } else if (current_dict_ids.size() == 0) {
@@ -450,23 +412,17 @@ bool do_command(char *cmdstr)
         }
       }
     }
-  }
-  else if (cmd[0] == "lookup") {
+  } else if (cmd[0] == "lookup") {
     normal_lookup((byte*)cmdstr + 7);
-  }
-  else if (cmd[0] == "sarray") {
+  } else if (cmd[0] == "sarray") {
     sarray_lookup((byte*)cmdstr + 7);
-  }
-  else if (cmd[0] == "regexp") {
+  } else if (cmd[0] == "regexp") {
     regexp_lookup((byte*)cmdstr + 7);
-  }
-  else if (cmd[0] == "full") {
+  } else if (cmd[0] == "full") {
     full_lookup((byte*)cmdstr + 5);
-  }
-  else if (cmd[0] == "clean") {
+  } else if (cmd[0] == "clean") {
     free_all_cloned_buffers();
-  }
-  else {
+  } else {
     std::cout << "// [ERROR] 未知のコマンド '" << cmd[0] << "' に遭遇..." << std::endl;
   }
 

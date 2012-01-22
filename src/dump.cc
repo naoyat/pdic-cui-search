@@ -21,8 +21,10 @@ void dump(byte *data, int size)
     printf("  ");
     for (int j=0; j<16; ++j) {
       int ch = data[i+j];
-      if (0x20 <= ch && ch <= 0x7e) putchar(ch);
-      else putchar('.');
+      if (0x20 <= ch && ch <= 0x7e)
+        putchar(ch);
+      else
+        putchar('.');
     }
 
     printf("\n");

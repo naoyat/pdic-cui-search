@@ -144,18 +144,26 @@ byte *string_for_index(byte *src_str)
   for (int i=0; i<src_cp_length; ++i) {
     int ch_s = src_cp[i], ch_d;
 
-    if (isupper(ch_s)) ch_d = tolower(ch_s);
-    else if (ch_s == '-') ch_d = ' ';
-    else if (ch_s == '\'') continue; // skip quote
-    else if (ch_s == 0x3001) ch_d = ','; // 、
-    else if (ch_s == 0x3002) ch_d = '.'; // 。
-    else if (ch_s == 0x301c) ch_d = '~'; // 〜
-    else if (0x30a0 <= ch_s && ch_s <= 0x30ff) {
+    if (isupper(ch_s)) {
+      ch_d = tolower(ch_s);
+    } else if (ch_s == '-') {
+      ch_d = ' ';
+    } else if (ch_s == '\'') {
+      continue; // skip quote
+    } else if (ch_s == 0x3001) {
+      ch_d = ','; // 、
+    } else if (ch_s == 0x3002) {
+      ch_d = '.'; // 。
+    } else if (ch_s == 0x301c) {
+      ch_d = '~'; // 〜
+    } else if (0x30a0 <= ch_s && ch_s <= 0x30ff) {
       int ch = katakana_map[ch_s - 0x30a0];
       ch_d = ch ? ch : ch_s;
+    } else if (0xff00 <= ch_s && ch_s <= 0xff9f) {
+      ch_d = ch_s - 0xff00 + 0x20;
+    } else {
+      ch_d = ch_s;
     }
-    else if (0xff00 <= ch_s && ch_s <= 0xff9f) ch_d = ch_s - 0xff00 + 0x20;
-    else ch_d = ch_s;
 
     dest_cp[dest_cp_length++] = ch_d;
   }
@@ -166,8 +174,6 @@ byte *string_for_index(byte *src_str)
   byte *dest_str = encode_utf8(dest_cp, dest_cp_length, dest_size);
 
   free((void *)dest_cp);
-
-  //printf("{%s} --> {%s}\n", src_str, dest_str);
 
   return dest_str;
 }

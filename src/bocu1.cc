@@ -117,12 +117,19 @@ byte *encode_bocu1(unichar *src_codepoint, int src_len, int& dest_size)
     }
 
     // renew pc
-    if (code < 0x20) pc = 0x40;
-    else if (code == 0x20) ;
-    else if (0x3040 <= code && code <= 0x309f) pc = 0x3070;
-    else if (0x4e00 <= code && code <= 0x9fa5) pc = 0x7711;
-    else if (0xac00 <= code && code <= 0xd7a3) pc = 0xc1d1;
-    else pc = (code & 0xffff80) | 0x40;
+    if (code < 0x20) {
+      pc = 0x40;
+    } else if (code == 0x20) {
+      ;
+    } else if (0x3040 <= code && code <= 0x309f) {
+      pc = 0x3070;
+    } else if (0x4e00 <= code && code <= 0x9fa5) {
+      pc = 0x7711;
+    } else if (0xac00 <= code && code <= 0xd7a3) {
+      pc = 0xc1d1;
+    } else {
+      pc = (code & 0xffff80) | 0x40;
+    }
   }
   dest[dest_size] = 0;
 
@@ -138,8 +145,7 @@ unichar *decode_bocu1(byte *src_bocu1, int src_size, int& dest_size)
     lead = (byte)src_bocu1[i++];
     if (lead <= 0x20) {
       // code = lead
-    }
-    else if (lead == 0x21) { // 21 (L T T T)
+    } else if (lead == 0x21) { // 21 (L T T T)
       diff = -187660 + 243*243*243;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr * 243*243;
@@ -147,35 +153,29 @@ unichar *decode_bocu1(byte *src_bocu1, int src_size, int& dest_size)
       diff += tr * 243;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr;
-    }
-    else if (lead < 0x25) { // 22-24 (L T T)
+    } else if (lead < 0x25) { // 22-24 (L T T)
       diff = -10513 + (lead - 0x25)*243*243;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr * 243;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr;
-    }
-    else if (lead < 0x50) { // 25-4f (L T)
+    } else if (lead < 0x50) { // 25-4f (L T)
       diff = -64 + (lead - 0x50)*243;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr;
-    }
-    else if (lead < 0xd0) { // 50-cf (L)
+    } else if (lead < 0xd0) { // 50-cf (L)
       diff = lead - 0x90;
-    }
-    else if (lead < 0xfb) { // d0-fa (L T)
+    } else if (lead < 0xfb) { // d0-fa (L T)
       diff = 64 + (lead - 0xd0)*243;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr;
-    }
-    else if (lead < 0xfe) { // fb-fd (L T T)
+    } else if (lead < 0xfe) { // fb-fd (L T T)
       diff = 10513 + (lead - 0xfb)*243*243;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr * 243;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr;
-    }
-    else if (lead == 0xfe) { // fe (L T T T)
+    } else if (lead == 0xfe) { // fe (L T T T)
       diff = 187660;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr * 243*243;
@@ -183,8 +183,7 @@ unichar *decode_bocu1(byte *src_bocu1, int src_size, int& dest_size)
       diff += tr * 243;
       tr = decode_trail[ src_bocu1[i++] ];
       diff += tr;
-    }
-    else { // ff : reset
+    } else { // ff : reset
       ;
     }
 
@@ -192,20 +191,25 @@ unichar *decode_bocu1(byte *src_bocu1, int src_size, int& dest_size)
       unichar code = (unichar)lead;
       dest[dest_size++] = code;
       pc = 0x40;
-    }
-    else if (lead == 0x20) {
+    } else if (lead == 0x20) {
       unichar code = 0x20;
       dest[dest_size++] = code;
     } else if (lead < 0xff) {
       unichar code = (unichar)(pc + diff);
       //if (code < 0) code = 0; // error recovery
       dest[dest_size++] = code;
-      if (code < 0x20) pc = 0x40;
-      else if (code == 0x20) ;
-      else if (0x3040 <= code && code <= 0x309f) pc = 0x3070;
-      else if (0x4e00 <= code && code <= 0x9fa5) pc = 0x7711;
-      else if (0xac00 <= code && code <= 0xd7a3) pc = 0xc1d1;
-      else pc = (code & ~0x7f) | 0x40;
+      if (code < 0x20)
+        pc = 0x40;
+      else if (code == 0x20)
+        ;
+      else if (0x3040 <= code && code <= 0x309f)
+        pc = 0x3070;
+      else if (0x4e00 <= code && code <= 0x9fa5)
+        pc = 0x7711;
+      else if (0xac00 <= code && code <= 0xd7a3)
+        pc = 0xc1d1;
+      else
+        pc = (code & ~0x7f) | 0x40;
     } else {
       pc = 0x40; // reset
     }
@@ -219,7 +223,7 @@ unichar *decode_bocu1(byte *src_bocu1, int src_size, int& dest_size)
 byte *utf8_to_bocu1(byte *src_utf8, int src_size)
 {
   if (!src_size) src_size = strlen((char *)src_utf8);
-                     
+
   int codepoints_len;
   unichar* codepoints = decode_utf8(src_utf8, src_size, codepoints_len);
 
@@ -269,15 +273,18 @@ void bocu1_check(byte *bocu1_encoded_data, int size)
   byte *bocu1str = encode_bocu1(codepoints2, codepoints2_len, bocu1_len);
   printf("["); inline_dump(bocu1str, bocu1_len); printf("]");
 
-  if (codepoints2_len == codepoints1_len && memcmp((char *)codepoints1, (char *)codepoints2, sizeof(unichar)*codepoints1_len) == 0)
+  if (codepoints2_len == codepoints1_len &&
+      memcmp((char *)codepoints1, (char *)codepoints2, sizeof(unichar)*codepoints1_len) == 0) {
     printf(" => ok");
-  else
+  } else {
     printf(" => NG");
+  }
 
-  if (bocu1_len == size && memcmp((char *)bocu1str, (char *)bocu1_encoded_data, size) == 0)
+  if (bocu1_len == size && memcmp((char *)bocu1str, (char *)bocu1_encoded_data, size) == 0) {
     printf(" => ok.\n");
-  else
+  } else {
     printf(" => NG.\n");
+  }
 
   free((void *)utf8str);
   free((void *)codepoints1);

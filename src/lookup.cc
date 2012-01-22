@@ -110,19 +110,16 @@ void lookup(byte *needle, int needle_len, int flag)
     }
     current_pattern = new RE2(needle_pattern);
     result_vec = _normal_lookup(needle, needle_len);
-  }
-  else if (flag == LOOKUP_SARRAY) {
+  } else if (flag == LOOKUP_SARRAY) {
     if (needle[needle_len-1] == '*') {
       needle[needle_len-1] = 0;
     }
     current_pattern = new RE2(re2::StringPiece((const char *)needle, needle_len));
     result_vec = _sarray_lookup(needle, needle_len);
-  }
-  else if (flag == LOOKUP_REGEXP) {
+  } else if (flag == LOOKUP_REGEXP) {
     current_pattern = new RE2(re2::StringPiece((const char *)needle, needle_len));
     result_vec = _regexp_lookup(current_pattern);
-  }
-  else {
+  } else {
     current_pattern = new RE2(re2::StringPiece((const char *)needle, needle_len));
     result_vec = _full_lookup(needle, needle_len);
   }
@@ -140,9 +137,14 @@ int current_lookup_flags()
 
 const char *current_lookup_mode()
 {
-  if (default_lookup_flags == LOOKUP_NORMAL) return "normal";
-  if (default_lookup_flags == (LOOKUP_NORMAL | LOOKUP_EXACT_MATCH)) return "exact";
-  if (default_lookup_flags == LOOKUP_SARRAY) return "sarray";
-  if (default_lookup_flags == LOOKUP_REGEXP) return "regexp";
-  else return "all";
+  if (default_lookup_flags == LOOKUP_NORMAL)
+    return "normal";
+  else if (default_lookup_flags == (LOOKUP_NORMAL | LOOKUP_EXACT_MATCH))
+    return "exact";
+  else if (default_lookup_flags == LOOKUP_SARRAY)
+    return "sarray";
+  else if (default_lookup_flags == LOOKUP_REGEXP)
+    return "regexp";
+  else
+    return "all";
 }

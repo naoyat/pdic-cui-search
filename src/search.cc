@@ -180,22 +180,19 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
 #ifdef DEBUG
   ++cmp_count;
 #endif
-        if (cmp == 0) {
+        if (cmp == 0)
           lo = mid + 1;
-        } else {
+        else
           hi = mid;
-        }
       }
       pos_min = lo;
 
       return std::make_pair(true, std::make_pair(neg_max+1, pos_min-1));
-    }
-    else if (cmp < 0) {
+    } else if (cmp < 0) {
       if (mid > neg_max) neg_max = mid;
       lo = mid + 1;
       continue;
-    }
-    else if (cmp > 0) {
+    } else if (cmp > 0) {
       if (mid < pos_min) pos_min = mid;
       hi = mid - 1;
       continue;

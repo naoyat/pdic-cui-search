@@ -62,28 +62,27 @@ Criteria::~Criteria()
 
 bool Criteria::match(PDICDatafield *field)
 {
-  /*
-  printf("%%match(needle="); bocu1_dump_in_utf8( needle );
-  printf(", [");
-  bocu1_dump_in_utf8( field->entry_index );
-  printf("|");
-  bocu1_dump_in_utf8( field->entry_word );
-  printf("])\n");
-  */
   if (exact_match) {
     if (field->entry_word_size == needle_size
-        && strncmp((char *)field->entry_word, (char *)needle, needle_size) == 0)
+        && strncmp((char *)field->entry_word, (char *)needle, needle_size) == 0) {
       return true;
-    else if (field->v6index &&
+    } else if (field->v6index &&
              (field->entry_index_size == needle_size_for_index
-              && strncmp((char *)field->entry_index, (char *)needle_for_index, needle_size_for_index) == 0))
+              && strncmp((char *)field->entry_index,
+                         (char *)needle_for_index, needle_size_for_index) == 0)) {
       return true;
-      else return false;
+    } else {
+      return false;
+    }
   } else {
-    if (strncmp((char *)field->entry_word, (char *)needle, needle_size) == 0) return true;
-    else if (field->v6index &&
-             strncmp((char *)field->entry_index, (char *)needle_for_index, needle_size_for_index) == 0 )
+    if (strncmp((char *)field->entry_word, (char *)needle, needle_size) == 0) {
       return true;
-    else return false;
+    } else if (field->v6index &&
+               strncmp((char *)field->entry_index,
+                       (char *)needle_for_index, needle_size_for_index) == 0) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
