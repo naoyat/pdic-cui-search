@@ -8,7 +8,6 @@ CXXFLAGS=-Wall -O3 -g -DDEBUG -DVERBOSE -I.
 .cc.o: $*.h
 	$(CXX) $(CXXFLAGS) -c $*.cc
 
-
 OBJECTS = \
 	obj/pdic/PDICHeader.o obj/pdic/PDICIndex.o obj/pdic/PDICDatablock.o \
 	obj/pdic/PDICDatafield.o obj/pdic/Criteria.o obj/pdic/Dict.o obj/pdic/lookup.o \
