@@ -24,6 +24,7 @@ void free_all_cloned_buffers()
 
 void *clone(void *data, size_t size, bool gc)
 {
+  if (!data) return NULL;
   void *buf = malloc(size);
   memcpy(buf, data, size);
   if (gc) clone_ptrs.insert(buf);
@@ -32,6 +33,8 @@ void *clone(void *data, size_t size, bool gc)
 
 byte *clone_cstr(byte *data, int length, bool gc)
 {
+  if (!data) return (byte *)NULL;
+  if (!data[0] && gc) return (byte *)"";
   if (!length) length = strlen((char *)data);
 
   void *newstr = clone((void *)data, length+1, gc);
@@ -42,6 +45,9 @@ byte *clone_cstr(byte *data, int length, bool gc)
 
 int bstrcmp(byte *s1, byte *s2, int minimum_charcode)
 {
+  if (!s1) return -1;
+  if (!s2) return 1;
+  //printf("bstrcmp(\"%s\", \"%s\")...\n", (const char*)s1, (const char*)s2);
   for (int i=0; ; ++i) {
     if (s1[i] < minimum_charcode) {
       if (s2[i] < minimum_charcode) return 0;
@@ -61,6 +67,7 @@ int bstrcmp(byte *s1, byte *s2, int minimum_charcode)
   else return 0;
   */
 }
+
 int bstrncmp(byte *s1, byte *s2, size_t n, int minimum_charcode)
 {
   for (int i=0; i<n; ++i) {
@@ -76,6 +83,23 @@ int bstrncmp(byte *s1, byte *s2, size_t n, int minimum_charcode)
   return 0;
 }
 
+int bstrcicmp(byte *s1, byte *s2, int minimum_charcode)
+{
+  for (int i=0; ; ++i) {
+    int c1 = tolower(s1[i]), c2 = tolower(s2[i]);
+    if (s1[i] < minimum_charcode) {
+      if (s2[i] < minimum_charcode) return 0;
+      else                          return c1 > c2 ? 1 : -1;
+    } else if (s2[i] < minimum_charcode) {
+      return 1;
+    } else {
+      if (c1 != c2) {
+        return c1 > c2 ? 1 : -1;
+      }
+    }
+  }
+  return 0;
+}
 
 int pbstrcmp(const void *s1, const void *s2)
 {

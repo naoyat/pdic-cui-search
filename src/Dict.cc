@@ -32,11 +32,18 @@ const char *sx_sarray[F_COUNT] = {".entry.sf",".trans.sf",".exmp.sf",".pron.sf"}
 
 bool lookup_result_asc( const lookup_result& left, const lookup_result& right )
 {
+  //printf("lr/a, %s, %s\n", (const char*)left[F_ENTRY], (const char*)right[F_ENTRY]);
   return bstrcmp(left[F_ENTRY], right[F_ENTRY]) < 0;
 }
 bool lookup_result_desc( lookup_result& left, lookup_result& right )
 {
+  //printf("lr/d, %s, %s\n", (const char*)left[F_ENTRY], (const char*)right[F_ENTRY]);
   return bstrcmp(left[F_ENTRY], right[F_ENTRY]) > 0;
+}
+
+bool toc_asc( const Toc& left, const Toc& right )
+{
+  return left.pdic_datafield_pos < right.pdic_datafield_pos;
 }
 
 extern std::vector<std::string> loadpaths;
@@ -54,7 +61,8 @@ bool stop_on_limit_mode = true;
 int match_count, render_count;
 int _search_lap_usec, _render_lap_usec;
 
-lookup_result_vec _result_vec;
+std::set<int> _result_id_set;
+Dict *_dict;
 
 void reset_match_count()
 {
@@ -260,6 +268,9 @@ Dict::make_toc()
     printf("TOC is not allocated\n");
     return -1;
   }
+
+  std::sort(all(_toc), toc_asc);
+
   for (int i=0,c=_toc.size(); i<c; ++i) toc[i] = _toc[i];
 
   savemem((savepath + SX_TOC).c_str(), (byte *)toc, sizeof(Toc)*_toc.size());
@@ -291,11 +302,15 @@ Dict::make_toc()
 void cb_dump_entry(PDICDatafield *datafield)
 {
   puts((char *)datafield->in_utf8(F_ENTRY));
-  ++match_count;
+
+  if (++match_count >= render_count_limit) render_count_limit_exceeded = true;
 }
 
 void cb_dump(PDICDatafield *datafield)
 {
+  //int offset = (int)(word - buf);
+  //int word_id = rev(field, offset);
+
   byte *fields[F_COUNT] = {
     datafield->in_utf8(F_ENTRY),
     datafield->in_utf8(F_JWORD),
@@ -303,28 +318,63 @@ void cb_dump(PDICDatafield *datafield)
     datafield->in_utf8(F_PRON)
   };
   render_result((lookup_result)fields, datafield->criteria->re2_pattern);
-  save_result(_result_vec, (lookup_result)fields);
-  ++match_count;
+
+  int word_id = _dict->word_id_for_pdic_datafield_pos(datafield->start_pos);
+  _result_id_set.insert(word_id);
+
+  if (++match_count >= render_count_limit) render_count_limit_exceeded = true;
 }
 
 void cb_save(PDICDatafield *datafield)
 {
-  byte *fields[F_COUNT] = {
-    datafield->in_utf8(F_ENTRY),
-    datafield->in_utf8(F_JWORD),
-    datafield->in_utf8(F_EXAMPLE),
-    datafield->in_utf8(F_PRON)
-  };
-  save_result(_result_vec, (lookup_result)fields);
-  ++match_count;
+  int word_id = _dict->word_id_for_pdic_datafield_pos(datafield->start_pos);
+  _result_id_set.insert(word_id);
+
+  if (++match_count >= render_count_limit) render_count_limit_exceeded = true;
 }
 
+int
+Dict::word_id_for_pdic_datafield_pos(int pdic_datafield_pos)
+{
+  if (found(revmap_pdic_datafield_pos,pdic_datafield_pos)) {
+    return revmap_pdic_datafield_pos[pdic_datafield_pos];
+  }
+  if (pdic_datafield_pos < toc[0].pdic_datafield_pos
+      || toc[this->toc_length-1].pdic_datafield_pos < pdic_datafield_pos) {
+    return -1;
+  }
 
-lookup_result_vec
-Dict::normal_lookup(byte *needle, bool exact_match)
+  int lo=0, hi=this->toc_length-1, mid=-1;
+  while (lo <= hi) {
+    mid = (lo + hi) / 2; /// 4億語とか扱わないから31bit桁あふれケアはしない
+    int cmp = pdic_datafield_pos - toc[mid].pdic_datafield_pos;
+    if (cmp == 0) {
+      return revmap_pdic_datafield_pos[pdic_datafield_pos] = mid;
+    }
+    if (cmp < 0) {
+      hi = mid - 1;
+    }
+    if (cmp > 0) {
+      lo = mid + 1;
+    }
+  }
+  return -1;
+}
+
+std::set<int>
+Dict::normal_lookup_ids(byte *needle, bool exact_match)
 {
   if (separator_mode) {
     std::cout << "====== ^" << needle << (exact_match ? "$" : "") << " in " << name << " ======" << std::endl;
+  }
+  if (stop_on_limit_mode) {
+    if (render_count_limit_exceeded) {
+      if (verbose_mode) {
+        printf("[stop on limit] 件数(%d)が制限(%d)に達しているので %s からの検索を行いません。\n",
+               render_count, render_count_limit, name.c_str());
+      }
+      return std::set<int>();
+    }
   }
 
   int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
@@ -335,9 +385,7 @@ Dict::normal_lookup(byte *needle, bool exact_match)
   byte *needle_for_index = criteria->needle_for_index ? criteria->needle_for_index : criteria->needle;
   //printf("needle for index: {%s}\n", needle_for_index);
   bsearch_result_t result = index->bsearch_in_index(needle_for_index, exact_match);
-  if (verbose_mode) {
-    //std::cout << "result = " << result << std::endl;
-  }
+  //std::cout << "result: " << result << std::endl;
 
   int from, to;
   if (result.first) {
@@ -353,10 +401,20 @@ Dict::normal_lookup(byte *needle, bool exact_match)
     //printf("lookup. from %d to %d, %d/%d...\n", from, to, to-from+1, index->_nindex);
   }
 
-  _result_vec.clear();
+  _result_id_set.clear();
+  _dict = this;
 
   for (int ix=from; ix<=to; ix++) {
-    if (render_count_limit_exceeded && stop_on_limit_mode) break;
+    if (stop_on_limit_mode) {
+      if (render_count_limit_exceeded) {
+        if (verbose_mode) {
+          printf("[stop on limit] 件数(%d)が制限(%d)に達したので検索を中断します。\n",
+                 render_count, render_count_limit);
+        }
+        break;
+      }
+    }
+
     if (verbose_mode) {
       /*
       byte *utf8str = bocu1_to_utf8( index->entry_word(ix) );
@@ -378,7 +436,9 @@ Dict::normal_lookup(byte *needle, bool exact_match)
 not_found:
   ;
 
-  return lookup_result_vec(all(_result_vec));
+  _dict = NULL;
+
+  return std::set<int>(all(_result_id_set));
 }
 
 
@@ -390,22 +450,27 @@ Dict::search_in_sarray(int field, byte *needle)
   int sarray_length = dict_suffix_array_length[field];
 
   bsearch_result_t result = search(buf, sarray, sarray_length, needle, false);
-  if (verbose_mode) {
-    //printf("SARRAY: "); std::cout << result << std::endl;
-  }
 
   std::set<int> matched_offsets;
 
   if (result.first) {
     RE2 pattern((const char *)needle);
     for (int i=result.second.first; i<=result.second.second; ++i) {
-      if (render_count_limit_exceeded && stop_on_limit_mode) break;
+      if (stop_on_limit_mode) {
+        if (render_count_limit_exceeded) {
+          if (verbose_mode) {
+            printf("[stop on limit] 件数(%d)が制限(%d)に達したので検索を中断します。\n",
+                   render_count, render_count_limit);
+          }
+          break;
+        }
+      }
       byte *word = strhead(buf + sarray[i]);
       int offset = (int)(word - buf);
       int word_id = rev(field, offset);
       if (word_id >= 0) {
         Toc *t = &toc[word_id];
-        byte *fields[F_COUNT] = { 
+        byte *fields[F_COUNT] = {
           dict_buf[F_ENTRY]   + t->start_pos[F_ENTRY],
           dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
           dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
@@ -423,68 +488,93 @@ Dict::search_in_sarray(int field, byte *needle)
 }
 
 lookup_result_vec
-Dict::sarray_lookup(byte *needle)
+Dict::ids_to_result(const std::set<int>& word_ids)
 {
-  if (!toc || !dict_buf[F_ENTRY]) {
-    std::cout << "// [NOTICE] suffix-array検索には事前のインデックス作成が必要です。" << std::endl;
-    std::cout << "//  → .make toc" << std::endl;
-    return lookup_result_vec();
-  }
+  //std::cout << "word ids: " << word_ids << std::endl;
 
-  if (separator_mode) {
-    std::cout << "====== \"" << needle << "\" in " << name << " ======" << std::endl;
-  }
+  lookup_result_vec result_vec;
 
-  _result_vec.clear();
+  traverse(word_ids,word_id) {
+    if (*word_id < 0) continue;
 
-  std::set<int> matched_word_ids;
-  for (int f=0; f<F_COUNT; ++f) {
-    if (render_count_limit_exceeded && stop_on_limit_mode) break;
-    if (f == F_ENTRY || full_search_mode) {
-      std::set<int> matched_id_set = this->search_in_sarray(f, needle);
-      matched_word_ids.insert(all(matched_id_set));
-    }
-  }
-
-  traverse(matched_word_ids,word_id) {
-    if (render_count_limit_exceeded && stop_on_limit_mode) break;
     Toc *t = &toc[*word_id];
+    //printf("%d: [ %d %d %d %d %d ]\n", *word_id, t->pdic_datafield_pos, t->start_pos[0], t->start_pos[1], t->start_pos[2], t->start_pos[3]);
+
     byte *fields[F_COUNT] = {
       dict_buf[F_ENTRY]   + t->start_pos[F_ENTRY],
       dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
       dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
       dict_buf[F_PRON]    + t->start_pos[F_PRON]
     };
-    save_result(_result_vec, (lookup_result)fields);
-    ++match_count;
-    if (match_count >= render_count_limit) render_count_limit_exceeded = true;
+
+    result_vec.push_back((lookup_result)clone(fields, sizeof(byte*)*4));
   }
 
-  return lookup_result_vec(all(_result_vec));
+  return result_vec;
 }
 
-lookup_result_vec
-Dict::regexp_lookup(RE2 *re)
+std::set<int>
+Dict::sarray_lookup_ids(byte *needle)
+{
+  if (!toc || !dict_buf[F_ENTRY]) {
+    std::cout << "// [NOTICE] suffix-array検索には事前のインデックス作成が必要です。" << std::endl;
+    std::cout << "//  → .make toc" << std::endl;
+    return std::set<int>();
+  }
+
+  if (separator_mode) {
+    std::cout << "====== \"" << needle << "\" in " << name << " ======" << std::endl;
+  }
+
+  std::set<int> matched_word_ids;
+  for (int f=0; f<F_COUNT; ++f) {
+    if (stop_on_limit_mode) {
+      if (render_count_limit_exceeded) {
+        if (verbose_mode) {
+          printf("[stop on limit] 件数(%d)が制限(%d)に達したので検索を中断します。\n",
+                 render_count, render_count_limit);
+        }
+        break;
+      }
+    }
+    if (f == F_ENTRY || full_search_mode) {
+      std::set<int> matched_id_set = this->search_in_sarray(f, needle);
+      matched_word_ids.insert(all(matched_id_set));
+    }
+  }
+  return matched_word_ids;
+}
+
+std::set<int>
+Dict::regexp_lookup_ids(RE2 *re)
 {
   if (!toc || !dict_buf[F_ENTRY]) {
     std::cout << "// [NOTICE] 正規表現検索には事前のインデックス作成が必要です。" << std::endl;
     std::cout << "//  → .make toc" << std::endl;
-    return lookup_result_vec();
+    return std::set<int>();
   }
 
   if (separator_mode) {
     std::cout << "====== /" << re->pattern() << "/ in " << name << " ======" << std::endl;
   }
 
-  _result_vec.clear();
+  std::set<int> matched_word_ids;
 
-  for (int i=0; i<toc_length; ++i) {
-    if (render_count_limit_exceeded && stop_on_limit_mode) break;
+  for (int word_id=0; word_id<toc_length; ++word_id) {
+    if (stop_on_limit_mode) {
+      if (render_count_limit_exceeded) {
+        if (verbose_mode) {
+          printf("[stop on limit] 件数(%d)が制限(%d)に達したので検索を中断します。\n",
+                 render_count, render_count_limit);
+        }
+        break;
+      }
+    }
     byte *fields[F_COUNT] = {
-      dict_buf[F_ENTRY]   + toc[i].start_pos[F_ENTRY],
-      dict_buf[F_JWORD]   + toc[i].start_pos[F_JWORD],
-      dict_buf[F_EXAMPLE] + toc[i].start_pos[F_EXAMPLE],
-      dict_buf[F_PRON]    + toc[i].start_pos[F_PRON]
+      dict_buf[F_ENTRY]   + toc[word_id].start_pos[F_ENTRY],
+      dict_buf[F_JWORD]   + toc[word_id].start_pos[F_JWORD],
+      dict_buf[F_EXAMPLE] + toc[word_id].start_pos[F_EXAMPLE],
+      dict_buf[F_PRON]    + toc[word_id].start_pos[F_PRON]
     };
     if (RE2::PartialMatch((const char *)fields[F_ENTRY], *re)
         || (full_search_mode && (
@@ -492,13 +582,13 @@ Dict::regexp_lookup(RE2 *re)
                 || (fields[F_EXAMPLE][0] && RE2::PartialMatch((const char *)fields[F_EXAMPLE], *re))
                 || (fields[F_PRON][0] && RE2::PartialMatch((const char *)fields[F_PRON], *re)) )) ) {
       if (direct_dump_mode) render_result(fields, re);
-      save_result(_result_vec, fields);
-      ++match_count;
+      matched_word_ids.insert(word_id);
+
+      if (++match_count >= render_count_limit) render_count_limit_exceeded = true;
     }
-    if (match_count >= render_count_limit) render_count_limit_exceeded = true;
   }
 
-  return lookup_result_vec(all(_result_vec));
+  return matched_word_ids;
 }
 
 void
@@ -541,6 +631,7 @@ Dict::rev(int field, int pos) {
       lo = mid + 1;
     }
   }
+
   return -1;
 }
 
@@ -586,6 +677,9 @@ Dict::load_additional_files()
 void render_result(lookup_result fields, RE2 *re)
 {
   if (render_count >= render_count_limit) {
+    if (verbose_mode) {
+      printf("表示件数(%d)が制限(%d)に達したので表示を中断します。\n", render_count, render_count_limit);
+    }
     render_count_limit_exceeded = true;
     return;
   }

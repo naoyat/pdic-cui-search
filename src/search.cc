@@ -130,7 +130,6 @@ bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, 
 #endif
 
   if (!offsets_len || is_empty(needle)) return std::make_pair(false, std::make_pair(-1, 0));
-
   int needle_len = strlen((char *)needle);
 
   int cmp = exact_match ? bstrcmp(buf+offsets[0], needle) : bstrncmp(buf+offsets[0], needle, needle_len);

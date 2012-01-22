@@ -2,8 +2,8 @@
 .SUFFIXES: .cc .o
 
 CPP = g++
-#CPPFLAGS = -g -O2 -DDEBUG -DVERBOSE
-CPPFLAGS = -O3
+CPPFLAGS = -g -Wall -DDEBUG -DVERBOSE
+# CPPFLAGS = -O3 -DDEBUG
 
 .cc.o: $*.h
 	$(CPP) $(CPPFLAGS) -c $*.cc

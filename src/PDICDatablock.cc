@@ -74,10 +74,12 @@ PDICDatablock::iterate(action_proc *action, Criteria *criteria)
       entry_word_attrib = *(pos++);
     }
 
+    int start_pos_in_filemem = (int)(start_pos - filemem);
+
     // byte* entry_word, int entry_word_attrib, byte* data, int datasize
     memcpy(entry_word + compress_length, entry_word_compressed, entry_word_compressed_size+1);
 
-    PDICDatafield datafield((int)(start_pos - filemem),
+    PDICDatafield datafield(start_pos_in_filemem,
                             field_length,
                             entry_word,
                             compress_length + entry_word_compressed_size, // entry_word_size

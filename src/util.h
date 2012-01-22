@@ -23,6 +23,7 @@ void free_all_cloned_buffers();
 // byte版 str(n)cmp
 int bstrcmp(byte *s1, byte *s2, int minimum_charcode=0x20);
 int bstrncmp(byte *s1, byte *s2, size_t n, int minimum_charcode=0x20);
+int bstrcicmp(byte *s1, byte *s2, int minimum_charcode=0x20);
 
 // ポインタ版 bstr(n)cmp
 int pbstrcmp(const void *s1, const void *s2);

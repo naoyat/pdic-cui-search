@@ -49,7 +49,8 @@ public:
   byte *dict_buf[F_COUNT];
   int  *dict_suffix_array[F_COUNT], dict_suffix_array_length[F_COUNT];
   std::map<std::pair<int,int>,int> revmap;
-  
+  std::map<int,int> revmap_pdic_datafield_pos;
+
 public:
   Dict(const std::string& name, byte *filemem);
   ~Dict();
@@ -64,11 +65,27 @@ public:
 public:
   std::set<int> search_in_sarray(int field, byte *needle);
 
-  lookup_result_vec normal_lookup(byte *needle, bool exact_match);
-  lookup_result_vec sarray_lookup(byte *needle);
-  lookup_result_vec regexp_lookup(RE2 *re);
+  lookup_result_vec normal_lookup(byte *needle, bool exact_match) {
+    std::set<int> matched_word_ids = normal_lookup_ids(needle, exact_match);
+    return ids_to_result(matched_word_ids);
+  }
+  lookup_result_vec sarray_lookup(byte *needle) {
+    std::set<int> matched_word_ids = sarray_lookup_ids(needle);
+    return ids_to_result(matched_word_ids);
+  }
+  lookup_result_vec regexp_lookup(RE2 *re) {
+    std::set<int> matched_word_ids = regexp_lookup_ids(re);
+    return ids_to_result(matched_word_ids);
+  }
+
+  std::set<int> normal_lookup_ids(byte *needle, bool exact_match);
+  std::set<int> sarray_lookup_ids(byte *needle);
+  std::set<int> regexp_lookup_ids(RE2 *re);
+
+  int word_id_for_pdic_datafield_pos(int pdic_datafield_pos);
 
 private:
+  lookup_result_vec ids_to_result(const std::set<int>& word_ids);
   int rev(int field, int start_pos);
 };
 
@@ -81,15 +98,6 @@ void say_render_count();
 
 // render
 void render_result(lookup_result result, RE2 *re);
-inline void save_result(lookup_result_vec& result_vec, lookup_result result)
-{
-  for (int field=0; field<F_COUNT; ++field) {
-    if (is_not_empty(result[field])) {
-      result[field] = clone_cstr(result[field]);
-    }
-  }
-  result_vec.push_back((byteptr*)clone(result, sizeof(byteptr)*F_COUNT, true));
-}
 
 // CALLBACKS
 void cb_dump_entry(PDICDatafield *datafield);
