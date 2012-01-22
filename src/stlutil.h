@@ -6,7 +6,6 @@
 #define SRC_STLUTIL_H_
 
 #include <deque>
-// #include <iostream>
 #include <list>
 #include <map>
 #include <queue>
