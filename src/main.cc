@@ -29,8 +29,9 @@ int main(int argc, char **argv)
     if (linelen == 0) continue;
 
     switch (line[0]) {
-      case '?':
-        // help...
+      case '?': // reserved (help)
+        break;
+      case '+': // reserved
         break;
 
       case '.': // command mode
