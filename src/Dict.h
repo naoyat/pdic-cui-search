@@ -8,17 +8,20 @@
 
 #include <cstdio>
 #include <re2/re2.h>
-
-#include "util.h"
-#include "util_stl.h"
 #include "types.h"
-#include "PDICDatafield.h"
 
 class PDICIndex;
+class PDICDatafield;
 class Criteria;
 
 #define SX_TOC   ".toc"
 #define SX_XML   ".xml"
+
+#define F_COUNT    4
+#define F_ENTRY    0
+#define F_JWORD    1
+#define F_EXAMPLE  2
+#define F_PRON     3
 
 #define DEFAULT_RENDER_COUNT_LIMIT 150
 
@@ -76,13 +79,13 @@ public:
     std::set<int> matched_word_ids;
 
     std::set<int> matched_word_ids_normal = normal_lookup_ids(needle, false);
-    matched_word_ids.insert(all(matched_word_ids_normal));
+    matched_word_ids.insert(matched_word_ids_normal.begin(), matched_word_ids_normal.end());
 
     std::set<int> matched_word_ids_sarray = sarray_lookup_ids(needle);
-    matched_word_ids.insert(all(matched_word_ids_sarray));
+    matched_word_ids.insert(matched_word_ids_sarray.begin(), matched_word_ids_sarray.end());
 
     std::set<int> matched_word_ids_regexp = regexp_lookup_ids(re);
-    matched_word_ids.insert(all(matched_word_ids_regexp));
+    matched_word_ids.insert(matched_word_ids_regexp.begin(), matched_word_ids_regexp.end());
 
     return ids_to_result(matched_word_ids);
   }

@@ -4,8 +4,9 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "util.h"
 #include "bocu1.h"
+#include "utf8.h"
+#include "util.h"
 
 void dump(byte *data, int size)
 {

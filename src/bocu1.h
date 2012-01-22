@@ -1,7 +1,6 @@
 #ifndef PDICCUISEARCH_BOCU1_H_
 #define PDICCUISEARCH_BOCU1_H_
 
-#include "utf8.h"
 #include "types.h"
 
 // codepoints <=> bocu1

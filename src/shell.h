@@ -7,7 +7,6 @@
 #include <utility>
 #include <re2/re2.h>
 
-#include "Dict.h"
 #include "types.h"
 
 // shell

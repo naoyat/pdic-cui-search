@@ -1,15 +1,16 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
-#include "ctype.h"
+#include <ctype.h>
 
 #include "PDICHeader.h"
 #include "PDICIndex.h"
 #include "PDICDatablock.h"
-
-#include "dump.h"
 #include "bocu1.h"
+#include "dump.h"
+#include "search.h"
+#include "utf8.h"
+#include "util.h"
 
 PDICIndex::PDICIndex(byte *filemem)
 {
@@ -87,6 +88,12 @@ PDICIndex::datablock_offset(int ix)
   return offset;
 }
 
+bsearch_result_t
+PDICIndex::bsearch_in_index(byte *needle, bool exact_match)
+{
+  return search(index_buf, entry_word_offsets, _nindex, needle, exact_match);
+}
+
 void
 PDICIndex::dump()
 {
@@ -109,6 +116,13 @@ PDICIndex::iterate_datablock(int ix, action_proc *action, Criteria *criteria)
   PDICDatablock *datablock = new PDICDatablock(filemem, this, ix);
   datablock->iterate(action, criteria);
   delete datablock;
+}
+
+void
+PDICIndex::iterate_all_datablocks(action_proc *action, Criteria *criteria)
+{
+  for (int ix=0; ix<_nindex; ++ix)
+    this->iterate_datablock(ix, action, criteria);
 }
 
 //

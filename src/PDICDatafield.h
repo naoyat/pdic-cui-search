@@ -4,12 +4,6 @@
 #include <map>
 #include "types.h"
 
-#define F_COUNT    4
-#define F_ENTRY    0
-#define F_JWORD    1
-#define F_EXAMPLE  2
-#define F_PRON     3
-
 class Criteria;
 
 class PDICDatafield {

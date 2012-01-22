@@ -2,7 +2,6 @@
 #define PDICCUISEARCH_PDICHEADER_H_
 
 #include <cstdio>
-#include "util.h" // sNNval(), uNNval()
 #include "types.h"
 
 #define OLDDIC  1 // PDIC ver 1.x : OLDDIC
@@ -87,190 +86,44 @@ public:
   PDICHeader(byte *filemem);
   ~PDICHeader();
 
-  int version() { return _version; }
-  int major_version() { return _major_version; }
-  int minor_version() { return _minor_version; }
-  void dump();
+public:
+  byte* headername();
+  byte* dictitle();
+  int   version();
+  int   major_version();
+  int   minor_version();
+  int   lword();
+  int   ljapa();
+  int   block_size();
+  int   index_block();
+  int   header_size();
+  int   index_size();
+  int   empty_block();
+  int   nindex();
+  int   nblock();
+  unsigned int nword();
+  int   dicorder();
+  int   dictype();
+  int   attrlen();
+  int   olenumber();
+  int   os();
+  int   lid_word();
+  int   lid_japa();
+  int   lid_exp();
+  int   lid_pron();
+  int   lid_other();
+  int   index_blkbit(); // 0:16bit, 1:32bit
+  unsigned int extheader();
+  byte* cypt();
+  unsigned int update_count();
+  byte* dicident();
+  byte* derefid();
 
 public:
-  byte* headername() { return filemem + OFS_HEADERNAME; }
-  byte* dictitle() { return filemem + OFS_DICTITLE; }
+  bool  isAligned();
+  bool  isBOCU1(); // BOCU-1辞書か？
 
-  int lword() {
-    // HYPER6.10: { 1024 }
-    // HYPER6.00: { 248 }
-    // HYPER4, HYPER5: { 248 }
-    return s16val(filemem + OFS_LWORD);
-  }
-  int ljapa() {
-    // HYPER6.10: { 262144 } 未参照
-    // HYPER6.00: { 10000 }
-    // HYPER4, HYPER5: { 3000 }
-    return s16val(filemem + OFS_LJAPA);
-  }
-  int block_size() {
-    // HYPER6: { 1024 }
-    // HYPER4, HYPER5: { 256 }
-    // NEWDIC2: { 64, 128, 256, 512 }*16
-    // NEWDIC1: { 1024, 2048, 4096, 8192 }
-    if (_major_version >= HYPER4)
-      return u16val(filemem + OFS_BLOCK_SIZE);
-    else if (_major_version >= NEWDIC2)
-      return 16 * s16val(filemem + OFS_BLOCK_SIZE);
-    else // NEWDIC
-      return s16val(filemem + OFS_BLOCK_SIZE);
-  }
-  int index_block() {
-    if (_major_version >= HYPER4)
-      return s16val(filemem + OFS_INDEX_BLOCK);
-    else // NEWDIC, NEWDIC2
-      return 2048 * s16val(filemem + OFS_INDEX_BLOCK);
-  }
-  int header_size() {
-    // HYPER6: { 1024 }
-    // HYPER4, HYPER5: { 256 }
-    return s16val(filemem + OFS_HEADER_SIZE); // 256, 1024(6〜)
-  }
-  int index_size() {
-    if (_major_version >= HYPER4)
-      return index_block() * block_size();
-    else // NEWDIC, NEWDIC2
-      return s16val(filemem + OFS_INDEX_SIZE); // { 2048, 10240, 20480, 40960 }
-  }
-  int empty_block() {
-    // -1 if not exists
-    if (_major_version >= HYPER5)
-      return s32val(filemem + OFS_HYPER5_EMPTY_BLOCK2);
-    else if (_major_version >= HYPER4)
-      return s32val(filemem + OFS_HYPER4_EMPTY_BLOCK2);
-    else // NEWDIC, NEWDIC2
-      return s16val(filemem + OFS_EMPTY_BLOCK); // [0-4095]
-  }
-  int nindex() {
-    if (_major_version >= HYPER5)
-      return u32val(filemem + OFS_HYPER5_NINDEX2);
-    else if (_major_version >= HYPER4)
-      return u32val(filemem + OFS_HYPER4_NINDEX2);
-    else // NEWDIC, NEWDIC2
-      return s16val(filemem + OFS_NINDEX); // <= 4096
-  }
-  int nblock() {
-    if (_major_version >= HYPER5)
-      return u32val(filemem + OFS_HYPER5_NBLOCK2);
-    else if (_major_version >= HYPER4)
-      return u32val(filemem + OFS_HYPER4_NBLOCK2);
-    else // NEWDIC, NEWDIC2
-      return s16val(filemem + OFS_NBLOCK);
-  }
-  unsigned int nword() {
-    return u32val(filemem + OFS_NWORD);
-  }
-  int dicorder() {
-    // { 0[, 1, 2, 3] }
-    if (_major_version >= NEWDIC2)
-      return filemem[OFS_DICORDER];
-    else
-      return 0;
-  }
-  int dictype() {
-    // HYPER6:  { 0x01 | 0x08 |[0x10]|[0x20]| 0x40 |[0x80]}
-    // HYPER5:  { 0x01 | 0x08 | 0x10 |[0x20]| 0x40 | 0x80 }
-    // HYPER4:  { 0x01 |      |[0x10]| 0x20 | 0x40 | 0x80 }
-    // NEWDIC2: { 0x01 |      | 0x10 | 0x20 }
-    if (_major_version >= NEWDIC2)
-      return filemem[OFS_DICTYPE];
-    else
-      return 0;
-  }
-  int attrlen() {
-    // { 1 }
-    return filemem[OFS_ATTRLEN];
-  }
-  int olenumber() {
-    if (_major_version >= HYPER5)
-      return s32val(filemem + OFS_HYPER5_OLENUMBER);
-    else if (_major_version >= NEWDIC2)
-      return s32val(filemem + OFS_NEWDIC2_OLENUMBER);
-    else
-      return 0;
-  }
-  int os() {
-    // HYPER6: { 0x20="BOCU-1 encoding" }
-    // HYPER5: { 0, 1, 2, 3, 4, 0x10 }
-    // HYPER4: { 0 }
-    // NEWDIC2: { 0[, 1, 2] }
-    if (_major_version >= HYPER5)
-      return filemem[OFS_HYPER5_OS];
-    else if (_major_version >= NEWDIC2)
-      return filemem[OFS_NEWDIC2_OS];
-    else
-      return 0;
-  }
-  int lid_word() {
-    return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_WORD) : 0;
-  }
-  int lid_japa() {
-    return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_JAPA) : 0;
-  }
-  int lid_exp() {
-    return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_EXP) : 0;
-  }
-  int lid_pron() {
-    return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_PRON) : 0;
-  }
-  int lid_other() {
-    return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_OTHER) : 0;
-  }
-  int index_blkbit() {
-    // 0:16bit, 1:32bit
-    if (_major_version >= HYPER5)
-      return filemem[OFS_HYPER5_INDEX_BLKBIT];
-    else if (_major_version == HYPER4)
-      return filemem[OFS_HYPER4_INDEX_BLKBIT];
-    else
-      return 0;
-  }
-  unsigned int extheader() {
-    if (_major_version >= HYPER5)
-      return u32val(filemem + OFS_HYPER5_EXTHEADER);
-    else if (_major_version == HYPER4)
-      return u32val(filemem + OFS_HYPER4_EXTHEADER);
-    else
-      return 0;
-  }
-  byte *cypt() {
-    if (_major_version >= HYPER6)
-      return filemem + OFS_HYPER6_CYPT;
-    else
-      return NULL;
-  }
-  unsigned int update_count() {
-    if (_major_version >= HYPER4)
-      return u32val(filemem + OFS_UPDATE_COUNT);
-    else
-      return 0;
-  }
-  byte *dicident() {
-    if (_major_version >= HYPER5)
-      return filemem + OFS_HYPER5_DICIDENT;
-    else
-      return NULL;
-  }
-  byte *derefid() {
-    if (_major_version == HYPER6 && _minor_version < 10)
-      return filemem + OFS_HYPER6_DEREFID;
-    else
-      return NULL;
-  }
-
-public:
-  bool isAligned() {
-    return _major_version >= HYPER5;
-  }
-  // BOCU-1辞書か？
-  bool isBOCU1() {
-    return _major_version >= HYPER5 && dictype() & 0x08;
-  }
+  void  dump();
 };
 
 #endif // PDICCUISEARCH_PDICHEADER_H_

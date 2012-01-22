@@ -9,19 +9,20 @@
 #include <re2/re2.h>
 
 #include "Criteria.h"
-#include "PDICHeader.h"
-#include "PDICIndex.h"
 #include "PDICDatablock.h"
 #include "PDICDatafield.h"
-#include "bocu1.h"
-#include "filemem.h"
-#include "timeutil.h"
-#include "util_stl.h"
-#include "utf8.h"
-#include "macdic_xml.h"
-
-#include "charcode.h"
+#include "PDICHeader.h"
+#include "PDICIndex.h"
 #include "ansi_color.h"
+#include "bocu1.h"
+#include "charcode.h"
+#include "filemem.h"
+#include "macdic_xml.h"
+#include "search.h"
+#include "timeutil.h"
+#include "utf8.h"
+#include "util.h"
+#include "util_stl.h"
 
 #ifdef DEBUG
 #include "cout.h"

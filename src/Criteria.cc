@@ -6,14 +6,15 @@
 #include <cstring>
 #include <re2/re2.h>
 
+#include "PDICDatafield.h"
+#include "PDICHeader.h"
+#include "PDICIndex.h" // string_for_index()
 #include "bocu1.h"
-#include "util.h"
+#include "charcode.h"
 #include "dump.h"
 #include "types.h"
-#include "charcode.h"
-#include "PDICHeader.h"
-#include "PDICDatafield.h"
-#include "PDICIndex.h" // string_for_index()
+#include "utf8.h"
+#include "util.h"
 
 Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match)
 {

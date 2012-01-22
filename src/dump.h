@@ -2,8 +2,6 @@
 #define PDICCUISEARCH_DUMP_H_
 
 #include <cstdio>
-
-#include "util.h"
 #include "types.h"
 
 char *inline_dump_str(byte *data, int size=0);

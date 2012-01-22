@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "Dict.h"
 #include "bocu1.h"
 #include "charcode.h"
 #include "utf8.h"
