@@ -106,7 +106,8 @@ PDICIndex::dump()
     } else {
       printf("%*s", entry_word_lengths[ix], entry_word(ix));
     }
-    newline();
+
+    printf("\n");
   }
 }
 

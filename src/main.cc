@@ -25,7 +25,7 @@ int main(int argc, char **argv)
   for (bool looping=true; looping; ) {
     std::cout << current_dict_name << "> ";
     char line[256];
-    if (!fgets(line, 256, stdin)) { newline(); break; }
+    if (!fgets(line, 256, stdin)) { printf("\n"); break; }
     int linelen = strlen(line); line[--linelen] = 0;
     if (linelen == 0) continue;
 
