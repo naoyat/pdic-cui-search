@@ -2,19 +2,19 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef PDICCUISEARCH_DICT_H_
-#define PDICCUISEARCH_DICT_H_
+#ifndef SRC_DICT_H_
+#define SRC_DICT_H_
 
 #include <stdio.h>
+#include <re2/re2.h>
 
 #include <map>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include <re2/re2.h>
-
-#include "types.h"
+#include "./types.h"
 
 
 class PDICIndex;
@@ -32,20 +32,20 @@ class Criteria;
 
 #define DEFAULT_RENDER_COUNT_LIMIT 150
 
-bool lookup_result_asc( const lookup_result& left, const lookup_result& right );
-bool lookup_result_desc( const lookup_result& left, const lookup_result& right );
+bool lookup_result_asc(const lookup_result& left, const lookup_result& right);
+bool lookup_result_desc(const lookup_result& left, const lookup_result& right);
 
 typedef struct {
-  int pdic_datafield_pos; // in filemem (PDICDatablock)
-  int start_pos[F_COUNT]; // in .entry/.jword/.exmp/.pron
+  int pdic_datafield_pos;  // in filemem (PDICDatablock)
+  int start_pos[F_COUNT];  // in .entry/.jword/.exmp/.pron
 } Toc;
 
 class Dict {
-public:
+ public:
   Dict(const std::string& name, byte *filemem);
   ~Dict();
 
-public:
+ public:
   std::string info() { return name + " " + path; }
   char *prefix() { return _prefix; }
   int   make_toc();
@@ -75,10 +75,10 @@ public:
   int   toc_length;
   byte* dict_buf[F_COUNT];
   int*  dict_suffix_array[F_COUNT], dict_suffix_array_length[F_COUNT];
-  std::map<std::pair<int,int>,int> revmap;
-  std::map<int,int> revmap_pdic_datafield_pos;
+  std::map<std::pair<int, int>, int> revmap;
+  std::map<int, int> revmap_pdic_datafield_pos;
 
-private:
+ private:
   lookup_result_vec ids_to_result(const std::set<int>& word_ids);
   int  rev(int field, int start_pos);
 };
@@ -101,4 +101,4 @@ void cb_save(PDICDatafield *datafield);
 void cb_estimate_buf_size(PDICDatafield *datafield);
 void cb_stock_entry_words(PDICDatafield *datafield);
 
-#endif // PDICCUISEARCH_DICT_H_
+#endif  // SRC_DICT_H_

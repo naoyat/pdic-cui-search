@@ -36,11 +36,16 @@ void* clone(void* data, size_t size, bool gc) {
 }
 
 byte* clone_cstr(byte* data, int length, bool gc) {
-  if (!data) return static_cast<byte*>NULL;
-  if (!data[0] && gc) return static_cast<byte*>"";
-  if (!length) length = strlen(static_cast<char*>data);
+  if (!data)
+    return static_cast<byte*>(NULL);
+  if (!data[0] && gc)
+    return reinterpret_cast<byte*>(const_cast<char*>(""));
 
-  byte* newstr = static_cast<byte*>clone(static_cast<void*>data, length+1, gc);
+  if (!length)
+    length = strlen(reinterpret_cast<char*>(data));
+
+  byte* newstr =
+      static_cast<byte*>(clone(static_cast<void*>(data), length+1, gc));
   newstr[length] = 0;
 
   return newstr;
@@ -103,11 +108,13 @@ int bstrcicmp(byte *s1, byte *s2, int minimum_charcode) {
 }
 
 int pbstrcmp(const void *s1, const void *s2) {
-  return bstrcmp(*static_cast<byte**>s1, *static_cast<byte**>s2);
+  return bstrcmp(*reinterpret_cast<byte**>(const_cast<void*>(s1)),
+                 *reinterpret_cast<byte**>(const_cast<void*>(s2)));
 }
 
 int pbsrncmp(const void *s1, const void *s2, size_t n) {
-  return bstrncmp(*static_cast<byte**>s1, *static_cast<byte**>s2, n);
+  return bstrncmp(*reinterpret_cast<byte**>(const_cast<void*>(s1)),
+                  *reinterpret_cast<byte**>(const_cast<void*>(s2)), n);
 }
 
 byte *strhead(byte *ptr) {

@@ -2,25 +2,24 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef PDICCUISEARCH_PDICDATAFIELD_H_
-#define PDICCUISEARCH_PDICDATAFIELD_H_
+#ifndef SRC_PDICDATAFIELD_H_
+#define SRC_PDICDATAFIELD_H_
 
 #include <map>
 
-#include "types.h"
-
+#include "./types.h"
 
 class Criteria;
 
 class PDICDatafield {
-public:
+ public:
   PDICDatafield(int start_pos, int field_length,
-                byte *entry_word, int entry_word_size, int entry_word_attrib,
-                int charcode, byte *data, int data_size,
-                bool v6index, Criteria *criteria);
+                byte* entry_word, int entry_word_size, int entry_word_attrib,
+                int charcode, byte* data, int data_size,
+                bool v6index, Criteria* criteria);
   ~PDICDatafield();
 
-public:
+ public:
   byte* in_utf8(int field);
   void  retain();
 
@@ -37,7 +36,7 @@ public:
   byte* data;
   int   data_size;
   byte* _jword_utf8;
-  std::map<int,byte*> _ext;
+  std::map<int, byte*> _ext;
   int   _ext_flags;
   byte* _ext_start_pos;
   byte* _pron_utf8;
@@ -46,7 +45,7 @@ public:
   Criteria* criteria;
   bool   v6index;
 
-private:
+ private:
   int   read_extension();
   byte* entry_word_utf8();
   byte* jword_utf8();
@@ -66,4 +65,4 @@ private:
 #define EXT_HAS_RESERVED (1 << EXT_RESERVED)
 #define EXT_HAS_LINKDATA (1 << EXT_LINKDATA)
 
-#endif // PDICCUISEARCH_PDICDATAFIELD_H_
+#endif  // SRC_PDICDATAFIELD_H_

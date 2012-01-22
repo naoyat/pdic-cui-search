@@ -2,29 +2,29 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef PDICCUISEARCH_PDICDATABLOCK_H_
-#define PDICCUISEARCH_PDICDATABLOCK_H_
+#ifndef SRC_PDICDATABLOCK_H_
+#define SRC_PDICDATABLOCK_H_
 
 #include <stdio.h>
 
-#include "types.h"
-
+#include "./types.h"
 
 class Criteria;
 class PDICIndex;
 
 class PDICDatablock {
-public:
-  PDICDatablock(byte* datablock_start, PDICIndex *index, int ix);
+ public:
+  PDICDatablock(byte* datablock_start, PDICIndex* index, int ix);
   ~PDICDatablock() {}
 
-public:
-  void iterate(action_proc *action, Criteria *criteria = NULL);
+ public:
+  void iterate(action_proc* action, Criteria* criteria = NULL);
 
-private:
-  byte* filemem, *datablock_start;
+ private:
+  byte* filemem;
+  byte* datablock_start;
   int   datablock_size;
-  PDICIndex *_index;
+  PDICIndex* _index;
   int   _ix;
 
   bool  _v6index;
@@ -32,4 +32,4 @@ private:
   bool  _isAligned;
 };
 
-#endif // PDICCUISEARCH_PDICDATABLOCK_H_
+#endif  // SRC_PDICDATABLOCK_H_

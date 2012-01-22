@@ -2,31 +2,29 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "shell.h"
+#include "./shell.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <re2/re2.h>
 
-#include <iostream>
 #include <map>
 #include <queue>
 #include <set>
 #include <string>
 #include <vector>
 
-#include <re2/re2.h>
-
-#include "ansi_color.h"
-#include "Dict.h"
-#include "filemem.h"
-#include "lookup.h"
-#include "PDICDatafield.h"
-#include "PDICHeader.h"
-#include "PDICIndex.h"
-#include "stlutil.h"
-#include "timeutil.h"
-#include "util.h"
+#include "./ansi_color.h"
+#include "./Dict.h"
+#include "./filemem.h"
+#include "./lookup.h"
+#include "./PDICDatafield.h"
+#include "./PDICHeader.h"
+#include "./PDICIndex.h"
+#include "./stlutil.h"
+#include "./timeutil.h"
+#include "./util.h"
 
 
 //
@@ -34,8 +32,8 @@
 //
 std::vector<std::string> loadpaths;
 extern std::vector<Dict*> dicts;
-std::map<std::string,std::vector<std::string> > aliases; // name -> name
-std::map<std::string,int> nametable; // name -> dict_id
+std::map<std::string, std::vector<std::string> > aliases;  // name -> name
+std::map<std::string, int> nametable;  // name -> dict_id
 std::string current_dict_name = "";
 
 extern bool separator_mode;
@@ -51,61 +49,65 @@ extern int default_lookup_flags;
 extern std::vector<int> current_dict_ids;
 extern lookup_result_vec current_result_vec;
 extern RE2* current_pattern;
-extern std::pair<std::string,std::string> current_query;
+extern std::pair<std::string, std::string> current_query;
 
 extern std::set<void*> clone_ptrs;
 
-void render_status()
-{
-  std::cout << ANSI_FGCOLOR_GREEN;
+void render_status() {
+  printf("%s", ANSI_FGCOLOR_GREEN);
 
-  std::cout << "// verbose mode = " << (verbose_mode ? "ON" : "OFF") << std::endl;
-  std::cout << "// direct dump mode = " << (direct_dump_mode ? "ON" : "OFF") << std::endl;
-  std::cout << "// separator mode = " << (separator_mode ? "ON" : "OFF") << std::endl;
-  std::cout << "// full search mode = " << (full_search_mode ? "ON" : "OFF") << std::endl;
-  std::cout << "// ANSI coloring mode = " << (ansi_coloring_mode ? "ON" : "OFF") << std::endl;
-  std::cout << "// newline mode = " << (more_newline_mode ? "ON" : "OFF") << std::endl;
-  std::cout << "// default lookup mode = " << current_lookup_mode() << std::endl;
-  std::cout << "// render count limit = " << render_count_limit << ", stop on limit = " << (stop_on_limit_mode ? "ON" : "OFF") << std::endl;
+  printf("// verbose mode = %s\n", verbose_mode ? "ON" : "OFF");
+  printf("// direct dump mode = %s\n", direct_dump_mode ? "ON" : "OFF");
+  printf("// separator mode = %s\n", separator_mode ? "ON" : "OFF");
+  printf("// full search mode = %s\n", full_search_mode ? "ON" : "OFF");
+  printf("// ANSI coloring mode = %s\n", ansi_coloring_mode ? "ON" : "OFF");
+  printf("// newline mode = %s\n", more_newline_mode ? "ON" : "OFF");
+  printf("// default lookup mode = %s\n", current_lookup_mode());
+  printf("// render count limit = %d, stop on limit = %s\n",
+         render_count_limit, stop_on_limit_mode ? "ON" : "OFF");
 
   if (current_pattern) {
-    std::cout << "// 最後に行われた検索: (" << current_query.first << ") \"" << current_query.second << "\"" << std::endl;
-    //std::cout << "// 最後に行われた検索: /" << current_pattern->pattern() << "/" << std::endl;
-    std::cout << "// 現在保持している結果: " << current_result_vec.size() << "件" << std::endl;
+    printf("// 最後に行われた検索: (%s) \"%s\"\n",
+           current_query.first.c_str(), current_query.second.c_str());
+    // printf("// 最後に行われた検索: /"
+    //  << current_pattern->pattern() << "/" << std::endl;
+    printf("// 現在保持している結果: %d件\n",
+           static_cast<int>(current_result_vec.size()));
   }
-  std::cout << ANSI_FGCOLOR_DEFAULT;
-  //std::cout << "clone_ptrs.size()=" << clone_ptrs.size();
-  //std::cout << std::endl;
+  printf("%s", ANSI_FGCOLOR_DEFAULT);
+  // printf("clone_ptrs.size()=" << clone_ptrs.size();
+  // printf(std::endl;
 }
 
-void shell_init()
-{
+void shell_init() {
   load_rc();
 }
-void shell_destroy()
-{
-  free_all_cloned_buffers();
 
+void shell_destroy() {
+  free_all_cloned_buffers();
   traverse(dicts, dict) delete *dict;
 }
 
-void load_rc(const char *rcpath)
-{
+void load_rc(const char* rcpath) {
   char buf[256];
   if (!rcpath) {
-    strncpy(buf, getenv("HOME"), 119);
-    strcat(buf, "/.pdicrc");
+    snprintf(buf, sizeof(buf), "%s/.pdicrc", getenv("HOME"));
     rcpath = buf;
   }
 
-  FILE *fp = fopen(rcpath, "r");
+  FILE* fp = fopen(rcpath, "r");
   if (fp != NULL) {
     while (fgets(buf, 256, fp)) {
-      int linelen = strlen(buf); buf[--linelen] = 0;
+      int linelen = strlen(buf);
+      buf[--linelen] = 0;
+
       if (linelen == 0) continue;
 
-      char *rem = strchr(buf, ';');
-      if (rem) { *rem = 0; linelen = (int)(rem - buf); }
+      char* rem = strchr(buf, ';');
+      if (rem) {
+        *rem = 0;
+        linelen = static_cast<int>(rem - buf);
+      }
 
       while (linelen > 0) {
         if (buf[linelen-1] != ' ') break;
@@ -116,32 +118,30 @@ void load_rc(const char *rcpath)
       do_command(buf);
     }
   } else {
-    std::cout << "// .pdicrc が見つかりません。" << std::endl;
+    printf("// .pdicrc が見つかりません。\n");
   }
   fclose(fp);
 }
 
-std::vector<int> resolve_aliases(const std::string& name)
-{
+std::vector<int> resolve_aliases(const std::string& name) {
   std::vector<int> dict_ids;
-  
-  if (found(nametable,name)) {
-    dict_ids.push_back( nametable[name] );
-  } else if (found(aliases,name)) {
+
+  if (found(nametable, name)) {
+    dict_ids.push_back(nametable[name]);
+  } else if (found(aliases, name)) {
     std::vector<std::string> names = aliases[name];
     traverse(names, name) {
       std::vector<int> ids = resolve_aliases(*name);
       dict_ids.insert(dict_ids.end(), all(ids));
     }
   } else {
-    std::cout << "// [ERROR] " << name << " が見つかりません。" << std::endl;
+    printf("// [ERROR] %s が見つかりません。\n", name.c_str());
   }
 
   return dict_ids;
 }
 
-bool do_use(std::string name)
-{
+bool do_use(std::string name) {
   std::vector<int> dict_ids = resolve_aliases(name);
 
   if (dict_ids.size() > 0) {
@@ -153,18 +153,17 @@ bool do_use(std::string name)
   }
 }
 
-void render_current_result()
-{
+void render_current_result() {
   int keep = render_count_limit;
   render_count_limit = INT_MAX;
   traverse(current_result_vec, it) {
     render_result(*it, current_pattern);
   }
   render_count_limit = keep;
-  //render_count = current_result_vec.size();
+  // render_count = current_result_vec.size();
 }
-void render_current_result(const std::set<int>& range)
-{
+
+void render_current_result(const std::set<int>& range) {
   int keep = render_count_limit;
   render_count_limit = INT_MAX;
   traverse(range, it) {
@@ -173,20 +172,20 @@ void render_current_result(const std::set<int>& range)
   render_count_limit = keep;
 }
 
-int do_load(const std::string& filename)
-{
-  for (uint i=0; i<loadpaths.size(); ++i) {
+int do_load(const std::string& filename) {
+  for (uint i = 0; i < loadpaths.size(); ++i) {
     std::string path = loadpaths[i] + "/" + filename;
 
-    byte *filemem = loadmem(path.c_str());
+    byte* filemem = loadmem(path.c_str());
     if (filemem) {
-      Dict *new_dict = new Dict(filename, filemem);
+      Dict* new_dict = new Dict(filename, filemem);
       int new_dict_id = dicts.size();
       dicts.push_back(new_dict);
       nametable[new_dict->prefix()] = new_dict_id;
 
       if (verbose_mode) {
-        printf("loading %s... => { name: %s, dict_id: %d }\n", path.c_str(), new_dict->prefix(), new_dict_id);
+        printf("loading %s... => { name: %s, dict_id: %d }\n",
+               path.c_str(), new_dict->prefix(), new_dict_id);
       }
       return new_dict_id;
     }
@@ -194,22 +193,21 @@ int do_load(const std::string& filename)
   return -1;
 }
 
-void do_alias(const std::string& alias, const std::string& valid_name)
-{
+void do_alias(const std::string& alias, const std::string& valid_name) {
   std::vector<std::string> names(1, valid_name);
   do_alias(alias, names);
 }
-void do_alias(const std::string& alias, const std::vector<std::string>& valid_names)
-{
+
+void do_alias(const std::string& alias,
+              const std::vector<std::string>& valid_names) {
   aliases[alias] = valid_names;
 }
 
-bool do_command(char *cmdstr)
-{
+bool do_command(char *cmdstr) {
   std::vector<std::string> cmd = split(cmdstr);
 
   if (cmd[0][0] == 'q' /*|| cmd[0] == "quit"*/ || cmd[0] == "bye") {
-    std::cout << "しばらくお待ちください..." << std::endl;
+    printf("しばらくお待ちください...\n");
     return false;
   } else if (cmd[0] == "status") {
     render_status();
@@ -220,24 +218,31 @@ bool do_command(char *cmdstr)
       if (cmd.size() >= 2) {
         std::set<int> lines;
         int s, e, line;
-        for (uint i=1; i<cmd.size(); ++i) {
-          if (RE2::FullMatch(cmd[i],"(\\d+)-(\\d+)", &s, &e))  {
+        for (uint i = 1; i < cmd.size(); ++i) {
+          if (RE2::FullMatch(cmd[i], "(\\d+)-(\\d+)", &s, &e))  {
             if (s < 1) s = 1;
             if (last < e) e = last;
-            if (s <= e) for (line=s; line<=e; ++line) lines.insert(line-1);
-          } else if (RE2::FullMatch(cmd[i],"(\\d+)-", &s))  {
+            if (s <= e) {
+              for (line = s; line <= e; ++line)
+                lines.insert(line - 1);
+            }
+          } else if (RE2::FullMatch(cmd[i], "(\\d+)-", &s))  {
             if (s < 1) s = 1;
-            if (s <= last) for (line=s; line<=last; ++line) lines.insert(line-1);
-          } else if (RE2::FullMatch(cmd[i],"-(\\d+)", &e))  {
+            if (s <= last) {
+              for (line = s; line <= last; ++line)
+                lines.insert(line - 1);
+            }
+          } else if (RE2::FullMatch(cmd[i], "-(\\d+)", &e))  {
             if (last < e) e = last;
-            if (1 <= e) for (line=1; line<=e; ++line) lines.insert(line-1);
-          } else if (RE2::FullMatch(cmd[i],"(\\d+)", &line)) {
-            if (1 <= line && line <= last) lines.insert(line-1);
+            if (1 <= e) {
+              for (line = 1; line <= e; ++line)
+                lines.insert(line - 1);
+            }
+          } else if (RE2::FullMatch(cmd[i], "(\\d+)", &line)) {
+            if (1 <= line && line <= last)
+              lines.insert(line - 1);
           }
         }
-#ifdef DEBUG
-        std::cout << "lines: " << lines << std::endl;
-#endif
         render_current_result(lines);
       } else {
         render_current_result();
@@ -246,12 +251,13 @@ bool do_command(char *cmdstr)
     }
   } else if (cmd[0] == "set") {
     if (cmd.size() >= 3) {
-      int value_ix = 2; if (cmd[2] == "=") ++value_ix;
+      int value_ix = 2;
+      if (cmd[2] == "=") ++value_ix;
       const char *mode_name = NULL;
       char value_str[11] = { 0 };
       if (cmd[value_ix] == "on" || cmd[value_ix] == "off") {
         bool onoff = cmd[value_ix] == "on";
-        strcpy(value_str, onoff ? "ON" : "OFF");
+        snprintf(value_str, sizeof(value_str), onoff ? "ON" : "OFF");
         if (cmd[1] == "verbose") {
           verbose_mode = onoff;
           mode_name = "verbose mode";
@@ -278,14 +284,16 @@ bool do_command(char *cmdstr)
           value_str[0] = '\0';
         }
       } else {
-        if (cmd[1] == "limit" || cmd[1] == "render_limit" || cmd[1] == "render_count_limit") {
-          int num = atoi( cmd[value_ix].c_str() );
+        if (cmd[1] == "limit"
+            || cmd[1] == "render_limit"
+            || cmd[1] == "render_count_limit") {
+          int num = atoi(cmd[value_ix].c_str());
           render_count_limit = (num > 0) ? num : DEFAULT_RENDER_COUNT_LIMIT;
           mode_name = "render count limit";
-          sprintf(value_str, "%d", render_count_limit);
+          snprintf(value_str, sizeof(value_str), "%d", render_count_limit);
         } else if (cmd[1] == "lookup") {
           mode_name = "default lookup mode";
-          sprintf(value_str, "%s", cmd[value_ix].c_str());
+          snprintf(value_str, sizeof(value_str), "%s", cmd[value_ix].c_str());
           if (cmd[value_ix] == "exact") {
             default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
           } else if (cmd[value_ix] == "forward") {
@@ -295,11 +303,13 @@ bool do_command(char *cmdstr)
           } else if (cmd[value_ix] == "regexp") {
             default_lookup_flags = LOOKUP_REGEXP;
           } else if (cmd[value_ix] == "all") {
-            default_lookup_flags = LOOKUP_NORMAL | LOOKUP_SARRAY | LOOKUP_REGEXP;
+            default_lookup_flags =
+                LOOKUP_NORMAL | LOOKUP_SARRAY | LOOKUP_REGEXP;
           } else {
-            std::cout << "[command] set lookup = {exact|forward|sarray|regexp|all}" << std::endl;
+            printf("[command] "
+                   "set lookup = {exact|forward|sarray|regexp|all}\n");
             mode_name = NULL;
-            //default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
+            // default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
           }
         } else {
           mode_name = NULL;
@@ -307,31 +317,32 @@ bool do_command(char *cmdstr)
         }
       }
       if (verbose_mode && mode_name != NULL) {
-        std::cout << ANSI_FGCOLOR_GREEN;
-        std::cout << "// " << mode_name << " = " << value_str << std::endl;
-        std::cout << ANSI_FGCOLOR_DEFAULT;
+        printf("%s", ANSI_FGCOLOR_GREEN);
+        printf("// %s = %s\n", mode_name, value_str);
+        printf("%s", ANSI_FGCOLOR_DEFAULT);
       }
     } else {
-      std::cout << "[command] set {limit} = <number>" << std::endl;
-      std::cout << "[command] set {verbose|separator|direct|full|coloring|newline} = {on|off}" << std::endl;
+      printf("[command] set {limit} = <number>\n");
+      printf("[command] set "
+             "{verbose|separator|direct|full|coloring|newline} = {on|off}\n");
     }
   } else if (cmd[0] == "add") {
     if (cmd.size() == 3 && cmd[1] == "loadpath") {
       loadpaths.push_back(cmd[2]);
     } else {
-      std::cout << "[command] add loadpath <path>" << std::endl;
+      printf("[command] add loadpath <path>\n");
     }
   } else if (cmd[0] == "group" && cmd.size() >= 2) {
     if (cmd.size() >= 2) {
       std::string groupname = cmd[1];
       std::vector<std::string> names;
-      for (uint i=2; i<cmd.size(); ++i) {
+      for (uint i = 2; i < cmd.size(); ++i) {
         if (cmd[i] == "=") continue;
         names.push_back(cmd[i]);
       }
       do_alias(groupname, names);
     } else {
-      std::cout << "[command] group <groupname> = <name_1> <name_2> ... <name_n>" << std::endl;
+      printf("[command] group <groupname> = <name_1> <name_2> ... <name_n>\n");
     }
   } else if (cmd[0] == "load") {
     if (cmd.size() >= 2) {
@@ -340,13 +351,15 @@ bool do_command(char *cmdstr)
 
       if (dict_id >= 0) {
         char *name = dicts[dict_id]->prefix();
-        //std::cout << "+" << name << std::endl;
-        for (uint i=2; i<cmd.size(); ++i) do_alias(cmd[i], name);
+        // printf("+" << name << std::endl;
+        for (uint i = 2; i < cmd.size(); ++i)
+          do_alias(cmd[i], name);
       } else {
-        std::cout << "// [ERROR] ファイル " << cmd[1] << " が読み込みパスに見つかりません。" << std::endl;
+        printf("// [ERROR] ファイル %s が読み込みパスに見つかりません。\n",
+               cmd[1].c_str());
       }
     } else {
-      std::cout << "[command] load <filename>" << std::endl;
+      printf("[command] load <filename>\n");
     }
   } else if (cmd[0] == "use") {
     if (cmd.size() >= 2) {
@@ -354,19 +367,24 @@ bool do_command(char *cmdstr)
       if (found(aliases, name)) {
         do_use(name);
       } else {
-        std::cout << "// [ERROR] '" << name << "' が見つかりません。" << std::endl;
+        printf("// [ERROR] '%s' が見つかりません。\n", name.c_str());
       }
     } else {
-      std::cout << "[command] use <name>" << std::endl;
+      printf("[command] use <name>\n");
     }
   } else if (cmd[0] == "list") {
     std::set<int> dict_ids(all(current_dict_ids));
-    for (uint dict_id=0; dict_id<dicts.size(); ++dict_id) {
-      printf("%2d%c %s\n", dict_id, (found(dict_ids,dict_id) ? '*' : ':'), dicts[dict_id]->info().c_str());
+    for (uint dict_id = 0; dict_id < dicts.size(); ++dict_id) {
+      printf("%2d%c %s\n",
+             dict_id,
+             (found(dict_ids, dict_id) ? '*' : ':'),
+             dicts[dict_id]->info().c_str());
     }
   } else if (cmd[0] == "aliases") {
     traverse(aliases, alias) {
-      std::cout << alias->first << ": " << join(alias->second, ", ") << std::endl;
+      printf("%s: %s\n",
+             alias->first.c_str(),
+             join(alias->second, ", ").c_str());
     }
   } else if (cmd[0] == "make") {
     if (cmd.size() == 2) {
@@ -381,22 +399,17 @@ bool do_command(char *cmdstr)
           dict->make_macdic_xml();
         }
       } else {
-        std::cout << "[command] make {toc|xml}" << std::endl;
+        printf("[command] make {toc|xml}\n");
       }
     } else {
-      std::cout << "[command] make {toc|xml}" << std::endl;
+      printf("[command] make {toc|xml}\n");
     }
   } else if (cmd[0] == "dump") {
     if (cmd.size() == 1) {
-      std::cout << "[command] dump {header|index|words|datablock <id>|all}" << std::endl;
+      printf("[command] dump {header|index|words|datablock <id>|all}\n");
     } else if (current_dict_ids.size() == 0) {
-      std::cout << "// 辞書が選択されていません。" << std::endl;
+      printf("// 辞書が選択されていません。\n");
     } else {
-      if (verbose_mode) {
-#ifdef DEBUG
-        std::cout << "DUMP: " << current_dict_name << " " << current_dict_ids << std::endl;
-#endif
-      }
       traverse(current_dict_ids, current_dict_id) {
         PDICIndex *index = dicts[*current_dict_id]->index;
         std::string what_to_dump = cmd[1];
@@ -405,29 +418,30 @@ bool do_command(char *cmdstr)
         } else if (what_to_dump == "index") {
           index->dump();
         } else if (what_to_dump == "datablock" && cmd.size() >= 3) {
-          int ix = atoi( cmd[2].c_str() );
+          int ix = atoi(cmd[2].c_str());
           index->iterate_datablock(ix, &cb_dump_entry, NULL);
         } else if (what_to_dump == "words") {
           index->iterate_all_datablocks(&cb_dump_entry, NULL);
         } else if (what_to_dump == "all") {
           index->iterate_all_datablocks(&cb_dump, NULL);
         } else {
-          std::cout << "// [ERROR] I don't know how to dump '" << what_to_dump << "'..." << std::endl;
+          printf("// [ERROR] I don't know how to dump '%s'...\n",
+                 what_to_dump.c_str());
         }
       }
     }
   } else if (cmd[0] == "lookup") {
-    normal_lookup((byte*)cmdstr + 7);
+    normal_lookup(reinterpret_cast<byte*>(cmdstr) + 7);
   } else if (cmd[0] == "sarray") {
-    sarray_lookup((byte*)cmdstr + 7);
+    sarray_lookup(reinterpret_cast<byte*>(cmdstr) + 7);
   } else if (cmd[0] == "regexp") {
-    regexp_lookup((byte*)cmdstr + 7);
+    regexp_lookup(reinterpret_cast<byte*>(cmdstr) + 7);
   } else if (cmd[0] == "full") {
-    full_lookup((byte*)cmdstr + 5);
+    full_lookup(reinterpret_cast<byte*>(cmdstr) + 5);
   } else if (cmd[0] == "clean") {
     free_all_cloned_buffers();
   } else {
-    std::cout << "// [ERROR] 未知のコマンド '" << cmd[0] << "' に遭遇..." << std::endl;
+    printf("// [ERROR] 未知のコマンド '%s' に遭遇...\n", cmd[0].c_str());
   }
 
   return true;

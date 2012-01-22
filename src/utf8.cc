@@ -2,22 +2,21 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "utf8.h"
+#include "./utf8.h"
 
 #include <iconv.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "types.h"
+#include "./types.h"
 
 
-bool surrogate(int codepoint, int *upper, int *lower)
-{
+bool surrogate(int codepoint, int *upper, int *lower) {
   if (0x10000 <= codepoint && codepoint < 0x110000) {
     int x = codepoint - 65536;
     *upper = 0xd800 + (x / 1024);
     *lower = 0xdc00 + (x % 1024);
-    //printf("surrogate(%x) -> %04x:%04x\n", *upper, *lower);
+    // printf("surrogate(%x) -> %04x:%04x\n", *upper, *lower);
     return true;
   } else {
     *upper = *lower = -1;
@@ -25,40 +24,40 @@ bool surrogate(int codepoint, int *upper, int *lower)
   }
 }
 
-int unsurrogate(int upper, int lower)
-{
-  if (upper < 0xd800 || 0xdbff < upper || lower < 0xdc00 || 0xdfff < lower) return -1;
-  return 0x10000 + (((upper - 0xd800) << 10) | (lower - 0xdc00));
+int unsurrogate(int upper, int lower) {
+  if (upper < 0xd800 || 0xdbff < upper || lower < 0xdc00 || 0xdfff < lower)
+    return -1;
+  else
+    return 0x10000 + (((upper - 0xd800) << 10) | (lower - 0xdc00));
 }
 
 
-byte *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
-{
-  dest_size = 0;
-  for (int i=0; i<src_size; i++) {
+byte *encode_utf8(unichar *src_codepoint, int src_size, int* dest_size) {
+  *dest_size = 0;
+  for (int i = 0; i < src_size; i++) {
     int codepoint = src_codepoint[i];
     if (codepoint == 0) {
       break;
     } else if (codepoint <= 0x7f) {
-      dest_size += 1;
+      *dest_size += 1;
     } else if (codepoint <= 0x07ff) {
-      dest_size += 2;
+      *dest_size += 2;
     } else /* if (src_codepoint[i] <= 0xffff) */ {
       if (0xd800 <= codepoint && codepoint <= 0xdbff) {
-        //int upper = codepoint - 0xd800;
-        //int lower = src_codepoint[++i] - 0xdc00;
-        dest_size += 4;
+        // int upper = codepoint - 0xd800;
+        // int lower = src_codepoint[++i] - 0xdc00;
+        *dest_size += 4;
       } else {
-        dest_size += 3;
+        *dest_size += 3;
       }
     }
   }
 
-  byte *dest = (byte *)malloc(dest_size + 1);
+  byte *dest = static_cast<byte*>(malloc(*dest_size + 1));
   if (!dest) return NULL;
 
-  int j=0;
-  for (int i=0; i<src_size; i++) {
+  int j = 0;
+  for (int i = 0; i < src_size; i++) {
     int codepoint = src_codepoint[i];
     if (codepoint == 0) {
       break;
@@ -67,7 +66,7 @@ byte *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
     } else if (codepoint <= 0x07ff) {
       dest[j++] = 0xc0 | (codepoint >> 6);
       dest[j++] = 0x80 | (codepoint & 0x3f);
-    } else { //if (codepoint <= 0xffff) {
+    } else {  // if (codepoint <= 0xffff)
       if (0xd800 <= codepoint && codepoint <= 0xdbff) {
         int next_code = src_codepoint[++i];
         if (0xdc00 <= next_code && next_code <= 0xdfff) {
@@ -97,14 +96,13 @@ byte *encode_utf8(unichar *src_codepoint, int src_size, int& dest_size)
   return dest;
 }
 
-unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_length)
-{
-  dest_length = 0;
+unichar *decode_utf8(byte *src_utf8, int src_size, int* dest_length) {
+  *dest_length = 0;
 
-  unichar* dest = (unichar *)malloc(sizeof(unichar)*(src_size+1));
+  unichar* dest = static_cast<unichar*>(malloc(sizeof(unichar)*(src_size+1)));
   if (!dest) return NULL;
 
-  for (int i=0; i<src_size; ) {
+  for (int i = 0; i < src_size; ) {
     int a = src_utf8[i++];
     int codepoint;
     if (a <= 0x7f) {
@@ -150,57 +148,62 @@ unichar *decode_utf8(byte *src_utf8, int src_size, int& dest_length)
     }
 
     if (codepoint < 0x10000) {
-      dest[dest_length++] = codepoint;
+      dest[(*dest_length)++] = codepoint;
     } else if (codepoint < 0x110000) {
       int upper, lower;
       surrogate(codepoint, &upper, &lower);
-      //printf("{%x -> %04x:%04x}", codepoint, upper, lower);
-      dest[dest_length++] = upper;
-      dest[dest_length++] = lower;
+      // printf("{%x -> %04x:%04x}", codepoint, upper, lower);
+      dest[(*dest_length)++] = upper;
+      dest[(*dest_length)++] = lower;
     } else {
       // simply ignore
     }
   }
 
-  dest[dest_length] = 0;
+  dest[*dest_length] = 0;
 
-  unichar *newp = (unichar *)realloc((void *)dest, sizeof(unichar)*(dest_length+1));
+  unichar *newp =
+      static_cast<unichar*>(realloc(static_cast<void*>(dest),
+                                    sizeof(unichar)*(*dest_length + 1)));
   return newp ? newp : dest;
 }
 
-char *_iconv(const char *src, size_t src_size, const char *src_code, char *dest, size_t dest_size, const char *dest_code)
-{
+char *_iconv(const char *src, size_t src_size, const char *src_code,
+             char *dest, size_t dest_size, const char *dest_code) {
   iconv_t icd = iconv_open(dest_code, src_code);
 
   size_t n_src = src_size, n_dest = dest_size;
-  char *p_src = (char *)src, *p_dest = (char *)dest;
+  char *p_src = const_cast<char*>(src), *p_dest = dest;
   while (n_src > 0) {
     iconv(icd, &p_src, &n_src, &p_dest, &n_dest);
   }
   *p_dest = 0;
 
-  int actual_size = (int)(p_dest - (char *)dest);
+  int actual_size = static_cast<int>(p_dest - dest);
 
-  char *newp = (char *)realloc((void *)dest, actual_size);
+  char *newp =
+      static_cast<char*>(realloc(static_cast<void*>(dest), actual_size));
   return newp ? newp : dest;
 }
 
-byte *sjis_to_utf8(byte *src, int src_size)
-{
-  if (!src_size) src_size = strlen((char *)src);
+byte *sjis_to_utf8(byte *src, int src_size) {
+  if (!src_size) src_size = strlen(reinterpret_cast<char*>(src));
 
   size_t dest_size = src_size * 2;
-  byte *dest = (byte *)malloc(dest_size + 1);
+  byte *dest = static_cast<byte*>(malloc(dest_size + 1));
 
-  return (byte *)_iconv((const char *)src, src_size, "Shift_JIS", (char *)dest, dest_size, "UTF-8");
+  return reinterpret_cast<byte*>(
+      _iconv(reinterpret_cast<const char*>(src), src_size, "Shift_JIS",
+             reinterpret_cast<char*>(dest), dest_size, "UTF-8"));
 }
 
-byte *utf8_to_sjis(byte *src, int src_size)
-{
-  if (!src_size) src_size = strlen((char *)src);
+byte *utf8_to_sjis(byte *src, int src_size) {
+  if (!src_size) src_size = strlen(reinterpret_cast<char*>(src));
 
   size_t dest_size = src_size * 2;
-  byte *dest = (byte *)malloc(dest_size + 1);
+  byte *dest = static_cast<byte*>(malloc(dest_size + 1));
 
-  return (byte *)_iconv((const char *)src, src_size, "UTF-8", (char *)dest, dest_size, "Shift_JIS");
+  return reinterpret_cast<byte*>(
+      _iconv(reinterpret_cast<const char*>(src), src_size, "UTF-8",
+             reinterpret_cast<char*>(dest), dest_size, "Shift_JIS") );
 }

@@ -4,22 +4,22 @@
 
 #include <stdio.h>
 
-#include <iostream>
 #include <string>
 
-#include "ansi_color.h"
-#include "dump.h"
-#include "lookup.h"
-#include "shell.h"
-
+#include "./ansi_color.h"
+#include "./dump.h"
+#include "./lookup.h"
+#include "./shell.h"
 
 extern std::string current_dict_name;
 extern bool verbose_mode;
 
-int main(int argc, char **argv)
-{
-  std::cout << ANSI_UNDERLINE_ON "PDIC CUI Search ver 0.7 (c)2012 @naoya_t. All Rights Reserved." ANSI_UNDERLINE_OFF << std::endl;
-  std::cout << "読み込み中..." << std::endl;
+int main(int argc, char **argv) {
+  printf(ANSI_UNDERLINE_ON
+         "PDIC CUI Search ver 0.7 (c)2012 @naoya_t. All Rights Reserved."
+         ANSI_UNDERLINE_OFF "\n");
+
+  printf("読み込み中...\n");
   shell_init();
 
   if (argc >= 2) {
@@ -28,34 +28,38 @@ int main(int argc, char **argv)
   }
 
   // REPL
-  for (bool looping=true; looping; ) {
-    std::cout << current_dict_name << "> ";
+  for (bool looping = true; looping; ) {
+    printf("%s> ", current_dict_name.c_str());
     char line[256];
-    if (!fgets(line, 256, stdin)) { printf("\n"); break; }
-    int linelen = strlen(line); line[--linelen] = 0;
+    if (!fgets(line, 256, stdin)) {
+      printf("\n");
+      break;
+    }
+    int linelen = strlen(line);
+    line[--linelen] = 0;
     if (linelen == 0) continue;
 
     switch (line[0]) {
-      case '?': // reserved (help)
+      case '?':  // reserved (help)
         break;
 
       case '+':
-        full_lookup((byte*)line+1, linelen-1);
+        full_lookup(reinterpret_cast<byte*>(line)+1, linelen-1);
         break;
 
-      case '.': // command mode
+      case '.':  // command mode
         if (linelen > 1) {
           if (verbose_mode) {
-            //printf("[COMMAND] %s\n", line+1);
+            // printf("[COMMAND] %s\n", line+1);
           }
           looping = do_command(line+1);
         }
         break;
 
-      case '!': // external shell mode
+      case '!':  // external shell mode
         if (linelen > 1) {
           if (verbose_mode) {
-            //printf("[EXTERNAL] %s\n", line+1);
+            // printf("[EXTERNAL] %s\n", line+1);
           }
           system(line+1);
         }
@@ -64,20 +68,20 @@ int main(int argc, char **argv)
       case '*':
         if (linelen > 1) {
           if (verbose_mode) {
-            //printf("[LOOKUP<sarray>] %s\n", line+1);
+            // printf("[LOOKUP<sarray>] %s\n", line+1);
           }
-          sarray_lookup((byte*)line+1, linelen-1);
+          sarray_lookup(reinterpret_cast<byte*>(line)+1, linelen-1);
         }
         break;
 
       case '/':
         if (linelen >= 3) {
-          if (strchr(line+1,'/') == line + linelen - 1)  {
+          if (strchr(line+1, '/') == line + linelen - 1) {
             line[linelen-1] = 0;
             if (verbose_mode) {
-              //printf("[LOOKUP<regexp>] /%s/\n", line+1);
+              // printf("[LOOKUP<regexp>] /%s/\n", line+1);
             }
-            regexp_lookup((byte*)line+1, linelen-2);
+            regexp_lookup(reinterpret_cast<byte*>(line)+1, linelen-2);
             break;
           }
         }
@@ -85,15 +89,15 @@ int main(int argc, char **argv)
 
       default:
         if (verbose_mode) {
-          //printf("[LOOKUP<normal>] %s\n", line);
+          // printf("[LOOKUP<normal>] %s\n", line);
         }
-        default_lookup((byte*)line, linelen);
+        default_lookup(reinterpret_cast<byte*>(line), linelen);
         break;
     }
   }
 
   shell_destroy();
+  printf("bye!\n");
 
-  std::cout << "bye!" << std::endl;
   return 0;
 }

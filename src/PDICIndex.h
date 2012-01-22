@@ -2,24 +2,23 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef PDICCUISEARCH_PDICINDEX_H_
-#define PDICCUISEARCH_PDICINDEX_H_
+#ifndef SRC_PDICINDEX_H_
+#define SRC_PDICINDEX_H_
 
 #include <utility>
 
-#include "types.h"
-
+#include "./types.h"
 
 class PDICHeader;
 class Criteria;
 
 class PDICIndex {
-public:
+ public:
   explicit PDICIndex(byte *filemem);
   PDICIndex(byte *filemem, PDICHeader *header);
   ~PDICIndex();
 
-public:
+ public:
   byte *entry_word(int ix) { return index_buf + entry_word_offsets[ix]; }
   unsigned int datablock_offset(int ix);
   unsigned int datablock_block_size() { return header->block_size(); }
@@ -37,7 +36,7 @@ public:
   int*  phys_ids;
 
 
-private:
+ private:
   int   load_index();
 
   byte *filemem;
@@ -46,6 +45,6 @@ private:
   int   index_size;
 };
 
-byte *string_for_index(byte *str);
+byte* string_for_index(byte* str);
 
-#endif // PDICCUISEARCH_PDICINDEX_H_
+#endif  // SRC_PDICINDEX_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef PDICCUISEARCH_ANSICOLOR_H_
-#define PDICCUISEARCH_ANSICOLOR_H_
+#ifndef SRC_ANSI_COLOR_H_
+#define SRC_ANSI_COLOR_H_
 
 // reset colors & styles
 #define ANSI_RESET             "\x1b[0m"
@@ -12,7 +12,7 @@
 #define ANSI_BOLD_ON           "\x1b[1m"
 #define ANSI_ITALICS_ON        "\x1b[3m"
 #define ANSI_UNDERLINE_ON      "\x1b[4m"
-#define ANSI_INVERSE_ON        "\x1b[7m" // reverses fgcolor/bgcolor
+#define ANSI_INVERSE_ON        "\x1b[7m"  // reverses fgcolor/bgcolor
 #define ANSI_STRIKETHROUGH_ON  "\x1b[9m"
 
 // unset style
@@ -28,7 +28,7 @@
 #define ANSI_FGCOLOR_GREEN     "\x1b[32m"
 #define ANSI_FGCOLOR_YELLOW    "\x1b[33m"
 #define ANSI_FGCOLOR_BLUE      "\x1b[34m"
-#define ANSI_FGCOLOR_MAGENTA   "\x1b[35m" // purple
+#define ANSI_FGCOLOR_MAGENTA   "\x1b[35m"  // purple
 #define ANSI_FGCOLOR_CYAN      "\x1b[36m"
 #define ANSI_FGCOLOR_WHITE     "\x1b[37m"
 #define ANSI_FGCOLOR_DEFAULT   "\x1b[39m"
@@ -44,4 +44,4 @@
 #define ANSI_BGCOLOR_WHITE     "\x1b[47m"
 #define ANSI_BGCOLOR_DEFAULT   "\x1b[49m"
 
-#endif // PDICCUISEARCH_ANSICOLOR_H_
+#endif  // SRC_ANSI_COLOR_H_

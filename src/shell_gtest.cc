@@ -8,11 +8,11 @@
 #include <string>
 #include <utility>
 
-#include "dump.h"
-#include "lookup.h"
-#include "shell.h"
-#include "util.h"
-
+#include "./Dict.h"
+#include "./dump.h"
+#include "./lookup.h"
+#include "./shell.h"
+#include "./util.h"
 
 TEST(shell, sarray_lookup) {
   load_rc("./gtest.pdicrc");
@@ -21,10 +21,14 @@ TEST(shell, sarray_lookup) {
   if (is_available) {
     lookup_result_vec result;
 
-    result = _sarray_lookup((byte *)"whose creativity");
-    EXPECT_EQ( 3, result.size() );
-    EXPECT_STREQ( "man whose creativity seems boundless", (const char *)result[0][F_ENTRY] );
-    EXPECT_STREQ( "person whose creativity seems boundless", (const char *)result[1][F_ENTRY] );
-    EXPECT_STREQ( "woman whose creativity seems boundless", (const char *)result[2][F_ENTRY] );
+    result = _sarray_lookup(
+        BYTE(const_cast<char*>("whose creativity")));
+    EXPECT_EQ(3, result.size());
+    EXPECT_STREQ("man whose creativity seems boundless",
+                 reinterpret_cast<char*>(result[0][F_ENTRY]));
+    EXPECT_STREQ("person whose creativity seems boundless",
+                 reinterpret_cast<char*>(result[1][F_ENTRY]));
+    EXPECT_STREQ("woman whose creativity seems boundless",
+                 reinterpret_cast<char*>(result[2][F_ENTRY]));
   }
 }

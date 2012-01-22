@@ -2,23 +2,22 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef PDICCUISEARCH_CRITERIA_H_
-#define PDICCUISEARCH_CRITERIA_H_
+#ifndef SRC_CRITERIA_H_
+#define SRC_CRITERIA_H_
 
 #include <re2/re2.h>
 
-#include "types.h"
+#include "./types.h"
 
 
 class PDICDatafield;
 
-class Criteria
-{
-public:
+class Criteria {
+ public:
   Criteria(byte *needle_utf8, int target_charcode, bool exact_match);
   ~Criteria();
 
-public:
+ public:
   bool match(PDICDatafield *datafield);
 
   RE2  *re2_pattern;
@@ -28,4 +27,4 @@ public:
   bool  exact_match;
 };
 
-#endif // PDICCUISEARCH_CRITERIA_H_
+#endif  // SRC_CRITERIA_H_
