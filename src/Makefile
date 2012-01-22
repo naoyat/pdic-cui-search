@@ -12,7 +12,7 @@ CPPFLAGS = -g -Wall -DDEBUG -DVERBOSE
 OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o Dict.o \
           bocu1.o cout.o dump.o filemem.o search.o shell.o lookup.o timeutil.o utf8.o util.o util_stl.o macdic_xml.o
 
-TEST_OBJECTS = Dict_gtest.o PDICIndex_gtest.o filemem_gtest.o search_gtest.o shell_gtest.o utf8_gtest.o util_gtest.o
+TEST_OBJECTS = PDICIndex_gtest.o filemem_gtest.o search_gtest.o shell_gtest.o utf8_gtest.o util_gtest.o
 TEST_DATA = filemem_gtest.dat
 TEST_OUTPUTS = filemem_gtest.savemem
 
@@ -70,7 +70,6 @@ macdic_xml.o: macdic_xml.cc macdic_xml.h
 main.o: main.cc shell.h
 gtest_main.o: gtest_main.cc
 
-Dict_gtest.o: Dict_gtest.cc  Dict.h
 filemem_gtest.o: filemem_gtest.cc filemem.h dump.h
 search_gtest.o: search_gtest.cc  search.h util.h
 shell_gtest.o: shell_gtest.cc  shell.h
