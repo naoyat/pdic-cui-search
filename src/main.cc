@@ -81,7 +81,7 @@ int main(int argc, char **argv)
         if (verbose_mode) {
           //printf("[LOOKUP<normal>] %s\n", line);
         }
-        normal_lookup((byte*)line, linelen);
+        default_lookup((byte*)line, linelen);
         break;
     }
   }

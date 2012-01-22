@@ -77,6 +77,12 @@ readlineには（少なくとも現時点では）対応していません。（
 .set 変数 = 値
     - limit = 数値
         数値: 結果表示件数の上限。デフォルトは150
+    - lookup = {exact|forward|sarray|regexp|all}
+        exact: デフォルトを完全一致検索に設定
+        forward: 〃前方一致検索に設定
+        sarray: 〃単語区切りでの一致に設定
+        regexp: 〃正規表現検索に設定
+        all: 〃全検索方式の和集合に設定
     - stop_on_limit = {on|off}
         on: 検索表示件数の上限に来たら検索を停止する
         off: 〃 停止しない（あとで検索結果を全部見たいときなどに用いる）

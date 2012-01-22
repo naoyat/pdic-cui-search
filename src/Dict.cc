@@ -56,6 +56,7 @@ bool ansi_coloring_mode = false;
 bool more_newline_mode = false;
 int render_count_limit = DEFAULT_RENDER_COUNT_LIMIT;
 bool render_count_limit_exceeded = false;
+bool said_that = false;
 bool stop_on_limit_mode = true;
 
 int match_count, render_count;
@@ -74,6 +75,7 @@ void reset_render_count()
   time_reset();
   render_count = 0;
   render_count_limit_exceeded = false;
+  said_that = false;
 }
 void lap_match_count()
 {
@@ -372,9 +374,10 @@ Dict::normal_lookup_ids(byte *needle, bool exact_match)
   }
   if (stop_on_limit_mode) {
     if (render_count_limit_exceeded) {
-      if (verbose_mode) {
+      if (verbose_mode && !said_that) {
         printf("[stop on limit] 件数(%d)が制限(%d)に達しているので %s からの検索を行いません。\n",
                render_count, render_count_limit, name.c_str());
+        said_that = true;
       }
       return std::set<int>();
     }
@@ -410,9 +413,10 @@ Dict::normal_lookup_ids(byte *needle, bool exact_match)
   for (int ix=from; ix<=to; ix++) {
     if (stop_on_limit_mode) {
       if (render_count_limit_exceeded) {
-        if (verbose_mode) {
+        if (verbose_mode && !said_that) {
           printf("[stop on limit] 件数(%d)が制限(%d)に達したので検索を中断します。\n",
                  render_count, render_count_limit);
+          said_that = true;
         }
         break;
       }
@@ -461,9 +465,10 @@ Dict::search_in_sarray(int field, byte *needle)
     for (int i=result.second.first; i<=result.second.second; ++i) {
       if (stop_on_limit_mode) {
         if (render_count_limit_exceeded) {
-          if (verbose_mode) {
+          if (verbose_mode && !said_that) {
             printf("[stop on limit] 件数(%d)が制限(%d)に達したので検索を中断します。\n",
                    render_count, render_count_limit);
+            said_that = true;
           }
           break;
         }
@@ -533,9 +538,10 @@ Dict::sarray_lookup_ids(byte *needle)
   for (int f=0; f<F_COUNT; ++f) {
     if (stop_on_limit_mode) {
       if (render_count_limit_exceeded) {
-        if (verbose_mode) {
+        if (verbose_mode && !said_that) {
           printf("[stop on limit] 件数(%d)が制限(%d)に達したので検索を中断します。\n",
                  render_count, render_count_limit);
+          said_that = true;
         }
         break;
       }
@@ -566,9 +572,10 @@ Dict::regexp_lookup_ids(RE2 *re)
   for (int word_id=0; word_id<toc_length; ++word_id) {
     if (stop_on_limit_mode) {
       if (render_count_limit_exceeded) {
-        if (verbose_mode) {
+        if (verbose_mode && !said_that) {
           printf("[stop on limit] 件数(%d)が制限(%d)に達したので検索を中断します。\n",
                  render_count, render_count_limit);
+          said_that = true;
         }
         break;
       }
@@ -680,8 +687,9 @@ Dict::load_additional_files()
 void render_result(lookup_result fields, RE2 *re)
 {
   if (render_count >= render_count_limit) {
-    if (verbose_mode) {
+    if (verbose_mode && !said_that) {
       printf("表示件数(%d)が制限(%d)に達したので表示を中断します。\n", render_count, render_count_limit);
+      said_that = true;
     }
     render_count_limit_exceeded = true;
     return;

@@ -45,6 +45,7 @@ extern bool ansi_coloring_mode;
 extern bool more_newline_mode;
 extern int render_count, render_count_limit;
 extern bool stop_on_limit_mode;
+extern int default_lookup_flags;
 
 extern std::vector<int> current_dict_ids;
 extern lookup_result_vec current_result_vec;
@@ -63,6 +64,7 @@ void render_status()
   std::cout << "// full search mode = " << (full_search_mode ? "ON" : "OFF") << std::endl;
   std::cout << "// ANSI coloring mode = " << (ansi_coloring_mode ? "ON" : "OFF") << std::endl;
   std::cout << "// newline mode = " << (more_newline_mode ? "ON" : "OFF") << std::endl;
+  std::cout << "// default lookup mode = " << current_lookup_mode() << std::endl;
   std::cout << "// render count limit = " << render_count_limit << ", stop on limit = " << (stop_on_limit_mode ? "ON" : "OFF") << std::endl;
 
   if (current_pattern) {
@@ -293,6 +295,30 @@ bool do_command(char *cmdstr)
           render_count_limit = (num > 0) ? num : DEFAULT_RENDER_COUNT_LIMIT;
           mode_name = "render count limit";
           sprintf(value_str, "%d", render_count_limit);
+        }
+        else if (cmd[1] == "lookup") {
+          mode_name = "default lookup mode";
+          sprintf(value_str, "%s", cmd[value_ix].c_str());
+          if (cmd[value_ix] == "exact") {
+            default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
+          }
+          if (cmd[value_ix] == "forward") {
+            default_lookup_flags = LOOKUP_NORMAL;
+          }
+          if (cmd[value_ix] == "sarray") {
+            default_lookup_flags = LOOKUP_SARRAY;
+          }
+          if (cmd[value_ix] == "regexp") {
+            default_lookup_flags = LOOKUP_REGEXP;
+          }
+          if (cmd[value_ix] == "all") {
+            default_lookup_flags = LOOKUP_NORMAL | LOOKUP_SARRAY | LOOKUP_REGEXP;
+          }
+          else {
+            std::cout << "[command] set lookup = {exact|forward|sarray|regexp|all}" << std::endl;
+            mode_name = NULL;
+            //default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
+          }
         }
         else {
           mode_name = NULL;

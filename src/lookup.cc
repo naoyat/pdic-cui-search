@@ -20,6 +20,7 @@ RE2* current_pattern;
 std::pair<std::string,std::string> current_query;
 
 extern bool direct_dump_mode;
+int default_lookup_flags = 0;
 
 lookup_result_vec _normal_lookup(byte *needle, int needle_len)
 {
@@ -128,4 +129,18 @@ void lookup(byte *needle, int needle_len, int flag)
   lap_match_count();
   if (!direct_dump_mode) render_current_result();
   say_match_count();
+}
+
+int current_lookup_flags()
+{
+  return default_lookup_flags;
+}
+
+const char *current_lookup_mode()
+{
+  if (default_lookup_flags == LOOKUP_NORMAL) return "normal";
+  if (default_lookup_flags == (LOOKUP_NORMAL | LOOKUP_EXACT_MATCH)) return "exact";
+  if (default_lookup_flags == LOOKUP_SARRAY) return "sarray";
+  if (default_lookup_flags == LOOKUP_REGEXP) return "regexp";
+  else return "all";
 }
