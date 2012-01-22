@@ -640,7 +640,7 @@ Dict::load_additional_files()
 {
   unload_additional_files();
 
-  for (int i=0; i<loadpaths.size(); ++i) {
+  for (uint i=0; i<loadpaths.size(); ++i) {
     std::string path = loadpaths[i] + "/" + this->prefix();
 
     if (this->toc) {

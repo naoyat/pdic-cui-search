@@ -16,6 +16,8 @@ int macdic_xml_open(std::string path)
   // header
   fputs("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n", macdic_xml_fp);
   fputs("<d:dictionary xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:d=\"http://www.apple.com/DTDs/DictionaryService-1.0.rng\">\n", macdic_xml_fp);
+
+  return 0;
 }
 
 void macdic_xml_close()

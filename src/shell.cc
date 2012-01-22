@@ -280,7 +280,7 @@ lookup_result_vec regexp_lookup(RE2 *current_pattern)
 
 int do_load(const std::string& filename)
 {
-  for (int i=0; i<loadpaths.size(); ++i) {
+  for (uint i=0; i<loadpaths.size(); ++i) {
     std::string path = loadpaths[i] + "/" + filename;
 
     byte *filemem = loadmem(path.c_str());
@@ -327,7 +327,7 @@ bool do_command(char *cmdstr)
       if (cmd.size() >= 2) {
         std::set<int> lines;
         int s, e, line;
-        for (int i=1; i<cmd.size(); ++i) {
+        for (uint i=1; i<cmd.size(); ++i) {
           if (RE2::FullMatch(cmd[i],"(\\d+)-(\\d+)", &s, &e))  {
             if (s < 1) s = 1;
             if (last < e) e = last;
@@ -428,7 +428,7 @@ bool do_command(char *cmdstr)
     if (cmd.size() >= 2) {
       std::string groupname = cmd[1];
       std::vector<std::string> names;
-      for (int i=2; i<cmd.size(); ++i) {
+      for (uint i=2; i<cmd.size(); ++i) {
         if (cmd[i] == "=") continue;
         else names.push_back(cmd[i]);
       }
@@ -445,7 +445,7 @@ bool do_command(char *cmdstr)
       if (dict_id >= 0) {
         char *name = dicts[dict_id]->prefix();
         //std::cout << "+" << name << std::endl;
-        for (int i=2; i<cmd.size(); ++i) {
+        for (uint i=2; i<cmd.size(); ++i) {
           do_alias(cmd[i], name);
         }
       } else {
@@ -469,7 +469,7 @@ bool do_command(char *cmdstr)
   }
   else if (cmd[0] == "list") {
     std::set<int> dict_ids(all(current_dict_ids));
-    for (int dict_id=0; dict_id<dicts.size(); ++dict_id) {
+    for (uint dict_id=0; dict_id<dicts.size(); ++dict_id) {
       printf("%2d%c %s\n", dict_id, (found(dict_ids,dict_id) ? '*' : ':'), dicts[dict_id]->info().c_str());
     }
   }

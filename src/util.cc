@@ -70,7 +70,7 @@ int bstrcmp(byte *s1, byte *s2, int minimum_charcode)
 
 int bstrncmp(byte *s1, byte *s2, size_t n, int minimum_charcode)
 {
-  for (int i=0; i<n; ++i) {
+  for (uint i=0; i<n; ++i) {
     if (s1[i] < minimum_charcode) {
       if (s2[i] < minimum_charcode) return 0;
       else                          return s1[i] > s2[i] ? 1 : -1;
