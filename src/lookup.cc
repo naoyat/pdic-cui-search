@@ -9,9 +9,9 @@
 #include <re2/stringpiece.h>
 
 #include "Dict.h"
+#include "stlutil.h"
 #include "types.h"
 #include "util.h"
-#include "util_stl.h"
 
 
 std::vector<Dict*> dicts;

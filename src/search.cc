@@ -8,10 +8,10 @@
 
 #include "bocu1.h"
 #include "dump.h"
+#include "stlutil.h"
 #include "types.h"
 #include "utf8.h"
 #include "util.h"
-#include "util_stl.h"
 
 
 #ifdef DEBUG

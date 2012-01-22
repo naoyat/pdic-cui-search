@@ -10,7 +10,7 @@ CPPFLAGS = -g -Wall -DDEBUG -DVERBOSE
 
 
 OBJECTS = PDICHeader.o PDICIndex.o PDICDatablock.o PDICDatafield.o Criteria.o Dict.o \
-          bocu1.o cout.o dump.o filemem.o search.o shell.o lookup.o timeutil.o utf8.o util.o util_stl.o macdic_xml.o
+          bocu1.o dump.o filemem.o macdic_xml.o lookup.o search.o shell.o stlutil.o timeutil.o utf8.o util.o 
 
 TEST_OBJECTS = filemem_gtest.o search_gtest.o shell_gtest.o utf8_gtest.o util_gtest.o
 TEST_DATA = filemem_gtest.dat
@@ -49,22 +49,21 @@ clean:
 
 Criteria.o: Criteria.cc Criteria.h  PDICDatafield.h bocu1.h charcode.h dump.h types.h util.h
 Dict.o: Dict.cc Dict.h  Criteria.h PDICHeader.h PDICIndex.h PDICDatablock.cc PDICDatafield.h \
-        ansi_color.h bocu1.h charcode.h filemem.h timeutil.h util_stl.h utf8.h types.h macdic_xml.h
+        ansi_color.h bocu1.h charcode.h filemem.h stlutil.h timeutil.h utf8.h types.h macdic_xml.h
 PDICDatablock.o: PDICDatablock.cc PDICDatablock.h  Criteria.h PDICDatafield.h PDICHeader.h PDICIndex.h bocu1.h charcode.h util.h types.h
 PDICDatafield.o: PDICDatafield.cc PDICDatafield.h  bocu1.h charcode.h utf8.h util.h
 PDICHeader.o: PDICHeader.cc PDICHeader.h  dump.h util.h
 PDICIndex.o: PDICIndex.cc PDICIndex.h  PDICDatablock.h PDICHeader.h PDICIndex.h bocu1.h search.h dump.h
 bocu1.o: bocu1.cc bocu1.h  dump.h types.h utf8.h
-cout.o: cout.cc cout.h
 dump.o: dump.cc dump.h  bocu1.h dump.h types.h util.h
-filemem.o: filemem.cc filemem.h  types.h util_stl.h
+filemem.o: filemem.cc filemem.h  stlutil.h types.h
 search.o: search.cc search.h  util.h
-shell.o: shell.cc shell.h  lookup.h Dict.h PDICDatafield.h PDICHeader.h PDICIndex.h timeutil.h util.h util_stl.h types.h
+shell.o: shell.cc shell.h  lookup.h Dict.h PDICDatafield.h PDICHeader.h PDICIndex.h stlutil.h timeutil.h types.h util.h 
 lookup.o: lookup.cc lookup.h
+stlutil.o: stlutil.cc stlutil.h
 timeutil.o: timeutil.cc timeutil.h
 utf8.o: utf8.cc utf8.h  types.h
 util.o: util.cc util.h  types.h
-util_stl.o: util_stl.cc util_stl.h
 macdic_xml.o: macdic_xml.cc macdic_xml.h
 
 main.o: main.cc shell.h

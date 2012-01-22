@@ -1,5 +1,5 @@
-#ifndef PDICCUISEARCH_COUT_H_
-#define PDICCUISEARCH_COUT_H_
+#ifndef PDICCUISEARCH_STLUTIL_H_
+#define PDICCUISEARCH_STLUTIL_H_
 
 #include <deque>
 #include <iostream>
@@ -10,8 +10,17 @@
 #include <sstream>
 #include <stack>
 #include <string>
+#include <utility>
 #include <vector>
 
+
+#define rep(var,n)  for(int var=0;var<(n);var++)
+#define traverse(c,i)  for(typeof((c).begin()) i=(c).begin(); i!=(c).end(); i++)
+#define all(c)  (c).begin(),(c).end()
+#define found(s,e)  ((s).find(e)!=(s).end())
+
+std::vector<std::string> split(std::string str, int delim=' ');
+std::string join(std::vector<std::string> strs, const std::string &delim="");
 
 std::string pluralize_if_plural(const std::string &singular_form, int number);
 std::string number_with_unit(int number, const std::string &unit_str);
@@ -78,4 +87,4 @@ template <typename T1, typename T2> std::ostream& operator<<(std::ostream &s, st
   return s << "(" << p.first << "," << p.second << ")";
 }
 
-#endif // PDICCUISEARCH_COUT_H_
+#endif // PDICCUISEARCH_STLUTIL_H_

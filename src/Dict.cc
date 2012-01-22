@@ -12,7 +12,6 @@
 #include "ansi_color.h"
 #include "bocu1.h"
 #include "charcode.h"
-#include "cout.h"
 #include "Criteria.h"
 #include "filemem.h"
 #include "macdic_xml.h"
@@ -21,10 +20,10 @@
 #include "PDICHeader.h"
 #include "PDICIndex.h"
 #include "search.h"
+#include "stlutil.h"
 #include "timeutil.h"
 #include "utf8.h"
 #include "util.h"
-#include "util_stl.h"
 
 
 const char *sx_buf[F_COUNT] = {".entry",".trans",".exmp",".pron"};

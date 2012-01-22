@@ -6,10 +6,10 @@
 #include "bocu1.h"
 #include "charcode.h"
 #include "Dict.h"
+#include "stlutil.h"
+#include "types.h"
 #include "utf8.h"
 #include "util.h"
-#include "util_stl.h"
-#include "types.h"
 
 
 PDICDatafield::PDICDatafield(int start_pos,
