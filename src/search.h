@@ -1,3 +1,7 @@
+// Copyright 2012 naoya_t.  All Rights Reserved.
+// Use of this source code is governed by a LGPL-style
+// license that can be found in the COPYING file.
+
 #ifndef PDICCUISEARCH_SEARCH_H_
 #define PDICCUISEARCH_SEARCH_H_
 
