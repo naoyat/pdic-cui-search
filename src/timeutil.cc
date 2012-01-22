@@ -1,7 +1,8 @@
 #include "timeutil.h"
 
-#include <ctime>
 #include <sys/time.h>
+#include <time.h>
+
 
 timeval _timeval_start;
 clock_t _clock_start;

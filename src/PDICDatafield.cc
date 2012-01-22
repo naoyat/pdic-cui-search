@@ -1,15 +1,16 @@
 #include "PDICDatafield.h"
 
-#include <cstdlib>
-#include <cstring>
+#include <stdlib.h>
+#include <string.h>
 
-#include "Dict.h"
 #include "bocu1.h"
 #include "charcode.h"
+#include "Dict.h"
 #include "utf8.h"
 #include "util.h"
 #include "util_stl.h"
 #include "types.h"
+
 
 PDICDatafield::PDICDatafield(int start_pos,
                              int field_length,

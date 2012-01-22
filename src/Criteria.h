@@ -2,6 +2,7 @@
 #define PDICCUISEARCH_CRITERIA_H_
 
 #include <re2/re2.h>
+
 #include "types.h"
 
 class PDICDatafield;

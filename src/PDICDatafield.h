@@ -2,7 +2,9 @@
 #define PDICCUISEARCH_PDICDATAFIELD_H_
 
 #include <map>
+
 #include "types.h"
+
 
 class Criteria;
 

@@ -1,11 +1,12 @@
 #include "bocu1.h"
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "utf8.h"
 #include "dump.h"
+#include "utf8.h"
+
 
 int decode_trail[256] = {
    -1,   0,   1,   2,   3,   4,   5,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,

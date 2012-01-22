@@ -2,8 +2,9 @@
 #define PDICCUISEARCH_UTILSTL_H_
 
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
+
 
 #define rep(var,n)  for(int var=0;var<(n);var++)
 #define traverse(c,i)  for(typeof((c).begin()) i=(c).begin(); i!=(c).end(); i++)

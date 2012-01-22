@@ -1,17 +1,18 @@
 #include "search.h"
 
-#include <vector>
+#include <string.h>
+
 #include <queue>
 #include <utility>
-#include <cstring>
-
-#include "util.h"
-#include "util_stl.h"
-#include "types.h"
-#include "dump.h"
+#include <vector>
 
 #include "bocu1.h"
+#include "dump.h"
+#include "types.h"
 #include "utf8.h"
+#include "util.h"
+#include "util_stl.h"
+
 
 #ifdef DEBUG
 int cmp_count;

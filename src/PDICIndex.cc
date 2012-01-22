@@ -1,16 +1,17 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 
-#include "PDICHeader.h"
-#include "PDICIndex.h"
-#include "PDICDatablock.h"
 #include "bocu1.h"
 #include "dump.h"
+#include "PDICDatablock.h"
+#include "PDICHeader.h"
+#include "PDICIndex.h"
 #include "search.h"
 #include "utf8.h"
 #include "util.h"
+
 
 PDICIndex::PDICIndex(byte *filemem)
 {

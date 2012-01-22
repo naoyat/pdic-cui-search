@@ -1,8 +1,10 @@
 #ifndef PDICCUISEARCH_PDICDATABLOCK_H_
 #define PDICCUISEARCH_PDICDATABLOCK_H_
 
-#include <cstdio>
+#include <stdio.h>
+
 #include "types.h"
+
 
 class Criteria;
 class PDICIndex;

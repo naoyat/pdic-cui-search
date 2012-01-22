@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
 
-#include <cstdlib>
-#include <cstring>
+#include <stdlib.h>
+#include <string.h>
 
 #include "search.h"
-#include "util.h"
 #include "types.h"
+#include "util.h"
+
 
 #ifdef DEBUG
 extern int cmp_count;

@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "utf8.h"
 #include "types.h"
+#include "utf8.h"
+
 
 TEST(utf8, surrogate) {
   int upper, lower;

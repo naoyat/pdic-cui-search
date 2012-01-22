@@ -1,11 +1,13 @@
+#include <stdio.h>
+
 #include <iostream>
 #include <string>
-#include <cstdio>
 
-#include "shell.h"
-#include "lookup.h"
-#include "dump.h"
 #include "ansi_color.h"
+#include "dump.h"
+#include "lookup.h"
+#include "shell.h"
+
 
 extern std::string current_dict_name;
 extern bool verbose_mode;

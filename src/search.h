@@ -2,7 +2,9 @@
 #define PDICCUISEARCH_SEARCH_H_
 
 #include <utility>
+
 #include "types.h"
+
 
 std::pair<byte*,int*> concat_strings(byte *strings[], int string_count, int end_marker=0);
 std::pair<int*,int> make_full_suffix_array(byte *buf, int buf_size);

@@ -1,14 +1,17 @@
 #ifndef PDICCUISEARCH_DICT_H_
 #define PDICCUISEARCH_DICT_H_
 
-#include <string>
-#include <vector>
+#include <stdio.h>
+
 #include <map>
 #include <set>
+#include <string>
+#include <vector>
 
-#include <cstdio>
 #include <re2/re2.h>
+
 #include "types.h"
+
 
 class PDICIndex;
 class PDICDatafield;

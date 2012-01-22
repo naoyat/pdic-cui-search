@@ -1,7 +1,10 @@
 #include "macdic_xml.h"
 
-#include <cstdio>
+#include <stdio.h>
+
+#include "Dict.h"
 #include "PDICDatafield.h"
+
 
 FILE *macdic_xml_fp = NULL;
 int macdic_xml_entry_id = 0;

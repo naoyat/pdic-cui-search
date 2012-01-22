@@ -1,13 +1,14 @@
-#include <gtest/gtest.h>
-
-#include <vector>
 #include <string>
 #include <utility>
+#include <vector>
+
+#include <gtest/gtest.h>
 
 #include "Dict.h"
+#include "dump.h"
 #include "shell.h"
 #include "util.h"
-#include "dump.h"
+
 
 extern std::vector<Dict*> dicts;
 

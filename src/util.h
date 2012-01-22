@@ -1,10 +1,11 @@
 #ifndef PDICCUISEARCH_UTIL_H_
 #define PDICCUISEARCH_UTIL_H_
 
-#include <cstdio>
-#include <cstring>
+#include <stdio.h>
+#include <string.h>
 
 #include "types.h"
+
 
 inline int s8val(byte *data) { return *(char *)data; }
 inline int s16val(byte *data) { return *(short *)data; }

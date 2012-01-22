@@ -1,5 +1,10 @@
 #include "cout.h"
 
+#include <iostream>
+#include <sstream>
+#include <string>
+
+
 std::string pluralize_if_plural(const std::string &singular_form, int number)
 {
   return singular_form + (number >= 2 ? "s" : "");
@@ -18,8 +23,8 @@ std::ostream& operator<<(std::ostream &s, std::vector<std::string> v)
   int cnt = v.size();
   s << "[ ";
   for (int i=0; i<cnt; i++) {
-	if (i > 0) s << ", ";
-	s << '"' << v[i] << '"';
+    if (i > 0) s << ", ";
+    s << '"' << v[i] << '"';
   }
   return s << " ]  // " << number_with_unit(cnt,"item");
 }

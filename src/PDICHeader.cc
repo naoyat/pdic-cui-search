@@ -1,8 +1,10 @@
 #include "PDICHeader.h"
 
-#include <cstdio>
-#include "util.h" // sNNval(), uNNval()
+#include <stdio.h>
+
 #include "dump.h"
+#include "util.h"
+
 
 PDICHeader::PDICHeader(byte *filemem)
 {

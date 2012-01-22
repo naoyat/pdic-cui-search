@@ -1,8 +1,10 @@
 #ifndef PDICCUISEARCH_PDICHEADER_H_
 #define PDICCUISEARCH_PDICHEADER_H_
 
-#include <cstdio>
+#include <stdio.h>
+
 #include "types.h"
+
 
 #define OLDDIC  1 // PDIC ver 1.x : OLDDIC
 #define NEWDIC1 2 // PDIC ver 2.x : NEWDIC1

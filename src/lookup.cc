@@ -1,16 +1,18 @@
 #include "lookup.h"
 
 #include <iostream>
-#include <vector>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <re2/re2.h>
 #include <re2/stringpiece.h>
 
 #include "Dict.h"
-#include "util_stl.h"
 #include "types.h"
+#include "util.h"
+#include "util_stl.h"
+
 
 std::vector<Dict*> dicts;
 std::vector<int> current_dict_ids;

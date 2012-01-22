@@ -1,14 +1,15 @@
 #include "filemem.h"
 
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+
 #include <map>
 #include <string>
 #include <utility>
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/mman.h>
-
 #include "util_stl.h"
+
 
 std::map<void*,std::pair<int,int> > mmap_info;
 

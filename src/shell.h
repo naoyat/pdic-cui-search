@@ -1,13 +1,15 @@
 #ifndef PDICCUISEARCH_SHELL_H_
 #define PDICCUISEARCH_SHELL_H_
 
-#include <string>
 #include <set>
-#include <vector>
+#include <string>
 #include <utility>
+#include <vector>
+
 #include <re2/re2.h>
 
 #include "types.h"
+
 
 // shell
 void shell_init();

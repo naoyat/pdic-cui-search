@@ -3,6 +3,7 @@
 
 #include "types.h"
 
+
 // codepoints <=> bocu1
 byte *encode_bocu1(unichar *src_codepoint, int src_len, int& dest_size);
 unichar *decode_bocu1(byte *src_bocu1, int src_size, int& dest_size);

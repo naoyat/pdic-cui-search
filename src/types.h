@@ -1,8 +1,9 @@
 #ifndef PDICCUISEARCH_TYPES_H_
 #define PDICCUISEARCH_TYPES_H_
 
-#include <vector>
 #include <utility>
+#include <vector>
+
 
 class PDICDatafield;
 

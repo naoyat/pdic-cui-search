@@ -3,6 +3,7 @@
 
 #include "types.h"
 
+
 int savemem(const char *path, byte *data, int data_size, int mode=0600); // メモリイメージをそのまま保存
 byte *loadmem(const char *path);
 bool unloadmem(byte *ptr);

@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "util.h"
 #include "types.h"
+#include "util.h"
+
 
 TEST(util, bstrcmp) {
   EXPECT_TRUE( bstrcmp((byte*)"abc", (byte*)"abc") == 0 );

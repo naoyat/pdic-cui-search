@@ -2,10 +2,11 @@
 #define PDICCUISEARCH_LOOKUP_H_
 
 #include <set>
+
 #include <re2/re2.h>
-//class PDICIndex;
-//class PDICDatafield;
+
 #include "types.h"
+
 
 #define LOOKUP_NORMAL      0x0010
 #define LOOKUP_SARRAY      0x0100

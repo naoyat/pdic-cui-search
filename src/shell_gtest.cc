@@ -4,10 +4,11 @@
 #include <string>
 #include <utility>
 
-#include "shell.h"
-#include "lookup.h"
-#include "util.h"
 #include "dump.h"
+#include "lookup.h"
+#include "shell.h"
+#include "util.h"
+
 
 TEST(shell, sarray_lookup) {
   load_rc("./gtest.pdicrc");

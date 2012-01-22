@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "filemem.h"
 #include "dump.h"
+#include "filemem.h"
 #include "types.h"
+
 
 TEST(filemem, loadmem) {
   EXPECT_EQ( NULL, loadmem(NULL) );

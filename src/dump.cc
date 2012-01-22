@@ -1,12 +1,13 @@
 #include "dump.h"
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "bocu1.h"
 #include "utf8.h"
 #include "util.h"
+
 
 void dump(byte *data, int size)
 {

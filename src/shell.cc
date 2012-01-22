@@ -1,32 +1,30 @@
 #include "shell.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <iostream>
+#include <map>
+#include <queue>
+#include <set>
 #include <string>
 #include <vector>
-#include <map>
-#include <set>
-#include <queue>
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
-#include "Dict.h"
-#include "PDICDatafield.h"
-#include "PDICHeader.h"
-#include "PDICIndex.h"
-#include "filemem.h"
-#include "timeutil.h"
-#include "util.h"
-#include "util_stl.h"
-#include "ansi_color.h"
-#include "lookup.h"
 
 #include <re2/re2.h>
 
-#ifdef DEBUG
+#include "ansi_color.h"
 #include "cout.h"
-#endif
+#include "Dict.h"
+#include "filemem.h"
+#include "lookup.h"
+#include "PDICDatafield.h"
+#include "PDICHeader.h"
+#include "PDICIndex.h"
+#include "timeutil.h"
+#include "util.h"
+#include "util_stl.h"
+
 
 //
 // globals

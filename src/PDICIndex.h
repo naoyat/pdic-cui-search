@@ -1,11 +1,13 @@
 #ifndef PDICCUISEARCH_PDICINDEX_H_
 #define PDICCUISEARCH_PDICINDEX_H_
 
+#include <utility>
+
+#include "types.h"
+
+
 class PDICHeader;
 class Criteria;
-
-#include <utility>
-#include "types.h"
 
 class PDICIndex {
 private:

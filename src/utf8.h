@@ -1,8 +1,10 @@
 #ifndef PDICCUISEARCH_UTF8_H_
 #define PDICCUISEARCH_UTF8_H_
 
-#include <cstdio>
+#include <stdio.h>
+
 #include "types.h"
+
 
 /*
  * Unicode & UTF-8

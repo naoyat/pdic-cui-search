@@ -1,9 +1,11 @@
 #include "utf8.h"
 
-#include <cstdlib>
-#include <cstring>
 #include <iconv.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "types.h"
+
 
 bool surrogate(int codepoint, int *upper, int *lower)
 {

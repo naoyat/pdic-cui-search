@@ -1,16 +1,17 @@
 #ifndef PDICCUISEARCH_COUT_H_
 #define PDICCUISEARCH_COUT_H_
 
+#include <deque>
 #include <iostream>
+#include <list>
+#include <map>
+#include <queue>
+#include <set>
 #include <sstream>
+#include <stack>
 #include <string>
 #include <vector>
-#include <list>
-#include <queue>
-#include <deque>
-#include <stack>
-#include <map>
-#include <set>
+
 
 std::string pluralize_if_plural(const std::string &singular_form, int number);
 std::string number_with_unit(int number, const std::string &unit_str);

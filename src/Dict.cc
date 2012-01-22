@@ -1,35 +1,35 @@
 #include "Dict.h"
 
-#include <iostream>
-#include <vector>
-#include <string>
-
 #include <libgen.h>
 #include <strings.h>
+
+#include <iostream>
+#include <string>
+#include <vector>
+
 #include <re2/re2.h>
 
+#include "ansi_color.h"
+#include "bocu1.h"
+#include "charcode.h"
+#include "cout.h"
 #include "Criteria.h"
+#include "filemem.h"
+#include "macdic_xml.h"
 #include "PDICDatablock.h"
 #include "PDICDatafield.h"
 #include "PDICHeader.h"
 #include "PDICIndex.h"
-#include "ansi_color.h"
-#include "bocu1.h"
-#include "charcode.h"
-#include "filemem.h"
-#include "macdic_xml.h"
 #include "search.h"
 #include "timeutil.h"
 #include "utf8.h"
 #include "util.h"
 #include "util_stl.h"
 
-#ifdef DEBUG
-#include "cout.h"
-#endif
 
 const char *sx_buf[F_COUNT] = {".entry",".trans",".exmp",".pron"};
 const char *sx_sarray[F_COUNT] = {".entry.sf",".trans.sf",".exmp.sf",".pron.sf"};
+
 
 bool lookup_result_asc( const lookup_result& left, const lookup_result& right )
 {

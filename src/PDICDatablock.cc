@@ -1,18 +1,18 @@
 #include "PDICDatablock.h"
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "PDICHeader.h"
-#include "PDICIndex.h"
-#include "PDICDatafield.h"
-#include "Criteria.h"
-
-#include "util.h"
 #include "bocu1.h"
 #include "charcode.h"
+#include "Criteria.h"
+#include "PDICDatafield.h"
+#include "PDICHeader.h"
+#include "PDICIndex.h"
 #include "types.h"
+#include "util.h"
+
 
 PDICDatablock::PDICDatablock(byte *filemem, PDICIndex *index, int ix)
 {

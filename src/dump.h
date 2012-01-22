@@ -1,8 +1,10 @@
 #ifndef PDICCUISEARCH_DUMP_H_
 #define PDICCUISEARCH_DUMP_H_
 
-#include <cstdio>
+#include <stdio.h>
+
 #include "types.h"
+
 
 char *inline_dump_str(byte *data, int size=0);
 char *inline_dump16_str(unichar *data, int size);
