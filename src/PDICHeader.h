@@ -1,5 +1,5 @@
-#ifndef PDIC_HEADER_H
-#define PDIC_HEADER_H
+#ifndef PDICCUISEARCH_PDICHEADER_H_
+#define PDICCUISEARCH_PDICHEADER_H_
 
 #include <cstdio>
 #include "util.h" // sNNval(), uNNval()
@@ -273,4 +273,4 @@ public:
   }
 };
 
-#endif
+#endif // PDICCUISEARCH_PDICHEADER_H_

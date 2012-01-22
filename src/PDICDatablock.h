@@ -1,5 +1,5 @@
-#ifndef PDIC_DATABLOCK_H
-#define PDIC_DATABLOCK_H
+#ifndef PDICCUISEARCH_PDICDATABLOCK_H_
+#define PDICCUISEARCH_PDICDATABLOCK_H_
 
 #include <cstdio>
 #include "types.h"
@@ -25,4 +25,4 @@ public:
   void iterate(action_proc *action, Criteria *criteria = NULL);
 };
 
-#endif
+#endif // PDICCUISEARCH_PDICDATABLOCK_H_

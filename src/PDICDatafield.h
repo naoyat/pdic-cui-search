@@ -1,5 +1,5 @@
-#ifndef PDIC_DATAFIELD_H
-#define PDIC_DATAFIELD_H
+#ifndef PDICCUISEARCH_PDICDATAFIELD_H_
+#define PDICCUISEARCH_PDICDATAFIELD_H_
 
 #include <map>
 #include "types.h"
@@ -75,4 +75,4 @@ public:
 #define EXT_HAS_RESERVED (1 << EXT_RESERVED)
 #define EXT_HAS_LINKDATA (1 << EXT_LINKDATA)
 
-#endif
+#endif // PDICCUISEARCH_PDICDATAFIELD_H_

@@ -1,5 +1,5 @@
-#ifndef UTF8_H
-#define UTF8_H
+#ifndef PDICCUISEARCH_UTF8_H_
+#define PDICCUISEARCH_UTF8_H_
 
 #include <cstdio>
 #include "types.h"
@@ -22,5 +22,4 @@ char *_iconv(const char *src, size_t src_size, const char *src_code, char *dest,
 byte *sjis_to_utf8(byte *src_sjis, int size=0);
 byte *utf8_to_sjis(byte *src_utf8, int size=0);
 
-
-#endif
+#endif // PDICCUISEARCH_UTF8_H_

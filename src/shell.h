@@ -1,5 +1,5 @@
-#ifndef SHELL_H
-#define SHELL_H
+#ifndef PDICCUISEARCH_SHELL_H_
+#define PDICCUISEARCH_SHELL_H_
 
 #include <string>
 #include <set>
@@ -31,4 +31,4 @@ void do_alias(const std::string& alias, const std::vector<std::string>& valid_na
 bool do_use(std::string name);
 std::vector<int> resolve_aliases(const std::string& name);
 
-#endif
+#endif // PDICCUISEARCH_SHELL_H_

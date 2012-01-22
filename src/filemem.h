@@ -1,5 +1,5 @@
-#ifndef FILEMEM_H
-#define FILEMEM_H
+#ifndef PDICCUISEARCH_FILEMEM_H_
+#define PDICCUISEARCH_FILEMEM_H_
 
 #include "types.h"
 
@@ -10,4 +10,4 @@ bool unloadmem(byte *ptr);
 int mem_fd(byte *ptr);
 int mem_size(byte *ptr);
 
-#endif
+#endif // PDICCUISEARCH_FILEMEM_H_

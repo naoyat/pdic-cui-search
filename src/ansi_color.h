@@ -1,5 +1,5 @@
-#ifndef ANSI_COLOR_H
-#define ANSI_COLOR_H
+#ifndef PDICCUISEARCH_ANSICOLOR_H_
+#define PDICCUISEARCH_ANSICOLOR_H_
 
 // reset colors & styles
 #define ANSI_RESET             "\x1b[0m"
@@ -40,5 +40,4 @@
 #define ANSI_BGCOLOR_WHITE     "\x1b[47m"
 #define ANSI_BGCOLOR_DEFAULT   "\x1b[49m"
 
-#endif
-
+#endif // PDICCUISEARCH_ANSICOLOR_H_

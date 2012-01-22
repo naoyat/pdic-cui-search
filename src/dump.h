@@ -1,5 +1,5 @@
-#ifndef DUMP_H
-#define DUMP_H
+#ifndef PDICCUISEARCH_DUMP_H_
+#define PDICCUISEARCH_DUMP_H_
 
 #include <cstdio>
 
@@ -19,4 +19,4 @@ void bocu1_dump_in_utf8(byte *bocu1_encoded_data, int size=0);
 
 inline void newline() { putchar('\n'); }
 
-#endif
+#endif // PDICCUISEARCH_DUMP_H_

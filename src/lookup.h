@@ -1,5 +1,5 @@
-#ifndef LOOKUP_H_
-#define LOOKUP_H_
+#ifndef PDICCUISEARCH_LOOKUP_H_
+#define PDICCUISEARCH_LOOKUP_H_
 
 #include <set>
 #include <re2/re2.h>
@@ -32,4 +32,4 @@ inline void default_lookup(byte *needle, int needle_len=0) { lookup(needle, need
 void render_current_result();
 void render_current_result(const std::set<int>& range);
 
-#endif
+#endif // PDICCUISEARCH_LOOKUP_H_

@@ -1,5 +1,5 @@
-#ifndef DICT_H
-#define DICT_H
+#ifndef PDICCUISEARCH_DICT_H_
+#define PDICCUISEARCH_DICT_H_
 
 #include <string>
 #include <vector>
@@ -116,4 +116,4 @@ void cb_save(PDICDatafield *datafield);
 void cb_estimate_buf_size(PDICDatafield *datafield);
 void cb_stock_entry_words(PDICDatafield *datafield);
 
-#endif
+#endif // PDICCUISEARCH_DICT_H_

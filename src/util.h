@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef PDICCUISEARCH_UTIL_H_
+#define PDICCUISEARCH_UTIL_H_
 
 #include <cstdio>
 #include <cstring>
@@ -34,4 +34,4 @@ byte *strhead(byte *ptr);
 inline bool is_not_empty(byte *ptr) { return ptr && ptr[0]; }
 inline bool is_empty(byte *ptr) { return (!ptr) || !ptr[0]; }
 
-#endif
+#endif // PDICCUISEARCH_UTIL_H_

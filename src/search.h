@@ -1,5 +1,5 @@
-#ifndef SEARCH_H
-#define SEARCH_H
+#ifndef PDICCUISEARCH_SEARCH_H_
+#define PDICCUISEARCH_SEARCH_H_
 
 #include <utility>
 #include "types.h"
@@ -12,4 +12,4 @@ std::pair<int*,int> make_light_suffix_array(byte *buf, int buf_size);
 
 bsearch_result_t search(byte *buf, int *offsets, int offsets_len, byte *needle, bool exact_match);
 
-#endif
+#endif // PDICCUISEARCH_SEARCH_H_

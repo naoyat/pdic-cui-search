@@ -1,5 +1,5 @@
-#ifndef UTIL_STL_H
-#define UTIL_STL_H
+#ifndef PDICCUISEARCH_UTILSTL_H_
+#define PDICCUISEARCH_UTILSTL_H_
 
 #include <string>
 #include <vector>
@@ -13,4 +13,4 @@
 std::vector<std::string> split(std::string str, int delim=' ');
 std::string join(std::vector<std::string> strs, const std::string &delim="");
 
-#endif
+#endif // PDICCUISEARCH_UTILSTL_H_

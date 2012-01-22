@@ -1,5 +1,5 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef PDICCUISEARCH_TYPES_H_
+#define PDICCUISEARCH_TYPES_H_
 
 #include <vector>
 
@@ -17,4 +17,4 @@ typedef lookup_result_vec (lookup_proc)(byte *needle, int needle_len);
 
 typedef void (action_proc)(PDICDatafield*);
 
-#endif
+#endif // PDICCUISEARCH_TYPES_H_

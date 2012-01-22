@@ -1,5 +1,5 @@
-#ifndef COUT_H
-#define COUT_H
+#ifndef PDICCUISEARCH_COUT_H_
+#define PDICCUISEARCH_COUT_H_
 
 #include <iostream>
 #include <sstream>
@@ -77,4 +77,4 @@ template <typename T1, typename T2> std::ostream& operator<<(std::ostream &s, st
   return s << "(" << p.first << "," << p.second << ")";
 }
 
-#endif
+#endif // PDICCUISEARCH_COUT_H_

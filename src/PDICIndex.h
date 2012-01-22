@@ -1,5 +1,5 @@
-#ifndef PDIC_INDEX_H
-#define PDIC_INDEX_H
+#ifndef PDICCUISEARCH_PDICINDEX_H_
+#define PDICCUISEARCH_PDICINDEX_H_
 
 class PDICHeader;
 class Criteria;
@@ -55,4 +55,4 @@ public:
 
 byte *string_for_index(byte *str);
 
-#endif
+#endif // PDICCUISEARCH_PDICINDEX_H_

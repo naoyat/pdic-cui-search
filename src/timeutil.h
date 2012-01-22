@@ -1,9 +1,9 @@
-#ifndef TIMEUTIL_H
-#define TIMEUTIL_H
+#ifndef PDICCUISEARCH_TIMEUTIL_H_
+#define PDICCUISEARCH_TIMEUTIL_H_
 
 #include <utility>
 
 void time_reset();
 std::pair<int,int> time_usec();
 
-#endif
+#endif // PDICCUISEARCH_TIMEUTIL_H_

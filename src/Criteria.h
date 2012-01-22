@@ -1,5 +1,5 @@
-#ifndef CRITERIA_H
-#define CRITERIA_H
+#ifndef PDICCUISEARCH_CRITERIA_H_
+#define PDICCUISEARCH_CRITERIA_H_
 
 #include <re2/re2.h>
 #include "types.h"
@@ -24,4 +24,4 @@ public:
   bool match(PDICDatafield *datafield);
 };
 
-#endif
+#endif // PDICCUISEARCH_CRITERIA_H_

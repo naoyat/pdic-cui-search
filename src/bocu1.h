@@ -1,5 +1,5 @@
-#ifndef BOCU1_H
-#define BOCU1_H
+#ifndef PDICCUISEARCH_BOCU1_H_
+#define PDICCUISEARCH_BOCU1_H_
 
 #include "utf8.h"
 #include "types.h"
@@ -14,4 +14,4 @@ byte *bocu1_to_utf8(byte *src_bocu1, int src_size=0);//, int& dest_size);
 
 void bocu1_check(byte *bocu1_encoded_data, int size=0);
 
-#endif
+#endif // PDICCUISEARCH_BOCU1_H_
