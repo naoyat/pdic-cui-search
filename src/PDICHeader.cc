@@ -19,38 +19,32 @@ PDICHeader::~PDICHeader()
 {
 }
 
-byte*
-PDICHeader::headername()
+byte* PDICHeader::headername()
 {
   return filemem + OFS_HEADERNAME;
 }
 
-byte*
-PDICHeader::dictitle()
+byte* PDICHeader::dictitle()
 {
   return filemem + OFS_DICTITLE;
 }
 
-int
-PDICHeader::version()
+int PDICHeader::version()
 {
   return _version;
 }
 
-int
-PDICHeader::major_version()
+int PDICHeader::major_version()
 {
   return _major_version;
 }
 
-int
-PDICHeader::minor_version()
+int PDICHeader::minor_version()
 {
   return _minor_version;
 }
 
-int
-PDICHeader::lword()
+int PDICHeader::lword()
 {
   // HYPER6.10: { 1024 }
   // HYPER6.00: { 248 }
@@ -58,8 +52,7 @@ PDICHeader::lword()
   return s16val(filemem + OFS_LWORD);
 }
 
-int
-PDICHeader::ljapa()
+int PDICHeader::ljapa()
 {
   // HYPER6.10: { 262144 } 未参照
   // HYPER6.00: { 10000 }
@@ -67,8 +60,7 @@ PDICHeader::ljapa()
   return s16val(filemem + OFS_LJAPA);
 }
 
-int
-PDICHeader::block_size()
+int PDICHeader::block_size()
 {
   // HYPER6: { 1024 }
   // HYPER4, HYPER5: { 256 }
@@ -82,8 +74,7 @@ PDICHeader::block_size()
     return s16val(filemem + OFS_BLOCK_SIZE);
 }
 
-int
-PDICHeader::index_block()
+int PDICHeader::index_block()
 {
   if (_major_version >= HYPER4)
     return s16val(filemem + OFS_INDEX_BLOCK);
@@ -91,16 +82,14 @@ PDICHeader::index_block()
     return 2048 * s16val(filemem + OFS_INDEX_BLOCK);
 }
 
-int
-PDICHeader::header_size()
+int PDICHeader::header_size()
 {
   // HYPER6: { 1024 }
   // HYPER4, HYPER5: { 256 }
   return s16val(filemem + OFS_HEADER_SIZE); // 256, 1024(6〜)
 }
 
-int
-PDICHeader::index_size()
+int PDICHeader::index_size()
 {
   if (_major_version >= HYPER4)
     return index_block() * block_size();
@@ -108,8 +97,7 @@ PDICHeader::index_size()
     return s16val(filemem + OFS_INDEX_SIZE); // { 2048, 10240, 20480, 40960 }
 }
 
-int
-PDICHeader::empty_block()
+int PDICHeader::empty_block()
 {
   // -1 if not exists
   if (_major_version >= HYPER5)
@@ -120,8 +108,7 @@ PDICHeader::empty_block()
     return s16val(filemem + OFS_EMPTY_BLOCK); // [0-4095]
 }
 
-int
-PDICHeader::nindex()
+int PDICHeader::nindex()
 {
   if (_major_version >= HYPER5)
     return u32val(filemem + OFS_HYPER5_NINDEX2);
@@ -131,8 +118,7 @@ PDICHeader::nindex()
     return s16val(filemem + OFS_NINDEX); // <= 4096
 }
 
-int
-PDICHeader::nblock()
+int PDICHeader::nblock()
 {
   if (_major_version >= HYPER5)
     return u32val(filemem + OFS_HYPER5_NBLOCK2);
@@ -142,14 +128,12 @@ PDICHeader::nblock()
     return s16val(filemem + OFS_NBLOCK);
 }
 
-unsigned int
-PDICHeader::nword()
+unsigned int PDICHeader::nword()
 {
   return u32val(filemem + OFS_NWORD);
 }
 
-int
-PDICHeader::dicorder()
+int PDICHeader::dicorder()
 {
   // { 0[, 1, 2, 3] }
   if (_major_version >= NEWDIC2)
@@ -158,8 +142,7 @@ PDICHeader::dicorder()
     return 0;
 }
 
-int
-PDICHeader::dictype()
+int PDICHeader::dictype()
 {
   // HYPER6:  { 0x01 | 0x08 |[0x10]|[0x20]| 0x40 |[0x80]}
   // HYPER5:  { 0x01 | 0x08 | 0x10 |[0x20]| 0x40 | 0x80 }
@@ -171,15 +154,13 @@ PDICHeader::dictype()
     return 0;
 }
 
-int
-PDICHeader::attrlen()
+int PDICHeader::attrlen()
 {
   // { 1 }
   return filemem[OFS_ATTRLEN];
 }
 
-int
-PDICHeader::olenumber()
+int PDICHeader::olenumber()
 {
   if (_major_version >= HYPER5)
     return s32val(filemem + OFS_HYPER5_OLENUMBER);
@@ -189,8 +170,7 @@ PDICHeader::olenumber()
     return 0;
 }
 
-int
-PDICHeader::os()
+int PDICHeader::os()
 {
   // HYPER6: { 0x20="BOCU-1 encoding" }
   // HYPER5: { 0, 1, 2, 3, 4, 0x10 }
@@ -204,38 +184,32 @@ PDICHeader::os()
     return 0;
 }
 
-int
-PDICHeader::lid_word()
+int PDICHeader::lid_word()
 {
   return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_WORD) : 0;
 }
 
-int
-PDICHeader::lid_japa()
+int PDICHeader::lid_japa()
 {
   return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_JAPA) : 0;
 }
 
-int
-PDICHeader::lid_exp()
+int PDICHeader::lid_exp()
 {
   return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_EXP) : 0;
 }
 
-int
-PDICHeader::lid_pron()
+int PDICHeader::lid_pron()
 {
   return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_PRON) : 0;
 }
 
-int
-PDICHeader::lid_other()
+int PDICHeader::lid_other()
 {
   return _major_version == NEWDIC2 ? u16val(filemem + OFS_LID_OTHER) : 0;
 }
 
-int
-PDICHeader::index_blkbit()
+int PDICHeader::index_blkbit()
 {
   // 0:16bit, 1:32bit
   if (_major_version >= HYPER5)
@@ -246,8 +220,7 @@ PDICHeader::index_blkbit()
     return 0;
 }
 
-unsigned int
-PDICHeader::extheader()
+unsigned int PDICHeader::extheader()
 {
   if (_major_version >= HYPER5)
     return u32val(filemem + OFS_HYPER5_EXTHEADER);
@@ -257,8 +230,7 @@ PDICHeader::extheader()
     return 0;
 }
 
-byte*
-PDICHeader::cypt()
+byte* PDICHeader::cypt()
 {
   if (_major_version >= HYPER6)
     return filemem + OFS_HYPER6_CYPT;
@@ -266,8 +238,7 @@ PDICHeader::cypt()
     return NULL;
 }
 
-unsigned int
-PDICHeader::update_count()
+unsigned int PDICHeader::update_count()
 {
   if (_major_version >= HYPER4)
     return u32val(filemem + OFS_UPDATE_COUNT);
@@ -275,8 +246,7 @@ PDICHeader::update_count()
     return 0;
 }
 
-byte*
-PDICHeader::dicident()
+byte* PDICHeader::dicident()
 {
   if (_major_version >= HYPER5)
     return filemem + OFS_HYPER5_DICIDENT;
@@ -284,8 +254,7 @@ PDICHeader::dicident()
     return NULL;
 }
 
-byte*
-PDICHeader::derefid()
+byte* PDICHeader::derefid()
 {
   if (_major_version == HYPER6 && _minor_version < 10)
     return filemem + OFS_HYPER6_DEREFID;
@@ -293,21 +262,18 @@ PDICHeader::derefid()
     return NULL;
 }
 
-bool
-PDICHeader::isAligned()
+bool PDICHeader::isAligned()
 {
   return _major_version >= HYPER5;
 }
 
 // BOCU-1辞書か？
-bool
-PDICHeader::isBOCU1()
+bool PDICHeader::isBOCU1()
 {
   return _major_version >= HYPER5 && dictype() & 0x08;
 }
 
-void
-PDICHeader::dump()
+void PDICHeader::dump()
 {
   //  ::dump(this->buf, 1024);
   printf("    headername = \"%s\"\n", headername());

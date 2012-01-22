@@ -33,8 +33,7 @@ PDICDatablock::PDICDatablock(byte *filemem, PDICIndex *index, int ix)
   //printf("使用ブロック数: %d (%d); %d bytes\n", using_blocks_count, is4byte, datablock_buf_size);
 }
 
-void
-PDICDatablock::iterate(action_proc *action, Criteria *criteria)
+void PDICDatablock::iterate(action_proc *action, Criteria *criteria)
 {
   byte entry_word[1024]; // （圧縮見出し語の伸長用）見出し語バッファ。Ver6でlword=1024なの
 

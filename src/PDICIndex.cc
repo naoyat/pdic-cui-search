@@ -20,6 +20,7 @@ PDICIndex::PDICIndex(byte *filemem)
   header_needs_delete = true;
   load_index();
 }
+
 PDICIndex::PDICIndex(byte *filemem, PDICHeader *header)
 {
   this->filemem = filemem;
@@ -27,6 +28,7 @@ PDICIndex::PDICIndex(byte *filemem, PDICHeader *header)
   header_needs_delete = false;
   load_index();
 }
+
 PDICIndex::~PDICIndex()
 {
   //if (index_buf) delete index_buf;
@@ -37,8 +39,7 @@ PDICIndex::~PDICIndex()
   delete phys_ids;
 }
 
-int
-PDICIndex::load_index()
+int PDICIndex::load_index()
 {
   index_buf = filemem + header->header_size() + header->extheader();
   index_size = header->index_size();
@@ -78,8 +79,7 @@ PDICIndex::load_index()
   return actual_nindex;
 }
 
-unsigned int
-PDICIndex::datablock_offset(int ix)
+unsigned int PDICIndex::datablock_offset(int ix)
 {
   if (ix < 0 || _nindex <= ix) return 0;
 
@@ -89,14 +89,12 @@ PDICIndex::datablock_offset(int ix)
   return offset;
 }
 
-bsearch_result_t
-PDICIndex::bsearch_in_index(byte *needle, bool exact_match)
+bsearch_result_t PDICIndex::bsearch_in_index(byte *needle, bool exact_match)
 {
   return search(index_buf, entry_word_offsets, _nindex, needle, exact_match);
 }
 
-void
-PDICIndex::dump()
+void PDICIndex::dump()
 {
   for (int ix=0; ix<_nindex; ++ix) {
     printf("%04d +%d: ", 1+ix, phys_ids[ix]);
@@ -112,16 +110,14 @@ PDICIndex::dump()
   }
 }
 
-void
-PDICIndex::iterate_datablock(int ix, action_proc *action, Criteria *criteria)
+void PDICIndex::iterate_datablock(int ix, action_proc *action, Criteria *criteria)
 {
   PDICDatablock *datablock = new PDICDatablock(filemem, this, ix);
   datablock->iterate(action, criteria);
   delete datablock;
 }
 
-void
-PDICIndex::iterate_all_datablocks(action_proc *action, Criteria *criteria)
+void PDICIndex::iterate_all_datablocks(action_proc *action, Criteria *criteria)
 {
   for (int ix=0; ix<_nindex; ++ix)
     this->iterate_datablock(ix, action, criteria);

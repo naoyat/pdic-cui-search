@@ -76,8 +76,7 @@ PDICDatafield::~PDICDatafield()
   }
 }
 
-void
-PDICDatafield::retain()
+void PDICDatafield::retain()
 {
   if (!is_retained) {
     entry_word  = clone_cstr(entry_word, 0, false);
@@ -86,8 +85,7 @@ PDICDatafield::retain()
   }
 }
 
-int
-PDICDatafield::read_extension()
+int PDICDatafield::read_extension()
 {
   if (_ext_flags) return _ext_flags;
 
@@ -150,8 +148,7 @@ PDICDatafield::read_extension()
   return _ext_flags;
 }
 
-byte *
-PDICDatafield::in_utf8(int field)
+byte* PDICDatafield::in_utf8(int field)
 {
   switch (field) {
     case F_ENTRY:
@@ -167,8 +164,7 @@ PDICDatafield::in_utf8(int field)
   }
 }
 
-byte *
-PDICDatafield::entry_word_utf8()
+byte* PDICDatafield::entry_word_utf8()
 {
   if (!_entry_word_utf8) {
     switch (charcode) {
@@ -186,8 +182,7 @@ PDICDatafield::entry_word_utf8()
   return _entry_word_utf8;
 }
 
-byte *
-PDICDatafield::jword_utf8()
+byte* PDICDatafield::jword_utf8()
 {
   if (!_jword_utf8) {
     byte *jword = data;
@@ -217,8 +212,7 @@ PDICDatafield::jword_utf8()
   return _jword_utf8;
 }
 
-byte *
-PDICDatafield::example_utf8() // 用例
+byte* PDICDatafield::example_utf8() // 用例
 {
   if (entry_word_attrib & 0x10) {
     if (read_extension() & EXT_HAS_EXAMPLE) {
@@ -228,8 +222,7 @@ PDICDatafield::example_utf8() // 用例
   return (byte*)NULL;
 }
 
-byte *
-PDICDatafield::pron_utf8() // 発音記号
+byte* PDICDatafield::pron_utf8() // 発音記号
 {
   if (entry_word_attrib & 0x10) {
     if (read_extension() & EXT_HAS_PRON) {

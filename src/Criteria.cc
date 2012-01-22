@@ -51,6 +51,7 @@ Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match)
   }
   this->exact_match = exact_match;
 }
+
 Criteria::~Criteria()
 {
   free((void *)needle);
@@ -59,8 +60,7 @@ Criteria::~Criteria()
   delete re2_pattern;
 }
 
-bool
-Criteria::match(PDICDatafield *field)
+bool Criteria::match(PDICDatafield *field)
 {
   /*
   printf("%%match(needle="); bocu1_dump_in_utf8( needle );
