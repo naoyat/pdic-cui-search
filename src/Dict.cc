@@ -135,7 +135,6 @@ Dict::Dict(const std::string& name, byte *filemem) {
   _prefix = new char[name.size()+1];
   snprintf(_prefix, name.size()+1, "%s",
            basename(const_cast<char*>(name.c_str())));
-  printf("prefix: %s\n", _prefix);
 
   int len = strlen(_prefix);
   if (strcasecmp(_prefix + len-4, ".dic") == 0) {
