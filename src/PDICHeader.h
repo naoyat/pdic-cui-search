@@ -85,7 +85,7 @@ private:
   int _major_version, _minor_version;
 
 public:
-  PDICHeader(byte *filemem);
+  explicit PDICHeader(byte *filemem);
   ~PDICHeader();
 
 public:

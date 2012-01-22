@@ -28,7 +28,7 @@ public:
   int* phys_ids;
   
 public:
-  PDICIndex(byte *filemem);
+  explicit PDICIndex(byte *filemem);
   PDICIndex(byte *filemem, PDICHeader *header);
   ~PDICIndex();
 
