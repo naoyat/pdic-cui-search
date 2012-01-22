@@ -10,9 +10,6 @@
 #include "Dict.h"
 #include "types.h"
 
-class PDICIndex;
-class PDICDatafield;
-
 // shell
 void shell_init();
 void shell_destroy();
@@ -33,18 +30,5 @@ void do_alias(const std::string& alias, const std::vector<std::string>& valid_na
 // - use
 bool do_use(std::string name);
 std::vector<int> resolve_aliases(const std::string& name);
-// - lookup
-void do_normal_lookup(char *needle, int needle_len=0);
-void do_sarray_lookup(char *needle, int needle_len=0);
-void do_regexp_lookup(char *needle, int needle_len=0);
-
-
-// lookup
-lookup_result_vec normal_lookup(byte *needle, int needle_len=0);
-lookup_result_vec sarray_lookup(byte *needle, int needle_len=0);
-lookup_result_vec regexp_lookup(RE2 *pattern);
-
-void render_current_result();
-void render_current_result(const std::set<int>& range);
 
 #endif

@@ -10,6 +10,7 @@
 #include <re2/re2.h>
 
 #include "util.h"
+#include "util_stl.h"
 #include "types.h"
 #include "PDICDatafield.h"
 
@@ -21,14 +22,8 @@ class Criteria;
 
 #define DEFAULT_RENDER_COUNT_LIMIT 150
 
-typedef byte *byteptr;
-typedef byteptr *lookup_result;
-typedef lookup_result *lookup_result_ptr;
-
 bool lookup_result_asc( const lookup_result& left, const lookup_result& right );
 bool lookup_result_desc( const lookup_result& left, const lookup_result& right );
-
-typedef std::vector<lookup_result> lookup_result_vec;
 
 typedef struct {
   int pdic_datafield_pos; // in filemem (PDICDatablock)
@@ -75,6 +70,20 @@ public:
   }
   lookup_result_vec regexp_lookup(RE2 *re) {
     std::set<int> matched_word_ids = regexp_lookup_ids(re);
+    return ids_to_result(matched_word_ids);
+  }
+  lookup_result_vec full_lookup(byte *needle, RE2 *re) {
+    std::set<int> matched_word_ids;
+
+    std::set<int> matched_word_ids_normal = normal_lookup_ids(needle, false);
+    matched_word_ids.insert(all(matched_word_ids_normal));
+
+    std::set<int> matched_word_ids_sarray = sarray_lookup_ids(needle);
+    matched_word_ids.insert(all(matched_word_ids_sarray));
+
+    std::set<int> matched_word_ids_regexp = regexp_lookup_ids(re);
+    matched_word_ids.insert(all(matched_word_ids_regexp));
+
     return ids_to_result(matched_word_ids);
   }
 

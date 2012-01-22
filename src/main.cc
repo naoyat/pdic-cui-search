@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "shell.h"
+#include "lookup.h"
 #include "dump.h"
 #include "ansi_color.h"
 
@@ -11,7 +12,7 @@ extern bool verbose_mode;
 
 int main(int argc, char **argv)
 {
-  std::cout << ANSI_UNDERLINE_ON "PDIC CUI Search ver 0.6 (c)2012 @naoya_t. All Rights Reserved." ANSI_UNDERLINE_OFF << std::endl;
+  std::cout << ANSI_UNDERLINE_ON "PDIC CUI Search ver 0.7 (c)2012 @naoya_t. All Rights Reserved." ANSI_UNDERLINE_OFF << std::endl;
   std::cout << "読み込み中..." << std::endl;
   shell_init();
 
@@ -31,7 +32,9 @@ int main(int argc, char **argv)
     switch (line[0]) {
       case '?': // reserved (help)
         break;
-      case '+': // reserved
+
+      case '+':
+        full_lookup((byte*)line+1, linelen-1);
         break;
 
       case '.': // command mode
@@ -57,7 +60,7 @@ int main(int argc, char **argv)
           if (verbose_mode) {
             //printf("[LOOKUP<sarray>] %s\n", line+1);
           }
-          do_sarray_lookup(line+1, linelen-1);
+          sarray_lookup((byte*)line+1, linelen-1);
         }
         break;
 
@@ -68,7 +71,7 @@ int main(int argc, char **argv)
             if (verbose_mode) {
               //printf("[LOOKUP<regexp>] /%s/\n", line+1);
             }
-            do_regexp_lookup(line+1, linelen-2);
+            regexp_lookup((byte*)line+1, linelen-2);
             break;
           }
         }
@@ -78,7 +81,7 @@ int main(int argc, char **argv)
         if (verbose_mode) {
           //printf("[LOOKUP<normal>] %s\n", line);
         }
-        do_normal_lookup(line, linelen);
+        normal_lookup((byte*)line, linelen);
         break;
     }
   }

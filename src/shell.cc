@@ -20,9 +20,9 @@
 #include "util.h"
 #include "util_stl.h"
 #include "ansi_color.h"
+#include "lookup.h"
 
 #include <re2/re2.h>
-#include <re2/stringpiece.h>
 
 #ifdef DEBUG
 #include "cout.h"
@@ -32,10 +32,9 @@
 // globals
 //
 std::vector<std::string> loadpaths;
-std::vector<Dict*> dicts;
+extern std::vector<Dict*> dicts;
 std::map<std::string,std::vector<std::string> > aliases; // name -> name
 std::map<std::string,int> nametable; // name -> dict_id
-std::vector<int> current_dict_ids;
 std::string current_dict_name = "";
 
 extern bool separator_mode;
@@ -47,10 +46,13 @@ extern bool more_newline_mode;
 extern int render_count, render_count_limit;
 extern bool stop_on_limit_mode;
 
-lookup_result_vec current_result_vec;
-RE2* current_pattern;
-std::pair<std::string,std::string> current_query;
+extern std::vector<int> current_dict_ids;
+extern lookup_result_vec current_result_vec;
+extern RE2* current_pattern;
+extern std::pair<std::string,std::string> current_query;
+
 extern std::set<void*> clone_ptrs;
+
 void render_status()
 {
   std::cout << ANSI_FGCOLOR_GREEN;
@@ -166,116 +168,6 @@ void render_current_result(const std::set<int>& range)
     render_result(current_result_vec[*it], current_pattern);
   }
   render_count_limit = keep;
-}
-
-void do_normal_lookup(char *needle, int needle_len)
-{
-  if (!needle_len) needle_len = strlen(needle);
-
-  if (current_dict_ids.size() == 0) {
-    std::cout << "// 辞書が選択されていません。" << std::endl;
-    return;
-  }
-
-  char needle_pattern[4+needle_len+1];
-  sprintf(needle_pattern, "(?i)%s", needle);
-  if (needle[needle_len-1] == '*') {
-    needle_pattern[4+needle_len-1] = 0;
-  }
-
-  reset_match_count(); reset_render_count();
-  current_pattern = new RE2(needle_pattern);
-  lookup_result_vec result_vec = normal_lookup((byte *)needle, needle_len);
-  current_result_vec.assign(all(result_vec));
-  lap_match_count();
-  if (!direct_dump_mode) render_current_result();
-  say_match_count();
-}
-
-void do_sarray_lookup(char *needle, int needle_len)
-{
-  if (!needle_len) needle_len = strlen(needle);
-  if (needle[needle_len-1] == '*') {
-    needle[needle_len-1] = 0;
-  }
-
-  if (current_dict_ids.size() == 0) {
-    std::cout << "// 辞書が選択されていません。" << std::endl;
-    return;
-  }
-
-  reset_match_count(); reset_render_count();
-  current_pattern = new RE2((const char *)needle);
-  lookup_result_vec result_vec = sarray_lookup((byte*)needle);
-  current_result_vec.assign(all(result_vec));
-  lap_match_count();
-  if (!direct_dump_mode) render_current_result();
-  say_match_count();
-}
-
-void do_regexp_lookup(char *needle, int needle_len)
-{
-  if (!needle_len) needle_len = strlen(needle);
-
-  if (current_dict_ids.size() == 0) {
-    std::cout << "// 辞書が選択されていません。" << std::endl;
-    return;
-  }
-
-  reset_match_count(); reset_render_count();
-  current_pattern = new RE2(re2::StringPiece(needle, needle_len));
-  lookup_result_vec result_vec = regexp_lookup(current_pattern);
-  current_result_vec.assign(all(result_vec));
-  lap_match_count();
-  if (!direct_dump_mode) render_current_result();
-  say_match_count();
-}
-
-
-lookup_result_vec normal_lookup(byte *needle, int needle_len)
-{
-  if (!needle_len) needle_len = strlen((char *)needle);
-
-  bool exact_match = true;
-  if (needle[needle_len-1] == '*') {
-    needle[needle_len-1] = 0;
-    exact_match = false;
-  }
-  current_query = std::make_pair(exact_match ? "exact" : "match-forward", (const char *)needle);
-
-  lookup_result_vec total_result_vec;
-  traverse(current_dict_ids, current_dict_id) {
-    lookup_result_vec result_vec = dicts[*current_dict_id]->normal_lookup((byte *)needle, exact_match);
-    total_result_vec.insert(total_result_vec.end(), all(result_vec));
-  }
-  std::sort(all(total_result_vec), lookup_result_asc);
-  return total_result_vec;
-}
-
-lookup_result_vec sarray_lookup(byte *needle, int needle_len)
-{
-  current_query = std::make_pair("suffix-array", (const char *)needle);
-
-  lookup_result_vec total_result_vec;
-  traverse(current_dict_ids, current_dict_id) {
-    lookup_result_vec result_vec = dicts[*current_dict_id]->sarray_lookup(needle);
-    total_result_vec.insert(total_result_vec.end(), all(result_vec));
-  }
-  std::sort(all(total_result_vec), lookup_result_asc);
-  return total_result_vec;
-}
-
-lookup_result_vec regexp_lookup(RE2 *current_pattern)
-{
-  current_query = std::make_pair("regexp", current_pattern->pattern());
-
-  lookup_result_vec total_result_vec;
-  traverse(current_dict_ids, current_dict_id) {
-    lookup_result_vec result_vec = dicts[*current_dict_id]->regexp_lookup(current_pattern);
-    total_result_vec.insert(total_result_vec.end(), all(result_vec));
-  }
-  std::sort(all(total_result_vec), lookup_result_asc);
-  return total_result_vec;
 }
 
 int do_load(const std::string& filename)
@@ -537,13 +429,16 @@ bool do_command(char *cmdstr)
     }
   }
   else if (cmd[0] == "lookup") {
-    do_normal_lookup(cmdstr + 7);
+    normal_lookup((byte*)cmdstr + 7);
   }
   else if (cmd[0] == "sarray") {
-    do_sarray_lookup(cmdstr + 7);
+    sarray_lookup((byte*)cmdstr + 7);
   }
   else if (cmd[0] == "regexp") {
-    do_regexp_lookup(cmdstr + 7);
+    regexp_lookup((byte*)cmdstr + 7);
+  }
+  else if (cmd[0] == "full") {
+    full_lookup((byte*)cmdstr + 5);
   }
   else if (cmd[0] == "clean") {
     free_all_cloned_buffers();
