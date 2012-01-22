@@ -37,61 +37,24 @@ typedef struct {
 } Toc;
 
 class Dict {
-
-public:
-  byte *filemem;
-  std::string path, name;
-  char *_prefix;
-
-public:
-  PDICIndex *index;
-  Toc  *toc;
-  int   toc_length;
-  byte *dict_buf[F_COUNT];
-  int  *dict_suffix_array[F_COUNT], dict_suffix_array_length[F_COUNT];
-  std::map<std::pair<int,int>,int> revmap;
-  std::map<int,int> revmap_pdic_datafield_pos;
-
 public:
   Dict(const std::string& name, byte *filemem);
   ~Dict();
-  std::string info() { return name + " " + path; }
-  char *prefix() { return _prefix; }
-
-  int make_toc();
-  int make_macdic_xml();
-  void unload_additional_files();
-  bool load_additional_files();
 
 public:
+  std::string info() { return name + " " + path; }
+  char *prefix() { return _prefix; }
+  int   make_toc();
+  int   make_macdic_xml();
+  void  unload_additional_files();
+  bool  load_additional_files();
+
   std::set<int> search_in_sarray(int field, byte *needle);
 
-  lookup_result_vec normal_lookup(byte *needle, bool exact_match) {
-    std::set<int> matched_word_ids = normal_lookup_ids(needle, exact_match);
-    return ids_to_result(matched_word_ids);
-  }
-  lookup_result_vec sarray_lookup(byte *needle) {
-    std::set<int> matched_word_ids = sarray_lookup_ids(needle);
-    return ids_to_result(matched_word_ids);
-  }
-  lookup_result_vec regexp_lookup(RE2 *re) {
-    std::set<int> matched_word_ids = regexp_lookup_ids(re);
-    return ids_to_result(matched_word_ids);
-  }
-  lookup_result_vec full_lookup(byte *needle, RE2 *re) {
-    std::set<int> matched_word_ids;
-
-    std::set<int> matched_word_ids_normal = normal_lookup_ids(needle, false);
-    matched_word_ids.insert(matched_word_ids_normal.begin(), matched_word_ids_normal.end());
-
-    std::set<int> matched_word_ids_sarray = sarray_lookup_ids(needle);
-    matched_word_ids.insert(matched_word_ids_sarray.begin(), matched_word_ids_sarray.end());
-
-    std::set<int> matched_word_ids_regexp = regexp_lookup_ids(re);
-    matched_word_ids.insert(matched_word_ids_regexp.begin(), matched_word_ids_regexp.end());
-
-    return ids_to_result(matched_word_ids);
-  }
+  lookup_result_vec normal_lookup(byte *needle, bool exact_match);
+  lookup_result_vec sarray_lookup(byte *needle);
+  lookup_result_vec regexp_lookup(RE2 *re);
+  lookup_result_vec full_lookup(byte *needle, RE2 *re);
 
   std::set<int> normal_lookup_ids(byte *needle, bool exact_match);
   std::set<int> sarray_lookup_ids(byte *needle);
@@ -99,9 +62,21 @@ public:
 
   int word_id_for_pdic_datafield_pos(int pdic_datafield_pos);
 
+  byte* filemem;
+  std::string path, name;
+  char* _prefix;
+
+  PDICIndex *index;
+  Toc*  toc;
+  int   toc_length;
+  byte* dict_buf[F_COUNT];
+  int*  dict_suffix_array[F_COUNT], dict_suffix_array_length[F_COUNT];
+  std::map<std::pair<int,int>,int> revmap;
+  std::map<int,int> revmap_pdic_datafield_pos;
+
 private:
   lookup_result_vec ids_to_result(const std::set<int>& word_ids);
-  int rev(int field, int start_pos);
+  int  rev(int field, int start_pos);
 };
 
 // match count

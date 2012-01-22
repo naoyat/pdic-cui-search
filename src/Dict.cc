@@ -71,6 +71,7 @@ void reset_match_count()
   time_reset();
   match_count = 0;
 }
+
 void reset_render_count()
 {
   time_reset();
@@ -78,6 +79,7 @@ void reset_render_count()
   render_count_limit_exceeded = false;
   said_that = false;
 }
+
 void lap_match_count()
 {
   std::pair<int,int> search_lap = time_usec();
@@ -85,6 +87,7 @@ void lap_match_count()
 
   time_reset();
 }
+
 void say_match_count()
 {
   std::pair<int,int> render_lap = time_usec();
@@ -105,6 +108,7 @@ void say_match_count()
   }
   printf(".\n" ANSI_FGCOLOR_DEFAULT);
 }
+
 void say_render_count()
 {
   std::pair<int,int> render_lap = time_usec();
@@ -116,7 +120,7 @@ void say_render_count()
   printf(".\n" ANSI_FGCOLOR_DEFAULT);
 }
 
-
+// ctor
 Dict::Dict(const std::string& name, byte *filemem)//, const std::string& path)
 {
   index = new PDICIndex(filemem);
@@ -494,6 +498,45 @@ Dict::search_in_sarray(int field, byte *needle)
   }
 
   return matched_offsets;
+}
+
+
+lookup_result_vec
+Dict::normal_lookup(byte *needle, bool exact_match)
+{
+  std::set<int> matched_word_ids = normal_lookup_ids(needle, exact_match);
+  return ids_to_result(matched_word_ids);
+}
+
+lookup_result_vec
+Dict::sarray_lookup(byte *needle)
+{
+  std::set<int> matched_word_ids = sarray_lookup_ids(needle);
+  return ids_to_result(matched_word_ids);
+}
+
+lookup_result_vec
+Dict::regexp_lookup(RE2 *re)
+{
+  std::set<int> matched_word_ids = regexp_lookup_ids(re);
+  return ids_to_result(matched_word_ids);
+}
+
+lookup_result_vec
+Dict::full_lookup(byte *needle, RE2 *re)
+{
+  std::set<int> matched_word_ids;
+
+  std::set<int> matched_word_ids_normal = normal_lookup_ids(needle, false);
+  matched_word_ids.insert(matched_word_ids_normal.begin(), matched_word_ids_normal.end());
+
+  std::set<int> matched_word_ids_sarray = sarray_lookup_ids(needle);
+  matched_word_ids.insert(matched_word_ids_sarray.begin(), matched_word_ids_sarray.end());
+
+  std::set<int> matched_word_ids_regexp = regexp_lookup_ids(re);
+  matched_word_ids.insert(matched_word_ids_regexp.begin(), matched_word_ids_regexp.end());
+
+  return ids_to_result(matched_word_ids);
 }
 
 lookup_result_vec

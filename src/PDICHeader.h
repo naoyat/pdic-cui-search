@@ -78,12 +78,6 @@
 
 
 class PDICHeader {
-private:
-  byte *filemem;
-
-  int _version;
-  int _major_version, _minor_version;
-
 public:
   explicit PDICHeader(byte *filemem);
   ~PDICHeader();
@@ -121,11 +115,14 @@ public:
   byte* dicident();
   byte* derefid();
 
-public:
   bool  isAligned();
   bool  isBOCU1(); // BOCU-1辞書か？
-
   void  dump();
+
+private:
+  byte *filemem;
+  int   _version;
+  int   _major_version, _minor_version;
 };
 
 #endif // PDICCUISEARCH_PDICHEADER_H_
