@@ -37,14 +37,10 @@ const char *sx_sarray[F_COUNT] = {
 };
 
 bool lookup_result_asc(const lookup_result& left, const lookup_result& right) {
-  // printf("lr/a, %s, %s\n",
-  //        (const char*)left[F_ENTRY], (const char*)right[F_ENTRY]);
   return bstrcmp(left[F_ENTRY], right[F_ENTRY]) < 0;
 }
 
 bool lookup_result_desc(const lookup_result& left, const lookup_result& right) {
-  // printf("lr/d, %s, %s\n",
-  //        (const char*)left[F_ENTRY], (const char*)right[F_ENTRY]);
   return bstrcmp(left[F_ENTRY], right[F_ENTRY]) > 0;
 }
 
@@ -107,7 +103,6 @@ void say_render_count() {
   _render_lap_usec = render_lap.first;
 
   printf(ANSI_FGCOLOR_GREEN "// 結果%d件", match_count);
-  // if (_match_count >= 2) putchar('s');
   if (render_count < match_count) printf(" (うち%d件表示)", render_count);
   printf(", 表示:%.3fミリ秒", 0.001 * _render_lap_usec);
   printf(".\n" ANSI_FGCOLOR_DEFAULT);
@@ -394,18 +389,15 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
 
   int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
 
-  // Criteria *criteria;
-  // if (index->header->major_version() >= HYPER6) {
   Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
   byte *needle_for_index = criteria->needle_for_index ?
       criteria->needle_for_index : criteria->needle;
-  // printf("needle for index: {%s}\n", needle_for_index);
   bsearch_result_t result = index->bsearch_in_index(needle_for_index,
                                                     exact_match);
 
   int from, to;
   if (result.first) {
-    from = result.second.first;  // - 1; if (from < 0) from = 0;
+    from = result.second.first;
     if (bstrcmp(index->entry_word(from), criteria->needle) != 0) {
       --from;
       if (from < 0) from = 0;
@@ -415,11 +407,6 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
     from = result.second.second - 1;
     if (from < 0) goto not_found;
     to = from;
-  }
-
-  if (g_shell->params.verbose_mode) {
-    // printf("lookup. from %d to %d, %d/%d...\n",
-    //        from, to, to-from+1, index->_nindex);
   }
 
   _result_id_set.clear();
@@ -438,13 +425,6 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
       }
     }
 
-    if (g_shell->params.verbose_mode) {
-      /*
-      byte *utf8str = bocu1_to_utf8( index->entry_word(ix) );
-      printf("  [%d/%d] %s\n", ix, index->_nindex, utf8str);
-      free((void *)utf8str);
-      */
-    }
     if (ix < 0) continue;
     if (ix >= index->_nindex) break;
 
@@ -464,7 +444,6 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
 
   return std::set<int>(_result_id_set.begin(), _result_id_set.end());
 }
-
 
 std::set<int> Dict::search_in_sarray(int field, byte *needle) {
   byte *buf = dict_buf[field];
@@ -551,21 +530,12 @@ lookup_result_vec Dict::ids_to_result(const std::set<int>& word_ids) {
     if (*word_id < 0) continue;
 
     Toc *t = &toc[*word_id];
-    // printf("%d: [ %d %d %d %d %d ]\n",
-    //        *word_id,
-    //        t->pdic_datafield_pos,
-    //        t->start_pos[0],
-    //        t->start_pos[1],
-    //        t->start_pos[2],
-    //        t->start_pos[3]);
-
     byte *fields[F_COUNT] = {
       dict_buf[F_ENTRY]   + t->start_pos[F_ENTRY],
       dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
       dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
       dict_buf[F_PRON]    + t->start_pos[F_PRON]
     };
-
     result_vec.push_back((lookup_result)clone(fields, sizeof(fields[0])*4));
   }
 
@@ -641,6 +611,7 @@ std::set<int> Dict::regexp_lookup_ids(RE2 *re) {
       dict_buf[F_EXAMPLE] + toc[word_id].start_pos[F_EXAMPLE],
       dict_buf[F_PRON]    + toc[word_id].start_pos[F_PRON]
     };
+
     if (RE2::PartialMatch((const char *)fields[F_ENTRY], *re)
         || (g_shell->params.full_search_mode
             && ((fields[F_JWORD][0]
