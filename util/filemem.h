@@ -9,10 +9,10 @@
 
 // メモリイメージをそのまま保存
 int   savemem(const char* path, byte* data, int data_size, int mode = 0600);
-byte* loadmem(const char* path);
-bool  unloadmem(byte* ptr);
+void* loadmem(const char* path);
+bool  unloadmem(void* ptr);
 
-int   mem_fd(byte* ptr);
-int   mem_size(byte* ptr);
+int   mem_fd(void* ptr);
+int   mem_size(void* ptr);
 
 #endif  // UTIL_FILEMEM_H_

@@ -12,22 +12,22 @@
 #include <string>
 #include <utility>
 
-#include "./stlutil.h"
+// #include "./stlutil.h"
 
 std::map<void*, std::pair<int, int> > mmap_info;
 
 // メモリイメージをそのまま保存
-int savemem(const char*path, byte* data, int data_size, int mode) {
+int savemem(const char* path, byte* data, int data_size, int mode) {
   int fd = open(path, O_WRONLY|O_CREAT|O_TRUNC, mode);
   if (fd == -1) return -1;
 
-  ssize_t saved_size = write(fd, (const void *)data, (size_t)data_size);
+  ssize_t saved_size = write(fd, static_cast<void*>(data), data_size);
   close(fd);
 
   return static_cast<int>(saved_size);
 }
 
-byte* loadmem(const char* path) {
+void* loadmem(const char* path) {
   int fd = open(path, O_RDONLY);
   if (fd == -1) return NULL;
 
@@ -43,34 +43,37 @@ byte* loadmem(const char* path) {
   }
 
   mmap_info[ptr] = std::make_pair(fd, size);
-  return reinterpret_cast<byte*>(ptr);
+  return ptr;
 }
 
-bool unloadmem(byte* ptr) {
-  if (!found(mmap_info, static_cast<void*>(ptr))) return false;
+bool unloadmem(void* ptr) {
+  if (mmap_info.find(ptr) == mmap_info.end())  // if not found
+    return false;
 
-  std::pair<int, int> info = mmap_info[static_cast<void*>(ptr)];
+  std::pair<int, int> info = mmap_info[ptr];
   int fd = info.first, size = info.second;
 
   munmap(ptr, size);
   close(fd);
 
-  mmap_info.erase(static_cast<void*>(ptr));
+  mmap_info.erase(ptr);
   return true;
 }
 
-int mem_fd(byte* ptr) {
-  if (!found(mmap_info, static_cast<void*>(ptr))) return -1;
+int mem_fd(void* ptr) {
+  if (mmap_info.find(ptr) == mmap_info.end())  // if not found
+    return -1;
 
-  std::pair<int, int> info = mmap_info[static_cast<void*>(ptr)];
+  std::pair<int, int> info = mmap_info[ptr];
   int fd = info.first;
   return fd;
 }
 
-int mem_size(byte *ptr) {
-  if (!found(mmap_info, static_cast<void*>(ptr))) return -1;
+int mem_size(void *ptr) {
+  if (mmap_info.find(ptr) == mmap_info.end())  // if not found
+    return -1;
 
-  std::pair<int, int> info = mmap_info[static_cast<void*>(ptr)];
+  std::pair<int, int> info = mmap_info[ptr];
   int size = info.second;
   return size;
 }

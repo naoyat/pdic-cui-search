@@ -274,7 +274,7 @@ int Dict::make_toc() {
     return -1;
   }
 
-  std::sort(all(_toc), toc_asc);
+  std::sort(_toc.begin(), _toc.end(), toc_asc);
 
   for (int i = 0, c = _toc.size(); i < c; ++i)
     toc[i] = _toc[i];
@@ -345,7 +345,8 @@ void cb_save(PDICDatafield *datafield) {
 }
 
 int Dict::word_id_for_pdic_datafield_pos(int pdic_datafield_pos) {
-  if (found(revmap_pdic_datafield_pos, pdic_datafield_pos)) {
+  if (revmap_pdic_datafield_pos.find(pdic_datafield_pos)
+      != revmap_pdic_datafield_pos.end()) {  // if found
     return revmap_pdic_datafield_pos[pdic_datafield_pos];
   }
   if (pdic_datafield_pos < toc[0].pdic_datafield_pos
@@ -461,7 +462,7 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
 
   _dict = NULL;
 
-  return std::set<int>(all(_result_id_set));
+  return std::set<int>(_result_id_set.begin(), _result_id_set.end());
 }
 
 
@@ -600,7 +601,7 @@ std::set<int> Dict::sarray_lookup_ids(byte *needle) {
     }
     if (f == F_ENTRY || g_shell->params.full_search_mode) {
       std::set<int> matched_id_set = this->search_in_sarray(f, needle);
-      matched_word_ids.insert(all(matched_id_set));
+      matched_word_ids.insert(matched_id_set.begin(), matched_id_set.end());
     }
   }
   return matched_word_ids;
@@ -682,7 +683,10 @@ void Dict::unload_additional_files() {
 
 int Dict::rev(int field, int pos) {
   std::pair<int, int> key = std::make_pair(field, pos);
-  if (found(revmap, key)) return revmap[key];
+
+  if (revmap.find(key) != revmap.end()) {  // if found
+    return revmap[key];
+  }
   if (pos < toc[0].start_pos[field]
       || toc[toc_length-1].start_pos[field] < pos) {
     return -1;

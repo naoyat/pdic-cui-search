@@ -40,9 +40,11 @@ lookup_result_vec _normal_lookup(byte *needle, int needle_len) {
         g_shell->dicts[*current_dict_id]->
         normal_lookup(reinterpret_cast<byte*>(needle),
                       exact_match);
-    total_result_vec.insert(total_result_vec.end(), all(result_vec));
+    total_result_vec.insert(total_result_vec.end(),
+                            result_vec.begin(), result_vec.end());
   }
-  std::sort(all(total_result_vec), lookup_result_asc);
+  std::sort(total_result_vec.begin(), total_result_vec.end(),
+            lookup_result_asc);
   return total_result_vec;
 }
 
@@ -54,9 +56,11 @@ lookup_result_vec _sarray_lookup(byte *needle, int needle_len) {
   traverse(g_shell->current_dict_ids, current_dict_id) {
     lookup_result_vec result_vec =
         g_shell->dicts[*current_dict_id]->sarray_lookup(needle);
-    total_result_vec.insert(total_result_vec.end(), all(result_vec));
+    total_result_vec.insert(total_result_vec.end(),
+                            result_vec.begin(), result_vec.end());
   }
-  std::sort(all(total_result_vec), lookup_result_asc);
+  std::sort(total_result_vec.begin(), total_result_vec.end(),
+            lookup_result_asc);
   return total_result_vec;
 }
 
@@ -68,9 +72,11 @@ lookup_result_vec _regexp_lookup(RE2 *pattern) {
   traverse(g_shell->current_dict_ids, current_dict_id) {
     lookup_result_vec result_vec =
         g_shell->dicts[*current_dict_id]->regexp_lookup(pattern);
-    total_result_vec.insert(total_result_vec.end(), all(result_vec));
+    total_result_vec.insert(total_result_vec.end(),
+                            result_vec.begin(), result_vec.end());
   }
-  std::sort(all(total_result_vec), lookup_result_asc);
+  std::sort(total_result_vec.begin(), total_result_vec.end(),
+            lookup_result_asc);
   return total_result_vec;
 }
 
@@ -83,9 +89,11 @@ lookup_result_vec _full_lookup(byte *needle, int needle_len) {
     lookup_result_vec result_vec =
         g_shell->dicts[*current_dict_id]
         ->full_lookup(needle, g_shell->current_pattern);
-    total_result_vec.insert(total_result_vec.end(), all(result_vec));
+    total_result_vec.insert(total_result_vec.end(),
+                            result_vec.begin(), result_vec.end());
   }
-  std::sort(all(total_result_vec), lookup_result_asc);
+  std::sort(total_result_vec.begin(), total_result_vec.end(),
+            lookup_result_asc);
   return total_result_vec;
 }
 
@@ -134,7 +142,7 @@ void lookup(byte *needle, int needle_len, int flag) {
     result_vec = _full_lookup(needle, needle_len);
   }
 
-  g_shell->current_result_vec.assign(all(result_vec));
+  g_shell->current_result_vec.assign(result_vec.begin(), result_vec.end());
   lap_match_count();
   if (!g_shell->params.direct_dump_mode) g_shell->render_current_result();
   say_match_count();

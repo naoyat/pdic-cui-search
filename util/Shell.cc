@@ -73,7 +73,7 @@ int Shell::do_load(const std::string& filename) {
   for (uint i = 0; i < loadpaths.size(); ++i) {
     std::string path = loadpaths[i] + "/" + filename;
 
-    byte* filemem = loadmem(path.c_str());
+    byte* filemem = static_cast<byte*>(loadmem(path.c_str()));
     if (filemem) {
       Dict* new_dict = new Dict(filename, filemem);
       int new_dict_id = dicts.size();
@@ -241,7 +241,7 @@ bool Shell::do_command(char *cmdstr) {
   } else if (cmd[0] == "use") {
     if (cmd.size() >= 2) {
       std::string name = cmd[1];
-      if (found(aliases, name)) {
+      if (aliases.find(name) != aliases.end()) {  // if found
         do_use(name);
       } else {
         printf("// [ERROR] '%s' が見つかりません。\n", name.c_str());
@@ -250,11 +250,10 @@ bool Shell::do_command(char *cmdstr) {
       printf("[command] use <name>\n");
     }
   } else if (cmd[0] == "list") {
-    std::set<int> dict_ids(all(current_dict_ids));
+    std::set<int> dict_ids(current_dict_ids.begin(), current_dict_ids.end());
     for (uint dict_id = 0; dict_id < dicts.size(); ++dict_id) {
-      printf("%2d%c %s\n",
-             dict_id,
-             (found(dict_ids, dict_id) ? '*' : ':'),
+      bool found = dict_ids.find(dict_id) != dict_ids.end();
+      printf("%2d%c %s\n", dict_id, found ? '*' : ':',
              dicts[dict_id]->info().c_str());
     }
   } else if (cmd[0] == "aliases") {
@@ -337,13 +336,13 @@ void Shell::do_alias(const std::string& alias,
 std::vector<int> Shell::resolve_aliases(const std::string& name) {
   std::vector<int> dict_ids;
 
-  if (found(nametable, name)) {
+  if (nametable.find(name) != nametable.end()) {  // if found in nametable
     dict_ids.push_back(nametable[name]);
-  } else if (found(aliases, name)) {
+  } else if (aliases.find(name) != aliases.end()) {  // if found in aliases
     std::vector<std::string> names = aliases[name];
     traverse(names, name) {
       std::vector<int> ids = resolve_aliases(*name);
-      dict_ids.insert(dict_ids.end(), all(ids));
+      dict_ids.insert(dict_ids.end(), ids.begin(), ids.end());
     }
   } else {
     printf("// [ERROR] %s が見つかりません。\n", name.c_str());
@@ -356,7 +355,7 @@ bool Shell::do_use(std::string name) {
   std::vector<int> dict_ids = resolve_aliases(name);
 
   if (dict_ids.size() > 0) {
-    current_dict_ids.assign(all(dict_ids));
+    current_dict_ids.assign(dict_ids.begin(), dict_ids.end());
     current_dict_name = name;
     return true;
   } else {

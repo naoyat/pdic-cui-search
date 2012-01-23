@@ -16,7 +16,7 @@
 std::set<void*> clone_ptrs;
 
 void free_cloned_buffer(void* ptr) {
-  if (found(clone_ptrs, ptr)) {
+  if (clone_ptrs.find(ptr) != clone_ptrs.end()) {  // if found
     free(ptr);
     clone_ptrs.erase(ptr);
   }
