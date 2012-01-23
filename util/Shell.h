@@ -7,6 +7,7 @@
 
 #include <re2/re2.h>
 
+#include <map>
 #include <set>
 #include <string>
 #include <utility>
@@ -50,6 +51,7 @@ class Shell {
 
   ShellParams params;
 
+  std::vector<std::string> loadpaths;
   std::vector<Dict*> dicts;
   std::map<std::string, std::vector<std::string> > aliases;  // name -> name
   std::map<std::string, int> nametable;  // name -> dict_id

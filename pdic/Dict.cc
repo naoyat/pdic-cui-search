@@ -17,7 +17,6 @@
 #include "pdic/PDICDatafield.h"
 #include "pdic/PDICHeader.h"
 #include "pdic/PDICIndex.h"
-
 #include "util/ansi_color.h"
 #include "util/bocu1.h"
 #include "util/charcode.h"
@@ -52,8 +51,6 @@ bool lookup_result_desc(const lookup_result& left, const lookup_result& right) {
 bool toc_asc(const Toc& left, const Toc& right) {
   return left.pdic_datafield_pos < right.pdic_datafield_pos;
 }
-
-std::vector<std::string> Dict::g_dict_loadpaths_;
 
 extern Shell *g_shell;
 
@@ -117,7 +114,6 @@ void say_render_count() {
 }
 
 // ctor
-#include <iostream>
 Dict::Dict(const std::string& name, byte *filemem) {
   index = new PDICIndex(filemem);
   this->name = name;
@@ -713,8 +709,8 @@ int Dict::rev(int field, int pos) {
 bool Dict::load_additional_files() {
   unload_additional_files();
 
-  for (uint i = 0; i < g_dict_loadpaths_.size(); ++i) {
-    std::string path = g_dict_loadpaths_[i] + "/" + this->prefix();
+  for (uint i = 0; i < g_shell->loadpaths.size(); ++i) {
+    std::string path = g_shell->loadpaths[i] + "/" + this->prefix();
 
     if (this->toc) {
       // 読み込み済みなので無視

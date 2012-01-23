@@ -70,8 +70,8 @@ void Shell::load_rc(const char* rcpath) {
 }
 
 int Shell::do_load(const std::string& filename) {
-  for (uint i = 0; i < Dict::g_dict_loadpaths_.size(); ++i) {
-    std::string path = Dict::g_dict_loadpaths_[i] + "/" + filename;
+  for (uint i = 0; i < loadpaths.size(); ++i) {
+    std::string path = loadpaths[i] + "/" + filename;
 
     byte* filemem = loadmem(path.c_str());
     if (filemem) {
@@ -205,7 +205,7 @@ bool Shell::do_command(char *cmdstr) {
     }
   } else if (cmd[0] == "add") {
     if (cmd.size() == 3 && cmd[1] == "loadpath") {
-      Dict::g_dict_loadpaths_.push_back(cmd[2]);
+      loadpaths.push_back(cmd[2]);
     } else {
       printf("[command] add loadpath <path>\n");
     }

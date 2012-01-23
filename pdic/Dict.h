@@ -75,9 +75,6 @@ class Dict {
   std::map<std::pair<int, int>, int> revmap;
   std::map<int, int> revmap_pdic_datafield_pos;
 
- public:
-  static std::vector<std::string> g_dict_loadpaths_;
-
  private:
   lookup_result_vec ids_to_result(const std::set<int>& word_ids);
   int  rev(int field, int start_pos);

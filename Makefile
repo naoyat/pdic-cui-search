@@ -2,8 +2,7 @@
 .SUFFIXES: .cc .o
 
 CXX = g++
-CXXFLAGS=-Wall -O3 -g -DDEBUG -DVERBOSE -I.
-# CXXFLAGS = -O3 -DDEBUG
+CXXFLAGS=-Wall -O3 -g -I.
 
 .cc.o: $*.h
 	$(CXX) $(CXXFLAGS) -c $*.cc

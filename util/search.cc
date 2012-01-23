@@ -17,7 +17,7 @@
 #include "./utf8.h"
 #include "./util.h"
 
-#ifdef DEBUG
+#ifdef DO_COUNT_COMPARISON
 int cmp_count;
 #endif
 
@@ -144,7 +144,7 @@ std::pair<int*, int> make_light_suffix_array(byte *buf, int buf_size) {
 // NEG-endを見るべき
 bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
                         byte *needle, bool exact_match) {
-#ifdef DEBUG
+#ifdef DO_COUNT_COMPARISON
   cmp_count = 0;
 #endif
 
@@ -154,7 +154,7 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
 
   int cmp = exact_match ? bstrcmp(buf+offsets[0], needle)
       : bstrncmp(buf+offsets[0], needle, needle_len);
-#ifdef DEBUG
+#ifdef DO_COUNT_COMPARISON
   ++cmp_count;
 #endif
   if (cmp > 0)
@@ -162,7 +162,7 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
 
   cmp = exact_match ? bstrcmp(buf+offsets[offsets_len-1], needle)
       : bstrncmp(buf+offsets[offsets_len-1], needle, needle_len);
-#ifdef DEBUG
+#ifdef DO_COUNT_COMPARISON
   ++cmp_count;
 #endif
   if (cmp < 0)
@@ -176,7 +176,7 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
 
     cmp = exact_match ? bstrcmp(buf+offsets[mid], needle)
         : bstrncmp(buf+offsets[mid], needle, needle_len);
-#ifdef DEBUG
+#ifdef DO_COUNT_COMPARISON
   ++cmp_count;
 #endif
     if (cmp == 0) {
@@ -186,7 +186,7 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
         mid = ((unsigned int)lo + (unsigned int)hi + 1) >> 1;
         cmp = exact_match ? bstrcmp(buf+offsets[mid], needle)
             : bstrncmp(buf+offsets[mid], needle, needle_len);
-#ifdef DEBUG
+#ifdef DO_COUNT_COMPARISON
   ++cmp_count;
 #endif
         if (cmp == 0) {
@@ -203,7 +203,7 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
         mid = ((unsigned int)lo + (unsigned int)hi) >> 1;
         cmp = exact_match ? bstrcmp(buf+offsets[mid], needle)
             : bstrncmp(buf+offsets[mid], needle, needle_len);
-#ifdef DEBUG
+#ifdef DO_COUNT_COMPARISON
   ++cmp_count;
 #endif
         if (cmp == 0)
