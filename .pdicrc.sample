@@ -11,7 +11,6 @@ load REIJI132.DIC reijiro r
 load RYAKU132.DIC ryakujiro a
 
 group 英辞郎132 = eijiro waeijiro reijiro ryakujiro
-
 use 英辞郎132
 
 ;lookup japan
@@ -22,4 +21,6 @@ set verbose = on
 set direct = on
 set coloring = on
 set full = on
-set limit = 100
+set limit = 150
+set stop_on_limit = on
+set lookup = regexp

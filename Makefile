@@ -13,7 +13,7 @@ OBJECTS = \
 	obj/pdic/PDICDatafield.o obj/pdic/Criteria.o obj/pdic/Dict.o obj/pdic/lookup.o \
 	obj/util/bocu1.o obj/util/dump.o obj/util/filemem.o obj/util/macdic_xml.o \
 	obj/util/search.o obj/util/stlutil.o obj/util/timeutil.o obj/util/utf8.o \
-	obj/util/util.o obj/util/shell.o
+	obj/util/util.o obj/util/Shell.o
 
 TEST_OBJECTS = test/filemem_gtest.o test/search_gtest.o \
                test/utf8_gtest.o test/util_gtest.o test/shell_gtest.o
@@ -49,7 +49,7 @@ test_eijiro: EIJIRO_gtest
 	./EIJIRO_gtest
 
 clean:
-	rm -f pdicsh pdic_gtest *.o */*.o *~ $(TEST_OUTPUTS)
+	rm -f pdicsh pdic_gtest *.o $(OBJECTS) *~ $(TEST_OUTPUTS)
 
 lint:
 	cpplint.py main.cc util/*.h util/*.cc pdic/*.h pdic/*.cc test/*.cc

@@ -28,6 +28,7 @@
 #include "util/timeutil.h"
 #include "util/utf8.h"
 #include "util/util.h"
+#include "util/Shell.h"
 
 const char *sx_buf[F_COUNT] = {
   ".entry", ".trans", ".exmp", ".pron"
@@ -52,19 +53,12 @@ bool toc_asc(const Toc& left, const Toc& right) {
   return left.pdic_datafield_pos < right.pdic_datafield_pos;
 }
 
-extern std::vector<std::string> loadpaths;
+std::vector<std::string> Dict::g_dict_loadpaths_;
 
-bool separator_mode = false;
-bool verbose_mode = false;
-bool direct_dump_mode = false;
-bool full_search_mode = false;
-bool ansi_coloring_mode = false;
-bool more_newline_mode = false;
-int render_count_limit = DEFAULT_RENDER_COUNT_LIMIT;
+extern Shell *g_shell;
+
 bool render_count_limit_exceeded = false;
 bool said_that = false;
-bool stop_on_limit_mode = true;
-
 int match_count, render_count;
 int _search_lap_usec, _render_lap_usec;
 
@@ -95,13 +89,14 @@ void say_match_count() {
   _render_lap_usec = render_lap.first;
 
   printf("%s", ANSI_FGCOLOR_GREEN);
-  if (render_count >= render_count_limit && stop_on_limit_mode) {
+  if (render_count >= g_shell->params.render_count_limit
+      && g_shell->params.stop_on_limit_mode) {
     printf("// 検索結果の最初の%d件を表示", render_count);
   } else {
     printf("// 結果%d件", match_count);
     if (render_count < match_count) printf(" (うち%d件表示)", render_count);
   }
-  if (direct_dump_mode) {
+  if (g_shell->params.direct_dump_mode) {
     printf(", 検索+表示:%.3fミリ秒", 0.001 * _search_lap_usec);
   } else {
     printf(", 検索:%.3fミリ秒", 0.001 * _search_lap_usec);
@@ -122,6 +117,7 @@ void say_render_count() {
 }
 
 // ctor
+#include <iostream>
 Dict::Dict(const std::string& name, byte *filemem) {
   index = new PDICIndex(filemem);
   this->name = name;
@@ -324,7 +320,7 @@ int Dict::make_toc() {
 void cb_dump_entry(PDICDatafield *datafield) {
   puts(reinterpret_cast<char*>(datafield->in_utf8(F_ENTRY)));
 
-  if (++match_count >= render_count_limit)
+  if (++match_count >= g_shell->params.render_count_limit)
     render_count_limit_exceeded = true;
 }
 
@@ -340,14 +336,16 @@ void cb_dump(PDICDatafield *datafield) {
   int word_id = _dict->word_id_for_pdic_datafield_pos(datafield->start_pos);
   _result_id_set.insert(word_id);
 
-  if (++match_count >= render_count_limit) render_count_limit_exceeded = true;
+  if (++match_count >= g_shell->params.render_count_limit)
+    render_count_limit_exceeded = true;
 }
 
 void cb_save(PDICDatafield *datafield) {
   int word_id = _dict->word_id_for_pdic_datafield_pos(datafield->start_pos);
   _result_id_set.insert(word_id);
 
-  if (++match_count >= render_count_limit) render_count_limit_exceeded = true;
+  if (++match_count >= g_shell->params.render_count_limit)
+    render_count_limit_exceeded = true;
 }
 
 int Dict::word_id_for_pdic_datafield_pos(int pdic_datafield_pos) {
@@ -379,18 +377,18 @@ int Dict::word_id_for_pdic_datafield_pos(int pdic_datafield_pos) {
 }
 
 std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
-  if (separator_mode) {
+  if (g_shell->params.separator_mode) {
     printf("====== ^%s%s in %s ======\n",
            reinterpret_cast<char*>(needle),
            exact_match ? "$" : "",
            name.c_str());
   }
-  if (stop_on_limit_mode) {
+  if (g_shell->params.stop_on_limit_mode) {
     if (render_count_limit_exceeded) {
-      if (verbose_mode && !said_that) {
+      if (g_shell->params.verbose_mode && !said_that) {
         printf("[stop on limit] "
                "件数(%d)が制限(%d)に達しているので%sからの検索を行いません。\n",
-               render_count, render_count_limit, name.c_str());
+               render_count, g_shell->params.render_count_limit, name.c_str());
         said_that = true;
       }
       return std::set<int>();
@@ -422,7 +420,7 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
     to = from;
   }
 
-  if (verbose_mode) {
+  if (g_shell->params.verbose_mode) {
     // printf("lookup. from %d to %d, %d/%d...\n",
     //        from, to, to-from+1, index->_nindex);
   }
@@ -431,19 +429,19 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
   _dict = this;
 
   for (int ix = from; ix <= to; ix++) {
-    if (stop_on_limit_mode) {
+    if (g_shell->params.stop_on_limit_mode) {
       if (render_count_limit_exceeded) {
-        if (verbose_mode && !said_that) {
+        if (g_shell->params.verbose_mode && !said_that) {
           printf("[stop on limit] "
                  "件数(%d)が制限(%d)に達したので検索を中断します。\n",
-                 render_count, render_count_limit);
+                 render_count, g_shell->params.render_count_limit);
           said_that = true;
         }
         break;
       }
     }
 
-    if (verbose_mode) {
+    if (g_shell->params.verbose_mode) {
       /*
       byte *utf8str = bocu1_to_utf8( index->entry_word(ix) );
       printf("  [%d/%d] %s\n", ix, index->_nindex, utf8str);
@@ -454,7 +452,7 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
     if (ix >= index->_nindex) break;
 
     PDICDatablock* datablock = new PDICDatablock(filemem, this->index, ix);
-    if (direct_dump_mode) {
+    if (g_shell->params.direct_dump_mode) {
       datablock->iterate(&cb_dump, criteria);
     } else {
       datablock->iterate(&cb_save, criteria);
@@ -483,12 +481,12 @@ std::set<int> Dict::search_in_sarray(int field, byte *needle) {
   if (result.first) {
     RE2 pattern((const char *)needle);
     for (int i = result.second.first; i <= result.second.second; ++i) {
-      if (stop_on_limit_mode) {
+      if (g_shell->params.stop_on_limit_mode) {
         if (render_count_limit_exceeded) {
-          if (verbose_mode && !said_that) {
+          if (g_shell->params.verbose_mode && !said_that) {
             printf("[stop on limit] "
                    "件数(%d)が制限(%d)に達したので検索を中断します。\n",
-                   render_count, render_count_limit);
+                   render_count, g_shell->params.render_count_limit);
             said_that = true;
           }
           break;
@@ -505,7 +503,7 @@ std::set<int> Dict::search_in_sarray(int field, byte *needle) {
           dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
           dict_buf[F_PRON]    + t->start_pos[F_PRON]
         };
-        if (direct_dump_mode) {
+        if (g_shell->params.direct_dump_mode) {
           render_result((lookup_result)fields, &pattern);
         }
         matched_offsets.insert(word_id);
@@ -585,7 +583,7 @@ std::set<int> Dict::sarray_lookup_ids(byte *needle) {
     return std::set<int>();
   }
 
-  if (separator_mode) {
+  if (g_shell->params.separator_mode) {
     printf("====== \"%s\" in %s ======\n",
            reinterpret_cast<char*>(needle),
            name.c_str());
@@ -593,18 +591,18 @@ std::set<int> Dict::sarray_lookup_ids(byte *needle) {
 
   std::set<int> matched_word_ids;
   for (int f = 0; f < F_COUNT; ++f) {
-    if (stop_on_limit_mode) {
+    if (g_shell->params.stop_on_limit_mode) {
       if (render_count_limit_exceeded) {
-        if (verbose_mode && !said_that) {
+        if (g_shell->params.verbose_mode && !said_that) {
           printf("[stop on limit] "
                  "件数(%d)が制限(%d)に達したので検索を中断します。\n",
-                 render_count, render_count_limit);
+                 render_count, g_shell->params.render_count_limit);
           said_that = true;
         }
         break;
       }
     }
-    if (f == F_ENTRY || full_search_mode) {
+    if (f == F_ENTRY || g_shell->params.full_search_mode) {
       std::set<int> matched_id_set = this->search_in_sarray(f, needle);
       matched_word_ids.insert(all(matched_id_set));
     }
@@ -620,7 +618,7 @@ std::set<int> Dict::regexp_lookup_ids(RE2 *re) {
     return std::set<int>();
   }
 
-  if (separator_mode) {
+  if (g_shell->params.separator_mode) {
     printf("====== /%s/ in %s ======\n",
            re->pattern().c_str(),
            name.c_str());
@@ -629,12 +627,12 @@ std::set<int> Dict::regexp_lookup_ids(RE2 *re) {
   std::set<int> matched_word_ids;
 
   for (int word_id = 0; word_id < toc_length; ++word_id) {
-    if (stop_on_limit_mode) {
+    if (g_shell->params.stop_on_limit_mode) {
       if (render_count_limit_exceeded) {
-        if (verbose_mode && !said_that) {
+        if (g_shell->params.verbose_mode && !said_that) {
           printf("[stop on limit] "
                  "件数(%d)が制限(%d)に達したので検索を中断します。\n",
-                 render_count, render_count_limit);
+                 render_count, g_shell->params.render_count_limit);
           said_that = true;
         }
         break;
@@ -647,7 +645,7 @@ std::set<int> Dict::regexp_lookup_ids(RE2 *re) {
       dict_buf[F_PRON]    + toc[word_id].start_pos[F_PRON]
     };
     if (RE2::PartialMatch((const char *)fields[F_ENTRY], *re)
-        || (full_search_mode
+        || (g_shell->params.full_search_mode
             && ((fields[F_JWORD][0]
                  && RE2::PartialMatch((const char *)fields[F_JWORD],
                                       *re))
@@ -657,10 +655,10 @@ std::set<int> Dict::regexp_lookup_ids(RE2 *re) {
                 || (fields[F_PRON][0]
                     && RE2::PartialMatch((const char *)fields[F_PRON],
                                          *re))))) {
-      if (direct_dump_mode) render_result(fields, re);
+      if (g_shell->params.direct_dump_mode) render_result(fields, re);
       matched_word_ids.insert(word_id);
 
-      if (++match_count >= render_count_limit)
+      if (++match_count >= g_shell->params.render_count_limit)
         render_count_limit_exceeded = true;
     }
   }
@@ -715,8 +713,8 @@ int Dict::rev(int field, int pos) {
 bool Dict::load_additional_files() {
   unload_additional_files();
 
-  for (uint i = 0; i < loadpaths.size(); ++i) {
-    std::string path = loadpaths[i] + "/" + this->prefix();
+  for (uint i = 0; i < g_dict_loadpaths_.size(); ++i) {
+    std::string path = g_dict_loadpaths_[i] + "/" + this->prefix();
 
     if (this->toc) {
       // 読み込み済みなので無視
@@ -749,7 +747,7 @@ bool Dict::load_additional_files() {
     }
   }
 
-  if (verbose_mode) {
+  if (g_shell->params.verbose_mode) {
     printf("%s: loaded sarray index successfully.\n", this->prefix());
   }
 
@@ -757,10 +755,10 @@ bool Dict::load_additional_files() {
 }
 
 void render_result(lookup_result fields, RE2 *re) {
-  if (render_count >= render_count_limit) {
-    if (verbose_mode && !said_that) {
+  if (render_count >= g_shell->params.render_count_limit) {
+    if (g_shell->params.verbose_mode && !said_that) {
       printf("表示件数(%d)が制限(%d)に達したので表示を中断します。\n",
-             render_count, render_count_limit);
+             render_count, g_shell->params.render_count_limit);
       said_that = true;
     }
     render_count_limit_exceeded = true;
@@ -769,7 +767,7 @@ void render_result(lookup_result fields, RE2 *re) {
 
   std::string entry_str((const char *)fields[F_ENTRY]);
 
-  if (ansi_coloring_mode) {
+  if (g_shell->params.ansi_coloring_mode) {
     printf("%s", ANSI_FGCOLOR_BLUE);
     RE2::GlobalReplace(&entry_str, *re,
                        ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_BLUE);
@@ -790,7 +788,7 @@ void render_result(lookup_result fields, RE2 *re) {
     std::string jword_str(indent + (const char *)fields[F_JWORD]);
     // RE2::GlobalReplace(&jword, "◆", "\n◆");
     RE2::GlobalReplace(&jword_str, "\n", "\n"+indent);
-    if (ansi_coloring_mode) {
+    if (g_shell->params.ansi_coloring_mode) {
       RE2::GlobalReplace(&jword_str, *re,
                          ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_DEFAULT);
     }
@@ -802,7 +800,7 @@ void render_result(lookup_result fields, RE2 *re) {
     printf("%s\n", example_str.c_str());
   }
 
-  if (more_newline_mode) printf("\n");
+  if (g_shell->params.more_newline_mode) printf("\n");
 
   ++render_count;
 }

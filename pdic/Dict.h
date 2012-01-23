@@ -29,8 +29,6 @@ class Criteria;
 #define F_EXAMPLE  2
 #define F_PRON     3
 
-#define DEFAULT_RENDER_COUNT_LIMIT 150
-
 bool lookup_result_asc(const lookup_result& left, const lookup_result& right);
 bool lookup_result_desc(const lookup_result& left, const lookup_result& right);
 
@@ -76,6 +74,9 @@ class Dict {
   int*  dict_suffix_array[F_COUNT], dict_suffix_array_length[F_COUNT];
   std::map<std::pair<int, int>, int> revmap;
   std::map<int, int> revmap_pdic_datafield_pos;
+
+ public:
+  static std::vector<std::string> g_dict_loadpaths_;
 
  private:
   lookup_result_vec ids_to_result(const std::set<int>& word_ids);

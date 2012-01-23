@@ -8,16 +8,16 @@
 #include <string>
 #include <utility>
 
-#include "./Dict.h"
-#include "./dump.h"
-#include "./lookup.h"
-#include "./shell.h"
-#include "./util.h"
+#include "pdic/Dict.h"
+#include "pdic/lookup.h"
+#include "util/dump.h"
+#include "util/Shell.h"
+#include "util/util.h"
 
 TEST(shell, sarray_lookup) {
-  load_rc("./gtest.pdicrc");
-  bool is_available = do_use("EIJI-132");
+  Shell shell("./gtest.pdicrc");
 
+  bool is_available = shell.do_use("EIJI-132");
   if (is_available) {
     lookup_result_vec result;
 

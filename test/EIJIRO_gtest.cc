@@ -8,20 +8,19 @@
 #include <utility>
 #include <vector>
 
-#include "./Dict.h"
-#include "./dump.h"
-#include "./shell.h"
-#include "./util.h"
-
-extern std::vector<Dict*> dicts;
+#include "pdic/Dict.h"
+#include "util/dump.h"
+#include "util/Shell.h"
+#include "util/util.h"
 
 TEST(EIJIRO, sarray_loookup) {
-  load_rc(const_cast<char*>("./gtest.pdicrc"));
+  Shell* shell = new Shell();
+  shell->load_rc(const_cast<char*>("./gtest.pdicrc"));
 
-  int dict_id = do_load("EIJI-132.DIC");
+  int dict_id = shell->do_load("EIJI-132.DIC");
   ASSERT_GE(dict_id, 0);
 
-  Dict *dict = dicts[dict_id];
+  Dict *dict = shell->dicts[dict_id];
 
   lookup_result_vec result =
       dict->sarray_lookup(BYTE(const_cast<char*>("whose creativity")));
@@ -35,15 +34,17 @@ TEST(EIJIRO, sarray_loookup) {
                reinterpret_cast<char*>(result[2][F_ENTRY]));
 
   delete dict;
+  delete shell;
 }
 
 TEST(EIJIRO, EIJI_131) {
-  load_rc(const_cast<char*>("./gtest.pdicrc"));
+  Shell* shell = new Shell();
+  shell->load_rc(const_cast<char*>("./gtest.pdicrc"));
 
-  int dict_id = do_load("EIJI-131.DIC");
+  int dict_id = shell->do_load("EIJI-131.DIC");
   ASSERT_GE(dict_id, 0);
 
-  Dict *dict = dicts[dict_id];
+  Dict *dict = shell->dicts[dict_id];
 
   lookup_result_vec result =
       dict->normal_lookup(BYTE(const_cast<char*>("unhate")), true);
@@ -54,17 +55,19 @@ TEST(EIJIRO, EIJI_131) {
   EXPECT_EQ(0, result.size());
 
   delete dict;
+  delete shell;
 }
 
 // char *tilde_jisx0221 = "\xe3\x80\x9c"; // U+301C(WAVE DASH)
 // char *tilde_ms932    = "\xef\xbd\x9e"; // U+FF5E(FULLWIDTH TILDE)
 TEST(Dict, EIJI_132) {
-  load_rc("./gtest.pdicrc");
+  Shell* shell = new Shell();
+  shell->load_rc("./gtest.pdicrc");
 
-  int dict_id = do_load("EIJI-132.DIC");
+  int dict_id = shell->do_load("EIJI-132.DIC");
   ASSERT_GE(dict_id, 0);
 
-  Dict *dict = dicts[dict_id];
+  Dict *dict = shell->dicts[dict_id];
 
   lookup_result_vec result = dict->normal_lookup(
       BYTE(const_cast<char*>("unhate")), true);
@@ -87,4 +90,5 @@ TEST(Dict, EIJI_132) {
                (const char *)result[0][F_JWORD]);
 
   delete dict;
+  delete shell;
 }
