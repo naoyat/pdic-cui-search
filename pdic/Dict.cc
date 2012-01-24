@@ -539,7 +539,6 @@ lookup_result_vec Dict::ids_to_result(const std::set<int>& word_ids) {
 
 lookup_result_vec Dict::ids_to_exact_cs_result(const std::set<int>& word_ids,
                                                byte* needle) {
-  printf("ids to exact cs result (with %s),...", (char*)needle);
   lookup_result_vec result_vec;
 
   traverse(word_ids, word_id) {
