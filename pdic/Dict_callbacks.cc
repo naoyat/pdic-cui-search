@@ -19,7 +19,6 @@
 #include "util/Shell.h"
 #include "util/timeutil.h"
 #include "util/util.h"
-#include "sandbox/alt.h"
 
 extern Shell *g_shell;
 
@@ -98,11 +97,6 @@ void say_render_count() {
 // render result
 //
 void render_result(lookup_result fields, RE2 *re) {
-  if (g_shell->params.debug_flags & 1) {
-    render_result_alt1(fields, re);
-    return;
-  }
-
   if (render_count >= g_shell->params.render_count_limit) {
     if (g_shell->params.verbose_mode && !said_that) {
       printf("表示件数(%d)が制限(%d)に達したので表示を中断します。\n",

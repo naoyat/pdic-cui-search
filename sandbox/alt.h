@@ -12,6 +12,8 @@
 //
 // alternative
 //
+void render_result_alt(lookup_result fields, RE2 *re);
 void render_result_alt1(lookup_result fields, RE2 *re);
+void render_result_altf(lookup_result fields, RE2 *re);
 
 #endif  // SANDBOX_ALT_H_
