@@ -61,6 +61,7 @@ class Dict {
   std::set<int> search_in_sarray(int field, byte *needle);
   std::set<int> search_in_henkakei(byte *needle);
 
+<<<<<<< HEAD
   lookup_result_vec normal_lookup(byte *needle, bool exact_match);
   lookup_result_vec henkakei_lookup(byte *needle);
   lookup_result_vec sarray_lookup(byte *needle);
@@ -71,8 +72,22 @@ class Dict {
   std::set<int> henkakei_lookup_ids(byte *needle);
   std::set<int> sarray_lookup_ids(byte *needle);
   std::set<int> regexp_lookup_ids(RE2 *re);
+=======
+  std::set<int> pdic_match_forward_lookup_ids(byte *needle, int flags);
+  std::set<int> exact_lookup_ids(byte *needle, int flags);
+  std::set<int> sarray_lookup_ids(byte *needle, int flags);
+  std::set<int> regexp_lookup_ids(RE2 *re, int flags);
+>>>>>>> d890d56... LOOKUPフラグを整理。xxxx_lookup() 系関数をまとめて、フラグ渡しにした
 
   int word_id_for_pdic_datafield_pos(int pdic_datafield_pos);
+
+  // PDIC辞書自体が持つインデックスを用いた前方一致検索。
+  lookup_result_vec pdic_match_forward_lookup(byte *needle, int flags);
+  lookup_result_vec sarray_lookup(byte *needle, int flags);
+  lookup_result_vec regexp_lookup(RE2 *re, int flags);
+  lookup_result_vec exact_lookup(byte *needle, int flags);
+  lookup_result_vec full_lookup(byte *needle, RE2 *re, int flags);
+  lookup_result_vec analyse(byte *text);
 
   byte* filemem;
   std::string path, name;
@@ -93,6 +108,8 @@ class Dict {
 
  private:
   lookup_result_vec ids_to_result(const std::set<int>& word_ids);
+  lookup_result_vec ids_to_exact_cs_result(const std::set<int>& word_ids,
+                                           byte* needle);
   int  rev(int field, int start_pos);
   bool is_eijiro() {
     return memcmp(this->name.data(), "EIJI", 4) == 0;

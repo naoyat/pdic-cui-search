@@ -10,6 +10,7 @@
 #include "util/ansi_color.h"
 #include "util/dump.h"
 #include "util/Shell.h"
+#include "sandbox/analyse.h"
 
 Shell *g_shell = NULL;
 
@@ -40,12 +41,13 @@ int main(int argc, char **argv) {
     line[--linelen] = 0;
     if (linelen == 0) continue;
 
-    switch (line[0]) {
+    int head = line[0], tail = line[linelen-1];
+    switch (head) {
       case '?':  // reserved (help)
         break;
 
       case '+':
-        full_lookup(reinterpret_cast<byte*>(line)+1, linelen-1);
+        lookup(reinterpret_cast<byte*>(line)+1, LOOKUP_FROM_ALL);
         break;
 
       case '.':  // command mode
@@ -62,22 +64,29 @@ int main(int argc, char **argv) {
 
       case '*':
         if (linelen > 1) {
-          sarray_lookup(reinterpret_cast<byte*>(line)+1, linelen-1);
+          lookup(reinterpret_cast<byte*>(line)+1, LOOKUP_SARRAY);
         }
         break;
 
       case '/':
-        if (linelen >= 3) {
-          if (strchr(line+1, '/') == line + linelen - 1) {
-            line[linelen-1] = 0;
-            regexp_lookup(reinterpret_cast<byte*>(line)+1, linelen-2);
-            break;
-          }
+        if (linelen >= 3 && tail == '/') {
+          line[linelen-1] = '\0';
+          lookup(reinterpret_cast<byte*>(line)+1, LOOKUP_REGEXP);
+          break;
         }
         // else fall thru
 
       default:
-        default_lookup(reinterpret_cast<byte*>(line), linelen);
+        if (g_shell->params.debug_flags & 1) {
+          analyse_text(reinterpret_cast<byte*>(line), linelen);
+        } else {
+          int flags = g_shell->params.default_lookup_flags;
+          if (tail == '*') {
+            line[linelen-1] = '\0';
+            flags &= ~LOOKUP_MATCH_BACKWARD;
+          }
+          lookup(reinterpret_cast<byte*>(line), flags);
+        }
         break;
     }
   }

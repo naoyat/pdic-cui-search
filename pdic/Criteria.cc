@@ -14,6 +14,7 @@
 #include "pdic/PDICDatafield.h"
 #include "pdic/PDICHeader.h"
 #include "pdic/PDICIndex.h"  // string_for_index()
+#include "pdic/lookup.h"
 #include "util/bocu1.h"
 #include "util/charcode.h"
 #include "util/dump.h"
@@ -21,9 +22,15 @@
 #include "util/utf8.h"
 #include "util/util.h"
 
-Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match) {
-  this->re2_pattern = new RE2(std::string("(?i)")
-                              + reinterpret_cast<char*>(needle_utf8));
+Criteria::Criteria(byte *needle_utf8, int target_charcode, int flags) {
+  this->match_backward = (flags & LOOKUP_MATCH_BACKWARD) ? true : false;
+  this->case_sensitive = (flags & LOOKUP_CASE_SENSITIVE) ? true : false;
+
+  std::string pattern =
+      std::string(case_sensitive ? "" : "(?i)")
+      + reinterpret_cast<char*>(needle_utf8)
+      + std::string(match_backward ? "$" : "");
+  this->re2_pattern = new RE2(pattern);
 
   this->needle_utf8 = needle_utf8;
   this->needle_for_index_utf8 = static_cast<byte*>(NULL);
@@ -51,7 +58,6 @@ Criteria::Criteria(byte *needle_utf8, int target_charcode, bool exact_match) {
       needle = clone_cstr(needle_utf8, needle_size, false);
       break;
   }
-  this->exact_match = exact_match;
 }
 
 Criteria::~Criteria() {
@@ -62,12 +68,12 @@ Criteria::~Criteria() {
 }
 
 bool Criteria::match(PDICDatafield *field) {
-  if (exact_match) {
+  if (match_backward) {
     if (field->entry_word_size == needle_size
         && strncmp(reinterpret_cast<char*>(field->entry_word),
                    reinterpret_cast<char*>(needle), needle_size) == 0) {
       return true;
-    } else if (field->v6index &&
+    } else if (field->v6index && !case_sensitive &&
              (field->entry_index_size == needle_size_for_index
               && strncmp(reinterpret_cast<char*>(field->entry_index),
                          reinterpret_cast<char*>(needle_for_index),
@@ -81,7 +87,7 @@ bool Criteria::match(PDICDatafield *field) {
                 reinterpret_cast<char*>(needle),
                 needle_size) == 0) {
       return true;
-    } else if (field->v6index &&
+    } else if (field->v6index && !case_sensitive &&
                strncmp(reinterpret_cast<char*>(field->entry_index),
                        reinterpret_cast<char*>(needle_for_index),
                        needle_size_for_index) == 0) {

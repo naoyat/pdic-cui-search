@@ -316,13 +316,17 @@ bool Shell::do_command(char *cmdstr) {
       }
     }
   } else if (cmd[0] == "lookup") {
-    normal_lookup(reinterpret_cast<byte*>(cmdstr) + 7);
+    byte *needle = reinterpret_cast<byte*>(cmdstr) + 7;
+    lookup(needle, params.default_lookup_flags);
   } else if (cmd[0] == "sarray") {
-    sarray_lookup(reinterpret_cast<byte*>(cmdstr) + 7);
+    byte *needle = reinterpret_cast<byte*>(cmdstr) + 7;
+    lookup(needle, LOOKUP_SARRAY);
   } else if (cmd[0] == "regexp") {
-    regexp_lookup(reinterpret_cast<byte*>(cmdstr) + 7);
+    byte *needle = reinterpret_cast<byte*>(cmdstr) + 7;
+    lookup(needle, LOOKUP_REGEXP);
   } else if (cmd[0] == "full") {
-    full_lookup(reinterpret_cast<byte*>(cmdstr) + 5);
+    byte *needle = reinterpret_cast<byte*>(cmdstr) + 5;
+    lookup(needle, LOOKUP_FROM_ALL);
   } else if (cmd[0] == "clean") {
     free_all_cloned_buffers();
   } else {
@@ -427,6 +431,7 @@ void Shell::render_status() {
 
 ShellParams::ShellParams() {
   printf("ShellParams()...\n");
+<<<<<<< HEAD
   separator_mode = false;
   verbose_mode = false;
   direct_dump_mode = false;
@@ -436,6 +441,19 @@ ShellParams::ShellParams() {
   render_count_limit = DEFAULT_RENDER_COUNT_LIMIT;
   stop_on_limit_mode = true;
   default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
+=======
+  separator_mode       = false;
+  verbose_mode         = false;
+  direct_dump_mode     = false;
+  full_search_mode     = false;
+  ansi_coloring_mode   = false;
+  more_newline_mode    = false;
+  render_count_limit   = DEFAULT_RENDER_COUNT_LIMIT;
+  stop_on_limit_mode   = true;
+
+  default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_EXACT_MATCH;
+  debug_flags          = 0;
+>>>>>>> d890d56... LOOKUPフラグを整理。xxxx_lookup() 系関数をまとめて、フラグ渡しにした
 }
 
 int ShellParams::set_render_count_limit(int limit) {
@@ -448,17 +466,17 @@ int ShellParams::set_render_count_limit(int limit) {
 
 int ShellParams::set_lookup_mode(const char *mode_str) {
   if (strcmp(mode_str, "normal") == 0) {
-    default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
+    default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_EXACT_MATCH;
   } else if (strcmp(mode_str, "exact") == 0) {
-    default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
+    default_lookup_flags = LOOKUP_EXACT_MATCH;
   } else if (strcmp(mode_str, "forward") == 0) {
-    default_lookup_flags = LOOKUP_NORMAL;
+    default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_MATCH_FORWARD;
   } else if (strcmp(mode_str, "sarray") == 0) {
     default_lookup_flags = LOOKUP_SARRAY;
   } else if (strcmp(mode_str, "regexp") == 0) {
     default_lookup_flags = LOOKUP_REGEXP;
   } else if (strcmp(mode_str, "all") == 0) {
-    default_lookup_flags = LOOKUP_NORMAL | LOOKUP_SARRAY | LOOKUP_REGEXP;
+    default_lookup_flags = LOOKUP_FROM_ALL;
   } else {
     return -1;
   }
@@ -466,9 +484,9 @@ int ShellParams::set_lookup_mode(const char *mode_str) {
 }
 
 const char *ShellParams::get_lookup_mode() {
-  if (default_lookup_flags == LOOKUP_NORMAL)
+  if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_MATCH_FORWARD)
     return "normal";
-  else if (default_lookup_flags == (LOOKUP_NORMAL | LOOKUP_EXACT_MATCH))
+  else if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_EXACT_MATCH)
     return "exact";
   else if (default_lookup_flags == LOOKUP_SARRAY)
     return "sarray";

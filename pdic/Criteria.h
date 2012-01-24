@@ -13,7 +13,7 @@ class PDICDatafield;
 
 class Criteria {
  public:
-  Criteria(byte *needle_utf8, int target_charcode, bool exact_match);
+  Criteria(byte *needle_utf8, int target_charcode, int flags);
   ~Criteria();
 
  public:
@@ -23,7 +23,8 @@ class Criteria {
   byte *needle_utf8, *needle_for_index_utf8;
   byte *needle, *needle_for_index;
   int   needle_size, needle_size_for_index;
-  bool  exact_match;
+
+  bool  match_backward, case_sensitive;
 };
 
 #endif  // PDIC_CRITERIA_H_

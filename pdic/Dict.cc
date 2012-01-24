@@ -18,6 +18,7 @@
 #include "pdic/PDICDatafield.h"
 #include "pdic/PDICHeader.h"
 #include "pdic/PDICIndex.h"
+#include "pdic/lookup.h"
 #include "util/ansi_color.h"
 #include "util/bocu1.h"
 #include "util/charcode.h"
@@ -326,11 +327,15 @@ int Dict::word_id_for_pdic_datafield_pos(int pdic_datafield_pos) {
   return -1;
 }
 
-std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
+std::set<int> Dict::pdic_match_forward_lookup_ids(byte* needle, int flags) {
+  bool match_backward = (flags & LOOKUP_MATCH_BACKWARD) ? true : false;
+  bool case_sensitive = (flags & LOOKUP_CASE_SENSITIVE) ? true : false;
+
   if (g_shell->params.separator_mode) {
-    printf("====== ^%s%s in %s ======\n",
+    printf("====== ^%s%s%s in %s ======\n",
+           (flags & LOOKUP_CASE_SENSITIVE) ? "" : "(?i)",
            reinterpret_cast<char*>(needle),
-           exact_match ? "$" : "",
+           match_backward ? "$" : "",
            name.c_str());
   }
   if (g_shell->params.stop_on_limit_mode) {
@@ -347,11 +352,11 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
 
   int target_charcode = index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS;
 
-  Criteria *criteria = new Criteria(needle, target_charcode, exact_match);
+  Criteria *criteria = new Criteria(needle, target_charcode, flags);
   byte *needle_for_index = criteria->needle_for_index ?
       criteria->needle_for_index : criteria->needle;
   bsearch_result_t result = index->bsearch_in_index(needle_for_index,
-                                                    exact_match);
+                                                    match_backward);
 
   int from, to;
   if (result.first) {
@@ -403,6 +408,11 @@ std::set<int> Dict::normal_lookup_ids(byte* needle, bool exact_match) {
   return std::set<int>(_result_id_set.begin(), _result_id_set.end());
 }
 
+std::set<int> Dict::exact_lookup_ids(byte *needle, int flags) {
+  // TOCを用いたものを実装したいが未だ
+  return pdic_match_forward_lookup_ids(needle, flags);
+}
+
 std::set<int> Dict::search_in_sarray(int field, byte *needle) {
   byte *buf = dict_buf[field];
   int *sarray = dict_suffix_array[field];
@@ -448,6 +458,7 @@ std::set<int> Dict::search_in_sarray(int field, byte *needle) {
   return matched_offsets;
 }
 
+<<<<<<< HEAD
 std::set<int> Dict::search_in_henkakei(byte *needle) {
   return std::set<int>();
 }
@@ -455,30 +466,52 @@ std::set<int> Dict::search_in_henkakei(byte *needle) {
 lookup_result_vec Dict::normal_lookup(byte *needle, bool exact_match) {
   std::set<int> matched_word_ids = normal_lookup_ids(needle, exact_match);
   return ids_to_result(matched_word_ids);
+=======
+
+lookup_result_vec Dict::pdic_match_forward_lookup(byte *needle, int flags) {
+  std::set<int> matched_word_ids = pdic_match_forward_lookup_ids(needle, flags);
+  if (flags & LOOKUP_CASE_SENSITIVE) {
+    return ids_to_exact_cs_result(matched_word_ids, needle);
+  } else {
+    return ids_to_result(matched_word_ids);
+  }
 }
 
-lookup_result_vec Dict::sarray_lookup(byte *needle) {
-  std::set<int> matched_word_ids = sarray_lookup_ids(needle);
+lookup_result_vec Dict::exact_lookup(byte *needle, int flags) {
+  std::set<int> matched_word_ids = exact_lookup_ids(needle, flags);
+  if (flags & LOOKUP_CASE_SENSITIVE) {
+    return ids_to_exact_cs_result(matched_word_ids, needle);
+  } else {
+    return ids_to_result(matched_word_ids);
+  }
+>>>>>>> d890d56... LOOKUPフラグを整理。xxxx_lookup() 系関数をまとめて、フラグ渡しにした
+}
+
+lookup_result_vec Dict::sarray_lookup(byte *needle, int flags) {
+  std::set<int> matched_word_ids = sarray_lookup_ids(needle, flags);
   return ids_to_result(matched_word_ids);
 }
 
-lookup_result_vec Dict::regexp_lookup(RE2 *re) {
-  std::set<int> matched_word_ids = regexp_lookup_ids(re);
+lookup_result_vec Dict::regexp_lookup(RE2 *re, int flags) {
+  std::set<int> matched_word_ids = regexp_lookup_ids(re, flags);
   return ids_to_result(matched_word_ids);
 }
 
-lookup_result_vec Dict::full_lookup(byte *needle, RE2 *re) {
+lookup_result_vec Dict::full_lookup(byte *needle, RE2 *re, int flags) {
   std::set<int> matched_word_ids;
 
-  std::set<int> matched_word_ids_normal = normal_lookup_ids(needle, false);
+  std::set<int> matched_word_ids_normal =
+      pdic_match_forward_lookup_ids(needle, flags);
   matched_word_ids.insert(matched_word_ids_normal.begin(),
                           matched_word_ids_normal.end());
 
-  std::set<int> matched_word_ids_sarray = sarray_lookup_ids(needle);
+  std::set<int> matched_word_ids_sarray =
+      sarray_lookup_ids(needle, flags);
   matched_word_ids.insert(matched_word_ids_sarray.begin(),
                           matched_word_ids_sarray.end());
 
-  std::set<int> matched_word_ids_regexp = regexp_lookup_ids(re);
+  std::set<int> matched_word_ids_regexp =
+      regexp_lookup_ids(re, flags);
   matched_word_ids.insert(matched_word_ids_regexp.begin(),
                           matched_word_ids_regexp.end());
 
@@ -504,7 +537,31 @@ lookup_result_vec Dict::ids_to_result(const std::set<int>& word_ids) {
   return result_vec;
 }
 
-std::set<int> Dict::sarray_lookup_ids(byte *needle) {
+lookup_result_vec Dict::ids_to_exact_cs_result(const std::set<int>& word_ids,
+                                               byte* needle) {
+  printf("ids to exact cs result (with %s),...", (char*)needle);
+  lookup_result_vec result_vec;
+
+  traverse(word_ids, word_id) {
+    if (*word_id < 0) continue;
+
+    Toc *t = &toc[*word_id];
+    byte *entry_word = dict_buf[F_ENTRY] + t->start_pos[F_ENTRY];
+    if (strcmp((char*)entry_word, (char*)needle) == 0) {
+      byte *fields[F_COUNT] = {
+        entry_word,
+        dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
+        dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
+        dict_buf[F_PRON]    + t->start_pos[F_PRON]
+      };
+      result_vec.push_back((lookup_result)clone(fields, sizeof(fields[0])*4));
+    }
+  }
+
+  return result_vec;
+}
+
+std::set<int> Dict::sarray_lookup_ids(byte *needle, int flags) {
   if (!toc || !dict_buf[F_ENTRY]) {
     printf("// [NOTICE] "
            "suffix-array検索には事前のインデックス作成が必要です。\n");
@@ -539,7 +596,7 @@ std::set<int> Dict::sarray_lookup_ids(byte *needle) {
   return matched_word_ids;
 }
 
-std::set<int> Dict::regexp_lookup_ids(RE2 *re) {
+std::set<int> Dict::regexp_lookup_ids(RE2 *re, int flags) {
   if (!toc || !dict_buf[F_ENTRY]) {
     printf("// [NOTICE] "
            "正規表現検索には事前のインデックス作成が必要です。\n");
