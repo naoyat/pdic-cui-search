@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "pdic/Dict.h"
+#include "pdic/Dict_callbacks.h"
 #include "pdic/lookup.h"
 #include "pdic/PDICDatafield.h"
 #include "pdic/PDICHeader.h"
@@ -137,68 +138,12 @@ bool Shell::do_command(char *cmdstr) {
       say_render_count();
     }
   } else if (cmd[0] == "set") {
+    bool is_valid = false;
     if (cmd.size() >= 3) {
-      int value_ix = 2;
-      if (cmd[2] == "=") ++value_ix;
-      const char *mode_name = NULL;
-      char value_str[11] = { 0 };
-      if (cmd[value_ix] == "on" || cmd[value_ix] == "off") {
-        bool onoff = cmd[value_ix] == "on";
-        snprintf(value_str, sizeof(value_str), onoff ? "ON" : "OFF");
-        if (cmd[1] == "verbose") {
-          params.verbose_mode = onoff;
-          mode_name = "verbose mode";
-        } else if (cmd[1] == "direct") {
-          params.direct_dump_mode = onoff;
-          mode_name = "direct dump mode";
-        } else if (cmd[1] == "separator") {
-          params.separator_mode = onoff;
-          mode_name = "separator mode";
-        } else if (cmd[1] == "full" || cmd[1] == "full_search") {
-          params.full_search_mode = onoff;
-          mode_name = "full search mode";
-        } else if (cmd[1] == "coloring" || cmd[1] == "ansi_coloring") {
-          params.ansi_coloring_mode = onoff;
-          mode_name = "ANSI coloring mode";
-        } else if (cmd[1] == "newline" || cmd[1] == "more_newline") {
-          params.more_newline_mode = onoff;
-          mode_name = "newline";
-        } else if (cmd[1] == "stop_on_limit") {
-          params.stop_on_limit_mode = onoff;
-          mode_name = "stop on limit";
-        } else {
-          mode_name = NULL;
-          value_str[0] = '\0';
-        }
-      } else {
-        if (cmd[1] == "limit"
-            || cmd[1] == "render_limit"
-            || cmd[1] == "render_count_limit") {
-          int num = atoi(cmd[value_ix].c_str());
-          params.set_render_count_limit(num);
-          mode_name = "render count limit";
-          snprintf(value_str, sizeof(value_str), "%d",
-                   params.render_count_limit);
-        } else if (cmd[1] == "lookup") {
-          mode_name = "default lookup mode";
-          snprintf(value_str, sizeof(value_str), "%s", cmd[value_ix].c_str());
-
-          if (params.set_lookup_mode(cmd[value_ix].c_str()) != 0) {
-            printf("[command] "
-                   "set lookup = {exact|forward|sarray|regexp|all}\n");
-            mode_name = NULL;
-          }
-        } else {
-          mode_name = NULL;
-          value_str[0] = '\0';
-        }
-      }
-      if (params.verbose_mode && mode_name != NULL) {
-        printf("%s", ANSI_FGCOLOR_GREEN);
-        printf("// %s = %s\n", mode_name, value_str);
-        printf("%s", ANSI_FGCOLOR_DEFAULT);
-      }
-    } else {
+      int value_ix = (cmd[2] == "=") ? 3 : 2;
+      is_valid = do_set(cmd[1], cmd[value_ix]);
+    }
+    if (!is_valid) {
       printf("[command] set {limit} = <number>\n");
       printf("[command] set "
              "{verbose|separator|direct|full|coloring|newline} = {on|off}\n");
@@ -323,6 +268,81 @@ bool Shell::do_command(char *cmdstr) {
   return true;
 }
 
+bool Shell::do_set(const std::string& var, const std::string& val) {
+  const char *mode_name = NULL;
+  char value_str[11] = { 0 };
+
+  bool is_bool_val = false;
+  bool onoff;
+
+  if (val == "on" || val == "yes" || val == "true") {
+    is_bool_val = true;
+    onoff = true;
+  } else if (val == "off" || val == "no" || val == "false") {
+    is_bool_val = true;
+    onoff = false;
+  } else {
+    is_bool_val = false;
+  }
+
+  if (is_bool_val) {  // boolean value
+    snprintf(value_str, sizeof(value_str), onoff ? "ON" : "OFF");
+    if (var == "verbose") {
+      params.verbose_mode = onoff;
+      mode_name = "verbose mode";
+    } else if (var == "direct") {
+      params.direct_dump_mode = onoff;
+      mode_name = "direct dump mode";
+    } else if (var == "separator") {
+      params.separator_mode = onoff;
+      mode_name = "separator mode";
+    } else if (var == "full" || var == "full_search") {
+      params.full_search_mode = onoff;
+      mode_name = "full search mode";
+    } else if (var == "coloring" || var == "ansi_coloring") {
+      params.ansi_coloring_mode = onoff;
+      mode_name = "ANSI coloring mode";
+    } else if (var == "newline" || var == "more_newline") {
+      params.more_newline_mode = onoff;
+      mode_name = "newline";
+    } else if (var == "stop_on_limit") {
+      params.stop_on_limit_mode = onoff;
+      mode_name = "stop on limit";
+    } else {
+      return false;
+    }
+  } else {  // non-boolean value
+    if (var == "limit" || var == "render_limit"
+        || var == "render_count_limit") {
+      int num = atoi(val.c_str());
+      params.set_render_count_limit(num);
+      mode_name = "render count limit";
+      snprintf(value_str, sizeof(value_str), "%d",
+               params.render_count_limit);
+    } else if (var == "lookup") {
+      mode_name = "default lookup mode";
+      snprintf(value_str, sizeof(value_str), "%s", val.c_str());
+      if (params.set_lookup_mode(val.c_str()) != 0) {
+        printf("[command] "
+               "set lookup = {exact|forward|sarray|regexp|all}\n");
+        mode_name = NULL;
+      }
+    } else if (var == "debug") {
+      mode_name = "debug flag";
+      params.debug_flags = atoi(val.c_str());
+      snprintf(value_str, sizeof(value_str), "%d", params.debug_flags);
+    } else {
+      return false;
+    }
+  }
+
+  printf("%s", ANSI_FGCOLOR_GREEN);
+  printf("// %s = %s\n", mode_name, value_str);
+  printf("%s", ANSI_FGCOLOR_DEFAULT);
+
+  return true;
+}
+
 void Shell::do_alias(const std::string& alias, const std::string& valid_name) {
   std::vector<std::string> names(1, valid_name);
   do_alias(alias, names);
@@ -418,15 +438,17 @@ void Shell::render_status() {
 
 ShellParams::ShellParams() {
   printf("ShellParams()...\n");
-  separator_mode = false;
-  verbose_mode = false;
-  direct_dump_mode = false;
-  full_search_mode = false;
-  ansi_coloring_mode = false;
-  more_newline_mode = false;
-  render_count_limit = DEFAULT_RENDER_COUNT_LIMIT;
-  stop_on_limit_mode = true;
+  separator_mode       = false;
+  verbose_mode         = false;
+  direct_dump_mode     = false;
+  full_search_mode     = false;
+  ansi_coloring_mode   = false;
+  more_newline_mode    = false;
+  render_count_limit   = DEFAULT_RENDER_COUNT_LIMIT;
+  stop_on_limit_mode   = true;
+
   default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
+  debug_flags          = 0;
 }
 
 int ShellParams::set_render_count_limit(int limit) {

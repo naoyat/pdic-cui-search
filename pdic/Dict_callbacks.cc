@@ -5,6 +5,7 @@
 #include "pdic/Dict_callbacks.h"
 
 #include <string.h>
+#include <re2/re2.h>
 
 #include <set>
 #include <utility>
@@ -18,6 +19,7 @@
 #include "util/Shell.h"
 #include "util/timeutil.h"
 #include "util/util.h"
+#include "sandbox/alt.h"
 
 extern Shell *g_shell;
 
@@ -92,6 +94,64 @@ void say_render_count() {
   printf(".\n" ANSI_FGCOLOR_DEFAULT);
 }
 
+//
+// render result
+//
+void render_result(lookup_result fields, RE2 *re) {
+  if (g_shell->params.debug_flags & 1) {
+    render_result_alt1(fields, re);
+    return;
+  }
+
+  if (render_count >= g_shell->params.render_count_limit) {
+    if (g_shell->params.verbose_mode && !said_that) {
+      printf("表示件数(%d)が制限(%d)に達したので表示を中断します。\n",
+             render_count, g_shell->params.render_count_limit);
+      said_that = true;
+    }
+    render_count_limit_exceeded = true;
+    return;
+  }
+
+  std::string entry_str((const char *)fields[F_ENTRY]);
+
+  if (g_shell->params.ansi_coloring_mode) {
+    printf("%s", ANSI_FGCOLOR_BLUE);
+    RE2::GlobalReplace(&entry_str, *re,
+                       ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_BLUE);
+    printf("%s%s%s", ANSI_BOLD_ON, entry_str.c_str(), ANSI_BOLD_OFF);
+    if (is_not_empty(fields[F_PRON]))
+      printf(" [%s]", reinterpret_cast<char*>(fields[F_PRON]));
+    printf("%s", ANSI_FGCOLOR_DEFAULT);
+  } else {
+    printf("%s", entry_str.c_str());
+    if (is_not_empty(fields[F_PRON]))
+      printf(" [%s]", reinterpret_cast<char*>(fields[F_PRON]));
+  }
+  printf("\n");
+
+  std::string indent = "   ";
+
+  if (is_not_empty(fields[F_JWORD])) {
+    std::string jword_str(indent + (const char *)fields[F_JWORD]);
+    // RE2::GlobalReplace(&jword, "◆", "\n◆");
+    RE2::GlobalReplace(&jword_str, "\n", "\n"+indent);
+    if (g_shell->params.ansi_coloring_mode) {
+      RE2::GlobalReplace(&jword_str, *re,
+                         ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_DEFAULT);
+    }
+    printf("%s\n", jword_str.c_str());
+  }
+  if (is_not_empty(fields[F_EXAMPLE])) {
+    std::string example_str(indent + (const char *)fields[F_EXAMPLE]);
+    RE2::GlobalReplace(&example_str, "\n", "\n"+indent);
+    printf("%s\n", example_str.c_str());
+  }
+
+  if (g_shell->params.more_newline_mode) printf("\n");
+
+  ++render_count;
+}
 
 //
 // callbacks

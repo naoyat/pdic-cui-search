@@ -2,7 +2,8 @@
 .SUFFIXES: .cc .o
 
 CXX = g++
-CXXFLAGS=-Wall -O3 -g -I.
+# CXXFLAGS=-Wall -O3 -g -I.
+CXXFLAGS=-Wall -O2 -I.
 
 .cc.o: $*.h
 	$(CXX) $(CXXFLAGS) -c $*.cc
@@ -12,7 +13,8 @@ OBJECTS = \
 	obj/pdic/Criteria.o obj/pdic/Dict.o obj/pdic/Dict_callbacks.o obj/pdic/lookup.o \
 	obj/util/bocu1.o obj/util/dump.o obj/util/filemem.o obj/util/macdic_xml.o \
 	obj/util/search.o obj/util/stlutil.o obj/util/timeutil.o obj/util/utf8.o \
-	obj/util/util.o obj/util/Shell.o
+	obj/util/util.o obj/util/Shell.o \
+	obj/sandbox/alt.o
 
 TEST_OBJECTS = test/filemem_gtest.o test/search_gtest.o \
                test/utf8_gtest.o test/util_gtest.o test/shell_gtest.o

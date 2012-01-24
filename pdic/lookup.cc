@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "pdic/Dict.h"
+#include "pdic/Dict_callbacks.h"
 #include "util/stlutil.h"
 #include "util/types.h"
 #include "util/util.h"

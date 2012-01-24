@@ -34,7 +34,9 @@ class ShellParams {
   bool more_newline_mode;
   int  render_count_limit;
   bool stop_on_limit_mode;
+
   int  default_lookup_flags;
+  int  debug_flags;
 };
 
 
@@ -46,6 +48,7 @@ class Shell {
   void load_rc(const char *rcpath = NULL);
 
   int  do_load(const std::string& filename);
+  bool do_set(const std::string& var, const std::string& val);
   bool do_command(char *cmdstr);
   void render_current_result();
 
