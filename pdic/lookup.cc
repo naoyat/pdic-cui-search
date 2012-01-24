@@ -23,24 +23,15 @@ extern Shell *g_shell;
 
 const int kMaxNeedlePatternSize = 1000;
 
-lookup_result_vec _normal_lookup(byte *needle, int needle_len) {
-  if (!needle_len) needle_len = strlen(reinterpret_cast<char*>(needle));
-
-  bool exact_match = true;
-  if (needle[needle_len-1] == '*') {
-    needle[needle_len-1] = 0;
-    exact_match = false;
-  }
+lookup_result_vec _pdic_match_forward_lookup(byte *needle, int flags) {
   g_shell->current_query =
-      std::make_pair(exact_match ? "exact" : "match-forward",
-                     reinterpret_cast<const char*>(needle));
+      std::make_pair("match-forward", reinterpret_cast<const char*>(needle));
 
   lookup_result_vec total_result_vec;
   traverse(g_shell->current_dict_ids, current_dict_id) {
     lookup_result_vec result_vec =
         g_shell->dicts[*current_dict_id]->
-        normal_lookup(reinterpret_cast<byte*>(needle),
-                      exact_match);
+        pdic_match_forward_lookup(needle, flags);
     total_result_vec.insert(total_result_vec.end(),
                             result_vec.begin(), result_vec.end());
   }
@@ -49,14 +40,30 @@ lookup_result_vec _normal_lookup(byte *needle, int needle_len) {
   return total_result_vec;
 }
 
-lookup_result_vec _sarray_lookup(byte *needle, int needle_len) {
+lookup_result_vec _exact_lookup(byte *needle, int flags) {
+  g_shell->current_query =
+      std::make_pair("exact", reinterpret_cast<const char*>(needle));
+
+  lookup_result_vec total_result_vec;
+  traverse(g_shell->current_dict_ids, current_dict_id) {
+    lookup_result_vec result_vec =
+        g_shell->dicts[*current_dict_id]->exact_lookup(needle, flags);
+    total_result_vec.insert(total_result_vec.end(),
+                            result_vec.begin(), result_vec.end());
+  }
+  std::sort(total_result_vec.begin(), total_result_vec.end(),
+            lookup_result_asc);
+  return total_result_vec;
+}
+
+lookup_result_vec _sarray_lookup(byte *needle, int flags) {
   g_shell->current_query =
       std::make_pair("suffix-array", reinterpret_cast<const char*>(needle));
 
   lookup_result_vec total_result_vec;
   traverse(g_shell->current_dict_ids, current_dict_id) {
     lookup_result_vec result_vec =
-        g_shell->dicts[*current_dict_id]->sarray_lookup(needle);
+        g_shell->dicts[*current_dict_id]->sarray_lookup(needle, flags);
     total_result_vec.insert(total_result_vec.end(),
                             result_vec.begin(), result_vec.end());
   }
@@ -65,14 +72,14 @@ lookup_result_vec _sarray_lookup(byte *needle, int needle_len) {
   return total_result_vec;
 }
 
-lookup_result_vec _regexp_lookup(RE2 *pattern) {
+lookup_result_vec _regexp_lookup(RE2 *pattern, int flags) {
   g_shell->current_query =
       std::make_pair("regexp", pattern->pattern());
 
   lookup_result_vec total_result_vec;
   traverse(g_shell->current_dict_ids, current_dict_id) {
     lookup_result_vec result_vec =
-        g_shell->dicts[*current_dict_id]->regexp_lookup(pattern);
+        g_shell->dicts[*current_dict_id]->regexp_lookup(pattern, flags);
     total_result_vec.insert(total_result_vec.end(),
                             result_vec.begin(), result_vec.end());
   }
@@ -81,7 +88,7 @@ lookup_result_vec _regexp_lookup(RE2 *pattern) {
   return total_result_vec;
 }
 
-lookup_result_vec _full_lookup(byte *needle, int needle_len) {
+lookup_result_vec _full_lookup(byte *needle, int flags) {
   g_shell->current_query =
       std::make_pair("full", reinterpret_cast<const char*>(needle));
 
@@ -89,7 +96,7 @@ lookup_result_vec _full_lookup(byte *needle, int needle_len) {
   traverse(g_shell->current_dict_ids, current_dict_id) {
     lookup_result_vec result_vec =
         g_shell->dicts[*current_dict_id]
-        ->full_lookup(needle, g_shell->current_pattern);
+        ->full_lookup(needle, g_shell->current_pattern, flags);
     total_result_vec.insert(total_result_vec.end(),
                             result_vec.begin(), result_vec.end());
   }
@@ -98,15 +105,13 @@ lookup_result_vec _full_lookup(byte *needle, int needle_len) {
   return total_result_vec;
 }
 
-void lookup(byte *needle, int needle_len, int flag) {
+void lookup(byte *needle, int flags) {
   if (is_empty(needle)) return;
 
   if (g_shell->current_dict_ids.size() == 0) {
     printf("// 辞書が選択されていません。\n");
     return;
   }
-
-  if (!needle_len) needle_len = strlen(reinterpret_cast<char*>(needle));
 
   //
   // initialize
@@ -115,40 +120,41 @@ void lookup(byte *needle, int needle_len, int flag) {
   reset_render_count();
   lookup_result_vec result_vec;
 
-  if (flag == LOOKUP_NORMAL || flag == (LOOKUP_NORMAL | LOOKUP_EXACT_MATCH)) {
-    char needle_pattern[kMaxNeedlePatternSize];
-    snprintf(needle_pattern, kMaxNeedlePatternSize, "(?i)%s", needle);
-    if (needle[needle_len-1] == '*') {
-      needle_pattern[4+needle_len-1] = 0;
-    }
-    g_shell->current_pattern = new RE2(needle_pattern);
-    result_vec = _normal_lookup(needle, needle_len);
-  } else if (flag == LOOKUP_SARRAY) {
-    if (needle[needle_len-1] == '*') {
-      needle[needle_len-1] = 0;
-    }
-    g_shell->current_pattern =
-        new RE2(re2::StringPiece(reinterpret_cast<char*>(needle),
-                                 needle_len));
-    result_vec = _sarray_lookup(needle, needle_len);
-  } else if (flag == LOOKUP_REGEXP) {
-    g_shell->current_pattern =
-        new RE2(re2::StringPiece(reinterpret_cast<char*>(needle),
-                                 needle_len));
-    result_vec = _regexp_lookup(g_shell->current_pattern);
+  /*
+  bool match_backward = true;
+  if (needle[needle_len-1] == '*') {
+    needle[needle_len-1] = 0;
+    match_backward = false;
+    flags &= ~LOOKUP_MATCH_BACKWARD;
   } else {
-    g_shell->current_pattern =
-        new RE2(re2::StringPiece(reinterpret_cast<char*>(needle),
-                                 needle_len));
-    result_vec = _full_lookup(needle, needle_len);
+    flags |= LOOKUP_MATCH_BACKWARD;
+  }
+  */
+
+  if (!(flags & LOOKUP_CASE_SENSITIVE)) {
+    std::string ci("(?i)");
+    g_shell->current_pattern = new RE2(ci + reinterpret_cast<char*>(needle));
+  } else {
+    g_shell->current_pattern = new RE2(reinterpret_cast<char*>(needle));
+  }
+
+  if (flags & LOOKUP_PDIC_INDEX) {
+    result_vec = _pdic_match_forward_lookup(needle, flags);
+  } else if (flags & LOOKUP_SARRAY) {
+    result_vec = _sarray_lookup(needle, flags);
+  } else if (flags & LOOKUP_REGEXP) {
+    result_vec = _regexp_lookup(g_shell->current_pattern, flags);
+  } else if (flags & LOOKUP_FROM_ALL) {
+    result_vec = _full_lookup(needle, flags);
+  } else {
+    if (flags & LOOKUP_EXACT_MATCH)
+      result_vec = _exact_lookup(needle, flags);
+    else
+      return;
   }
 
   g_shell->current_result_vec.assign(result_vec.begin(), result_vec.end());
   lap_match_count();
   if (!g_shell->params.direct_dump_mode) g_shell->render_current_result();
   say_match_count();
-}
-
-void default_lookup(byte *needle, int needle_len) {
-  lookup(needle, needle_len, g_shell->params.default_lookup_flags);
 }
