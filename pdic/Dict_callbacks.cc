@@ -8,6 +8,7 @@
 #include <re2/re2.h>
 
 #include <set>
+#include <string>
 #include <utility>
 #include <vector>
 
