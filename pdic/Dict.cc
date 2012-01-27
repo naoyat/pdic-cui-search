@@ -545,7 +545,8 @@ lookup_result_vec Dict::ids_to_exact_cs_result(const std::set<int>& word_ids,
 
     Toc *t = &toc[*word_id];
     byte *entry_word = dict_buf[F_ENTRY] + t->start_pos[F_ENTRY];
-    if (strcmp((char*)entry_word, (char*)needle) == 0) {
+    if (strcmp(reinterpret_cast<char*>(entry_word),
+               reinterpret_cast<char*>(needle)) == 0) {
       byte *fields[F_COUNT] = {
         entry_word,
         dict_buf[F_JWORD]   + t->start_pos[F_JWORD],

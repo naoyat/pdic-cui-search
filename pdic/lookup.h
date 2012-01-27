@@ -12,6 +12,7 @@
 #include "util/types.h"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #define LOOKUP_HENKAKEI     0x0008
 #define LOOKUP_NORMAL       0x0010
 #define LOOKUP_SARRAY       0x0100
@@ -30,6 +31,18 @@
 #define LOOKUP_MATCH_BACKWARD      0x0200
 #define LOOKUP_EXACT_MATCH         (LOOKUP_MATCH_FORWARD | LOOKUP_MATCH_BACKWARD)
 #define LOOKUP_CASE_SENSITIVE      0x1000
+=======
+#define LOOKUP_AUTO               0x0000
+#define LOOKUP_PDIC_INDEX         0x0001
+#define LOOKUP_SARRAY             0x0002
+#define LOOKUP_REGEXP             0x0004
+#define LOOKUP_FROM_ALL           0x0008
+
+#define LOOKUP_MATCH_FORWARD      0x0100
+#define LOOKUP_MATCH_BACKWARD     0x0200
+#define LOOKUP_EXACT_MATCH        (LOOKUP_MATCH_FORWARD | LOOKUP_MATCH_BACKWARD)
+#define LOOKUP_CASE_SENSITIVE     0x1000
+>>>>>>> cebf605... cpplintが通るように修正 (util/*, pdic/*, test/*)
 
 #define LOOKUP_PDIC_MATCH_FORWARD  (LOOKUP_PDIC_INDEX | LOOKUP_MATCH_FORWARD)
 
