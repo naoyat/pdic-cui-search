@@ -19,6 +19,7 @@
 #include "util/stlutil.h"
 #include "util/types.h"
 #include "sandbox/alt.h"
+#include "sandbox/Einsatz.h"
 #include "sandbox/Word.h"
 
 using namespace std;
@@ -88,7 +89,7 @@ void analyse_text(byte *text, int length) {
   vector<Word*> words;
 
   for (int i=0; i<L; ++i) {
-    string surface = tokens[i];
+    string surface(tokens[i]);
     int surface_length = surface.size();
 
     vector<string> candidates;
@@ -117,13 +118,28 @@ void analyse_text(byte *text, int length) {
     words.push_back(new Word(result, (byte*)surface.c_str()));
   }
 
-  cout << "INPUT: " << ANSI_BOLD_ON;
+  Einsatz ez(2);
+
+  vector<pair<string,string> > styles;
+  styles.push_back(make_pair(ANSI_BOLD_ON, ANSI_BOLD_OFF));
+  styles.push_back(make_pair("", ""));
+  ez.add_style_begins(styles);
+
   traverse(words, it) {
-    cout << (*it)->surface() << " ";
+    vector<string> vs;
+    vs.push_back((*it)->surface());
+    vector<string> poss = (*it)->pos();
+    traverse(poss, jt) {
+      vs.push_back(*jt);
+    }
+    cout << vs << endl;
+    ez.add(vs);
   }
+  ez.render();
+  /*
   if (last_ch) cout << (char)last_ch;
   cout << ANSI_BOLD_OFF << endl;
-
+  */
   traverse(words, it) {
     (*it)->render();
   }
