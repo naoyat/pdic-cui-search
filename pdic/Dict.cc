@@ -329,7 +329,6 @@ int Dict::word_id_for_pdic_datafield_pos(int pdic_datafield_pos) {
 
 std::set<int> Dict::pdic_match_forward_lookup_ids(byte* needle, int flags) {
   bool match_backward = (flags & LOOKUP_MATCH_BACKWARD) ? true : false;
-  bool case_sensitive = (flags & LOOKUP_CASE_SENSITIVE) ? true : false;
 
   if (g_shell->params.separator_mode) {
     printf("====== ^%s%s%s in %s ======\n",
