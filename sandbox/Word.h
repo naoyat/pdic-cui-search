@@ -21,7 +21,7 @@ typedef std::pair<std::pair<std::string, int>,
                   std::pair<std::string, std::string> > usage_t;
 
 class Word {
-public:
+ public:
   Word();
   explicit Word(lookup_result fields, byte *surface = NULL);
   ~Word();
@@ -32,7 +32,7 @@ public:
   void render();
   void render_full();
 
-private:
+ private:
   std::string surface_;
   lookup_result fields_;
   std::map<std::string, meanings_t> meanings_map_;

@@ -4,7 +4,6 @@
 
 #include "sandbox/Einsatz.h"
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -67,7 +66,7 @@ void Einsatz::add(std::vector<std::string> texts) {
 
 void Einsatz::add_style_begins(std::vector<
                                std::pair<std::string, std::string> > styles) {
-  for (int y=0; y<levels_; ++y) {
+  for (int y = 0; y < levels_; ++y) {
     style_begin_.push_back(styles[y].first);
     style_end_.push_back(styles[y].second);
   }
@@ -75,7 +74,7 @@ void Einsatz::add_style_begins(std::vector<
 }
 
 void Einsatz::render() {
-  for (int y=0; y<levels_; ++y) {
+  for (int y = 0; y < levels_; ++y) {
     for (unsigned int x = 0, c = texts_[y].size(); x < c; ++x) {
       putchar('|');
       if (has_text_) printf("%s", style_begin_[y].c_str());

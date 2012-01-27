@@ -11,7 +11,7 @@
 
 class Einsatz {
  public:
-  Einsatz(int levels);
+  explicit Einsatz(int levels);
   ~Einsatz();
 
   void add(std::vector<std::string> texts);
