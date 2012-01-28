@@ -15,7 +15,7 @@ Shell *g_shell = NULL;
 
 int main(int argc, char **argv) {
   printf(ANSI_UNDERLINE_ON
-         "PDIC CUI Search ver 0.7 (c)2012 @naoya_t. All Rights Reserved."
+         "PDIC CUI Search ver 0.7.1 (c)2012 @naoya_t. All Rights Reserved."
          ANSI_UNDERLINE_OFF "\n");
 
   g_shell = new Shell();
