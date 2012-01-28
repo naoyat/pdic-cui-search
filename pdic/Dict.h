@@ -59,7 +59,6 @@ class Dict {
   bool  load_additional_files();
 
   std::set<int> search_in_sarray(int field, byte *needle);
-  std::set<int> search_in_henkakei(byte *needle, int flags);
 
   std::set<int> pdic_match_forward_lookup_ids(byte *needle, int flags);
   std::set<int> henkakei_lookup_ids(byte *needle, int flags);
@@ -71,6 +70,7 @@ class Dict {
 
   // PDIC辞書自体が持つインデックスを用いた前方一致検索。
   lookup_result_vec pdic_match_forward_lookup(byte *needle, int flags);
+  lookup_result_vec henkakei_lookup(byte *needle, int flags);
   lookup_result_vec sarray_lookup(byte *needle, int flags);
   lookup_result_vec regexp_lookup(RE2 *re, int flags);
   lookup_result_vec exact_lookup(byte *needle, int flags);
@@ -88,8 +88,9 @@ class Dict {
   int*  dict_suffix_array[F_COUNT], dict_suffix_array_length[F_COUNT];
 
   // 変化形（英辞郎のみ）
-  char* hbuf;
   HenkakeiToc* htoc;
+  int          htoc_length;
+  char*        hbuf;
 
   std::map<std::pair<int, int>, int> revmap;
   std::map<int, int> revmap_pdic_datafield_pos;
@@ -100,6 +101,7 @@ class Dict {
                                            byte* needle);
   int  rev(int field, int start_pos);
   bool is_eijiro() {
+    // printf("this is %s,\n", this->name.c_str());
     return memcmp(this->name.data(), "EIJI", 4) == 0;
   }
 };
