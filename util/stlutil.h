@@ -19,7 +19,10 @@
 #define traverse(c, i)  \
   for (typeof((c).begin()) i = (c).begin(); i != (c).end(); i++)
 
+std::string strlower(const std::string& str);
+
 std::vector<std::string> split(std::string str, int delim=' ');
+std::vector<std::string> split(std::string str, std::string delim);
 std::string join(std::vector<std::string> strs, const std::string &delim="");
 
 std::string pluralize_if_plural(const std::string& singular_form, int number);

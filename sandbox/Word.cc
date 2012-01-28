@@ -5,10 +5,13 @@
 #include "sandbox/Word.h"
 
 #include <stdio.h>
+#include <cxxabi.h>
 #include <re2/re2.h>
 
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 
@@ -22,20 +25,65 @@ using namespace std;
 #include "sandbox/parse_lookup_result.h"
 
 //
-// class Word
+// class WObj
 //
-Word::Word() :
-    surface_(), meanings_map_(), usages_(), info_(), pos_() {
-  this->fields_ = NULL;
+WObj::WObj() : surface_(""), pos_() {
+  // printf("!!! ctor WOBj() called.\n");
+  // this->surface_ = std::string("");
 }
 
-Word::Word(lookup_result fields, byte *surface) :
-    surface_(), meanings_map_(), usages_(), info_(), pos_() {
-  if (!fields) return;
+WObj::WObj(byte *surface) : surface_((char*)surface), pos_() {
+  // this->surface_ = std::string((char*)surface);
+}
 
+WObj::WObj(std::string surface) : surface_(surface), pos_() {
+}
+
+char *WObj::class_name(WObj *obj) {
+  const std::type_info & id_p = typeid(*obj);
+  int status;
+  return abi::__cxa_demangle(id_p.name(), 0, 0, &status);
+}
+
+bool WObj::pos_canbe(const char *pos) const {
+  const std::vector<std::string> my_pos = this->pos();
+  for (unsigned int i = 0, c = my_pos.size(); i < c; ++i) {
+    // printf("(canbe? %s vs %s)\b", pos, my_pos[i].c_str());
+    if (pos == my_pos[i]) {
+      // printf("(can be %s.)\n", pos);
+      return true;
+    }
+  }
+  // printf("(cannot be %s.)\n", pos);
+  return false;
+}
+void WObj::dump(int indent) {
+  cout << string(indent, ' '); cout << surface() << endl;
+}
+
+//
+// class Word
+//
+Word::Word() : WObj(), meanings_map_(), usages_(), info_() {
+  printf("!!! ctor Word() called.\n");
+  // Word(NULL, (byte*)"");
+  // this->fields_ = NULL;
+  // this->surface_ = "";
+}
+
+Word::Word(lookup_result fields) : WObj(fields[F_ENTRY]), meanings_map_(), usages_(), info_() {
+  parse_fields(fields, fields[F_ENTRY]);
+}
+
+Word::Word(lookup_result fields, byte *surface) : WObj(surface), meanings_map_(), usages_(), info_() {
+  parse_fields(fields, surface);
+}
+
+void Word::parse_fields(lookup_result fields, byte *surface) {
+  if (!fields) return;
   this->fields_ = (lookup_result)clone(fields, sizeof(fields[0])*F_COUNT);
   this->surface_ = std::string((char*)(
-                                     surface ? surface : fields_[F_ENTRY]));
+                                   surface ? surface : fields_[F_ENTRY]));
 
   pair< map<string, meanings_t>, vector<usage_t> > result =
       parse_jword(fields_[F_JWORD]);
@@ -121,6 +169,50 @@ void Word::render_full() {
 #endif
   }
   printf("}\n");
+}
+
+std::string omit(string s) {
+  vector<string> splitted = split(s, "、");
+  string tr = splitted[0];
+  RE2::GlobalReplace(&tr, "〔.*〕", "");
+  RE2::GlobalReplace(&tr, "《.*》", "");
+  RE2::GlobalReplace(&tr, "［.*］", "");
+  RE2::GlobalReplace(&tr, "（.*）", "");
+  RE2::GlobalReplace(&tr, "^\xef\xbd\x9e", "");  // U+FF5E, "〜" in MS932
+  RE2::GlobalReplace(&tr, "…$", "");
+  return tr;
+}
+
+std::string Word::translate() {
+  traverse(pos_, it) {
+    traverse(meanings_map_[*it], jt) {
+      return omit(jt->second);
+    }
+  }
+  return "*";
+  // return "";  // string((char*)fields_[F_JWORD]);
+}
+//void Word::dump(int indent) {
+//  cout << string(indent, ' '); cout << surface() << endl;1
+//}
+
+std::string Word::translate(const std::string& pos) {
+  if (meanings_map_.find(pos) == meanings_map_.end())
+    return ""; // surface(); // std::string("---");
+
+  meanings_t meanings = meanings_map_[pos];
+  if (meanings.size() == 0) return surface(); // "---";
+
+  return omit(meanings[0].second);
+
+  /*
+  stringstream ss;
+  traverse(meanings, it) {
+    ss << "(" << it->first << ") " << it->second << " ";
+  }
+  return ss.str();
+  // return string((char*)fields_[F_JWORD]);
+  */
 }
 
 void Word::render() {

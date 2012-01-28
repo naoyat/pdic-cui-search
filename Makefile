@@ -14,7 +14,9 @@ OBJECTS = \
 	obj/util/bocu1.o obj/util/dump.o obj/util/filemem.o obj/util/macdic_xml.o \
 	obj/util/search.o obj/util/stlutil.o obj/util/timeutil.o obj/util/utf8.o \
 	obj/util/util.o obj/util/Shell.o \
-	obj/sandbox/alt.o obj/sandbox/analyse.o obj/sandbox/Word.o obj/sandbox/Einsatz.o obj/sandbox/parse_lookup_result.o
+	obj/sandbox/alt.o obj/sandbox/parse_lookup_result.o \
+	obj/sandbox/analyse.o obj/sandbox/parse.o obj/sandbox/Word.o obj/sandbox/EnglishGrammar.o \
+	obj/sandbox/Einsatz.o
 
 TEST_OBJECTS = test/filemem_gtest.o test/search_gtest.o \
                test/utf8_gtest.o test/util_gtest.o test/shell_gtest.o
@@ -55,6 +57,6 @@ clean:
 lint:
 	cpplint.py main.cc util/*.h util/*.cc pdic/*.h pdic/*.cc test/*.cc
 
-obj/%.o: %.cc
+obj/%.o: %.cc %.h
 	@mkdir -p $$(dirname $@)
 	$(CXX) -o $@ $(CXXFLAGS) -c $*.cc

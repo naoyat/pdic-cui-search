@@ -7,6 +7,8 @@
 
 #include "util/types.h"
 
+lookup_result e_just(byte *needle);
+
 void analyse_text(byte *text, int length);
 
 #endif  // SANDBOX_ANALYSE_H_

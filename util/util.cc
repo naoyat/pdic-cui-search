@@ -12,7 +12,6 @@
 #include "./stlutil.h"
 #include "./types.h"
 
-
 std::set<void*> clone_ptrs;
 
 void free_cloned_buffer(void* ptr) {

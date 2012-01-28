@@ -8,6 +8,14 @@
 #include <string>
 #include <vector>
 
+std::string strlower(const std::string& str) {
+  unsigned int len = str.size();
+  std::vector<char> buf(len);
+  for (unsigned int i = 0; i < len; ++i)
+    buf[i] = isupper(str[i]) ? tolower(str[i]) : str[i];
+  return std::string(buf.begin(), buf.end());
+}
+
 std::vector<std::string> split(std::string str, int delim) {
   std::vector<std::string> result;
 
@@ -43,6 +51,29 @@ std::vector<std::string> split(std::string str, int delim) {
     }
     if (*s) result.push_back(s);
   }
+
+  return result;
+}
+
+std::vector<std::string> split(std::string str, std::string delim)
+{
+  std::vector<std::string> result;
+
+  if (str.length() == 0) return result;
+
+  if (delim.length() == 0) {
+    int len = str.length();
+    result.resize(len);
+    for (int i = 0; i < len; ++i) result[i] = str.substr(i, 1);
+    return result;
+  }
+
+  std::string::size_type since = 0, at;
+  while ((at = str.find(delim, since)) != std::string::npos) {
+    result.push_back(str.substr(since, at-since));
+    since = at + delim.length();
+  }
+  result.push_back(str.substr(since));
 
   return result;
 }

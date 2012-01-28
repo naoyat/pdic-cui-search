@@ -18,9 +18,12 @@
 #include "util/Shell.h"
 #include "util/stlutil.h"
 #include "util/types.h"
+#include "util/util.h"
 #include "sandbox/alt.h"
 #include "sandbox/Einsatz.h"
 #include "sandbox/Word.h"
+#include "sandbox/EnglishGrammar.h"
+#include "sandbox/parse.h"
 
 using namespace std;
 
@@ -53,12 +56,6 @@ lookup_result e_just(byte *needle) {
   return result_vec[0];
 }
 
-std::string uncapitalize(const std::string& str) {
-  std::string newstr(str);
-  if (isupper(newstr[0])) newstr[0] = tolower(newstr[0]);
-  return newstr;
-}
-
 void analyse_text(byte *text, int length) {
   re2::StringPiece input((char*)text, length);
 
@@ -88,13 +85,22 @@ void analyse_text(byte *text, int length) {
 
   vector<Word*> words;
 
+  // 単語（スペースで区切られたトークン的な意味で）→ Wordクラスオブジェクト
   for (int i=0; i<L; ++i) {
     string surface(tokens[i]);
     int surface_length = surface.size();
 
+    switch (surface[surface_length-1]) {
+      case ',': case ';': case ':':
+        surface.resize(surface_length-1);
+        break;
+      default:
+        break;
+    }
+
     vector<string> candidates;
     if (i == 0) {
-      string lower = uncapitalize(tokens[i]);
+      std::string lower = strlower(tokens[i]);
       if (lower != surface) candidates.push_back(lower);
     }
     candidates.push_back(surface);
@@ -118,31 +124,51 @@ void analyse_text(byte *text, int length) {
     words.push_back(new Word(result, (byte*)surface.c_str()));
   }
 
-  Einsatz ez(2);
+  vector<WObj*> objs = parse(words);
 
+
+  traverse(objs, it) {
+    (*it)->dump(0);
+    // cout << " - " << (*it)->surface() << endl;
+  }
+  /*
+  cout << "word objects:";
+  traverse(objs, it) {
+    cout << " " << (*it)->surface();
+  }
+  cout << endl;
+  */
+  Einsatz ez(2);
+  
   vector<pair<string,string> > styles;
   styles.push_back(make_pair(ANSI_BOLD_ON, ANSI_BOLD_OFF));
   styles.push_back(make_pair("", ""));
   ez.add_style_begins(styles);
 
-  traverse(words, it) {
+  traverse(objs, it) {
     vector<string> vs;
+    // cout << (*it)->surface() << " " << (*it)->pos() << endl;
     vs.push_back((*it)->surface());
+    vs.push_back((*it)->translate());
     vector<string> poss = (*it)->pos();
     traverse(poss, jt) {
       vs.push_back(*jt);
     }
-    cout << vs << endl;
+    // cout << vs << endl;
     ez.add(vs);
   }
   ez.render();
+
   /*
   if (last_ch) cout << (char)last_ch;
   cout << ANSI_BOLD_OFF << endl;
   */
+
+  /*
   traverse(words, it) {
     (*it)->render();
   }
+  */
 
   // delete all
   traverse(words, it) {
