@@ -18,6 +18,7 @@
 #include "util/ansi_color.h"
 #include "util/types.h"
 #include "util/Shell.h"
+#include "util/stlutil.h"
 #include "util/timeutil.h"
 #include "util/util.h"
 
@@ -33,6 +34,7 @@ int _dict_buf_size[F_COUNT], _dict_buf_offset[F_COUNT];
 // 各見出し語の開始位置など (dict_buf[f] + dict_start_pos[f][i])
 std::vector<Toc> _toc;
 std::set<int> _result_id_set;
+std::vector<std::pair<std::string, int> > _henkakei_table;
 
 Dict *_dict;
 
@@ -222,3 +224,96 @@ void cb_save(PDICDatafield *datafield) {
     render_count_limit_exceeded = true;
 }
 
+
+inline bool isalpha_(int ch) {
+  if (isalpha(ch)) return true;
+  if (ch == '-' || ch == '\'') return true;
+  if (ch == '(' || ch == ')') return true;  // xx(y)xx
+  return false;
+}
+
+std::string parencheck(char *s0, int len, bool include_in_paren) {
+  // char buf[len-1];
+  char *op = strchr(s0, '(');
+  if (!op && !include_in_paren) return "";
+  char *cl = strchr(op+1, ')');
+  if (!cl && !include_in_paren) return "";
+
+  char buf[len - 2 + 1], *p = buf;
+  memcpy(p, s0, op-s0);
+  p += op-s0;
+  if (include_in_paren && cl > op+1) {
+    memcpy(p, op+1, cl-(op+1));
+    p += cl - (op+1);
+  }
+  memcpy(p, cl+1, (s0+len)-(cl+1));
+  p += (s0+len) - (cl+1);
+
+  // std::cout << "parencheck(\"" << std::string(s0, len) << "\", "
+  //           << (include_in_paren ? "true":"false") << ") = "
+  //           << std::string(buf, p-buf) << std::endl;
+  return std::string(buf, p-buf);
+}
+
+std::vector<std::string> variations(char *jword) {
+  std::vector<std::string> result;
+
+  const char *tag = "【変化】";
+  char *s = strstr(jword, tag);
+  if (!s) return result;
+  s += 12;  // strlen(tag)
+
+  char *e = strchr(s, '\r');
+  if (!e) e = strchr(s, '\0');
+  char *e2 = strnstr(s, "、【", e - s);
+  if (e2) e = e2;
+  e2 = strnstr(s, "◆", e - s);
+  if (e2) e = e2;
+
+  char *s0 = NULL, *p;
+  for (p = s; p < e; ++p) {
+    if (s0) {
+      if (!isalpha_(*p)) {
+        if (p - s0 == 1 && *s0 == '-') {
+          // ignoring "-"
+        } else if (memchr(s0, '(', p-s0)) {
+          result.push_back(parencheck(s0, p-s0, true));
+          result.push_back(parencheck(s0, p-s0, false));
+        } else {
+          result.push_back(std::string(s0, p-s0));
+        }
+        s0 = NULL;
+      }
+    } else {
+      if (isalpha_(*p)) {
+        s0 = p;
+      }
+    }
+  }
+  if (s0) {
+    if (p - s0 == 1 && *s0 == '-') {
+      // ignoring "-"
+    } else if (memchr(s0, '(', p-s0)) {
+      result.push_back(parencheck(s0, p-s0, true));
+      result.push_back(parencheck(s0, p-s0, false));
+    } else {
+      result.push_back(std::string(s0, p-s0));
+    }
+  }
+  return result;
+}
+
+void cb_dump_eijiro_henkakei(PDICDatafield *datafield) {
+  char* entry = reinterpret_cast<char*>(datafield->in_utf8(F_ENTRY));
+  char* jword = reinterpret_cast<char*>(datafield->in_utf8(F_JWORD));
+  std::vector<std::string> result = variations(jword);
+
+  if (result.size() > 0) {
+    int word_id = _dict->word_id_for_pdic_datafield_pos(datafield->start_pos);
+    traverse(result, it) {
+      std::string word = *it;
+      if (strcmp(word.c_str(), entry) != 0)
+        _henkakei_table.push_back(make_pair(word, word_id));
+    }
+  }
+}

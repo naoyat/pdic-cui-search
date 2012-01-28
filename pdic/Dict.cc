@@ -30,6 +30,7 @@
 #include "util/utf8.h"
 #include "util/util.h"
 #include "util/Shell.h"
+#include "util/types.h"
 
 const char *sx_buf[F_COUNT] = {
   ".entry", ".trans", ".exmp", ".pron"
@@ -59,6 +60,7 @@ extern int _dict_buf_size[F_COUNT], _dict_buf_offset[F_COUNT];
 extern std::vector<Toc> _toc;
 extern std::set<int> _result_id_set;
 extern Dict *_dict;
+extern std::vector<std::pair<std::string, int> > _henkakei_table;
 
 extern int match_count, render_count;
 extern bool render_count_limit_exceeded, said_that;
@@ -70,10 +72,16 @@ Dict::Dict(const std::string& name, byte *filemem) {
   this->filemem = filemem;
 
   toc = static_cast<Toc*>(NULL);
+  toc_length = 0;
+
   for (int field = 0; field < F_COUNT; ++field) {
     dict_buf[field] = static_cast<byte*>(NULL);
     dict_suffix_array[field] = static_cast<int*>(NULL);
   }
+
+  hbuf = static_cast<char*>(NULL);
+  htoc = static_cast<HenkakeiToc*>(NULL);
+  htoc_length = 0;
 
   _prefix = new char[name.size()+1];
   snprintf(_prefix, name.size()+1, "%s",
@@ -105,13 +113,88 @@ int Dict::make_macdic_xml() {
   return 0;
 }
 
-int Dict::make_toc() {
-  printf("%s: インデックスを作成します...\n", name.c_str());
+int Dict::make_henkakei_table() {
+  if (!this->is_eijiro()) return 0;
 
+  // unload
+  if (htoc) {
+    unloadmem(reinterpret_cast<byte*>(htoc));
+    htoc = static_cast<HenkakeiToc*>(NULL);
+  }
+  if (hbuf) {
+    unloadmem(reinterpret_cast<byte*>(hbuf));
+    hbuf = static_cast<char*>(NULL);
+  }
+
+  _dict = this;
+  _henkakei_table.clear();
+
+  index->iterate_all_datablocks(&cb_dump_eijiro_henkakei, NULL);
+
+  std::sort(_henkakei_table.begin(), _henkakei_table.end());
+
+  int memorysize = 1;
+  traverse(_henkakei_table, it) {
+    memorysize += it->first.size() + 1;
+    // printf("%s : %d\n", it->first.c_str(), it->second);
+  }
+
+  _dict = NULL;
+
+  int htoc_len = _henkakei_table.size();
+
+  printf("henkakei table size = %d, memory size = %d+%d\n",
+         htoc_len, memorysize,
+         static_cast<int>(htoc_len * sizeof(HenkakeiToc)));
+
+  htoc = static_cast<HenkakeiToc*>(
+      malloc(htoc_len * sizeof(HenkakeiToc)));
+  hbuf = static_cast<char*>(
+      malloc(memorysize));
+
+  hbuf[0] = 0;  // sentinel
+  for (int i = 0, ofs = 1; i < htoc_len; ++i) {
+    int len = _henkakei_table[i].first.size();
+
+    htoc[i].henkakei_datafield_pos = ofs;
+    htoc[i].word_id = _henkakei_table[i].second;
+
+    memcpy(hbuf + ofs, _henkakei_table[i].first.data(), len);
+    ofs += len;
+    hbuf[ofs++] = 0;
+  }
+
+  std::string savepath = this->prefix();
+
+  savemem((savepath + SX_HENKAKEI_BUF).c_str(),
+          reinterpret_cast<byte*>(hbuf),
+          memorysize);
+  savemem((savepath + SX_HENKAKEI_TOC).c_str(),
+          reinterpret_cast<byte*>(htoc),
+          sizeof(HenkakeiToc)*htoc_len);
+  free(static_cast<void*>(htoc));
+  free(static_cast<void*>(hbuf));
+
+  _henkakei_table.clear();
+
+  // reload
+  this->htoc = reinterpret_cast<HenkakeiToc*>(
+      loadmem((path + SX_HENKAKEI_TOC).c_str()));
+  this->htoc_length = mem_size(reinterpret_cast<byte*>(this->htoc))
+      / sizeof(HenkakeiToc);
+  this->hbuf = reinterpret_cast<char*>(
+      loadmem((path + SX_HENKAKEI_BUF).c_str()));
+
+  return 0;
+}
+
+int Dict::make_toc() {
   // 現在使用中のインデックスをアンロードしてから
   this->unload_additional_files();
 
   time_reset();
+
+  printf("%s: インデックスを作成します...\n", name.c_str());
 
   // initialize
 
@@ -209,6 +292,12 @@ int Dict::make_toc() {
          0.001*time2.first, 0.001*time2.second);
 
   this->load_additional_files();
+
+  // 変化形【英辞郎のみ】
+  if (this->is_eijiro()) {
+    printf("%s: 変化形を抽出しています...\n", name.c_str());
+    make_henkakei_table();
+  }
 
   return toc_len;
 }
@@ -327,6 +416,35 @@ std::set<int> Dict::exact_lookup_ids(byte *needle, int flags) {
   return pdic_match_forward_lookup_ids(needle, flags);
 }
 
+std::set<int> Dict::henkakei_lookup_ids(byte *needle, int flags) {
+  if (!is_eijiro() || !hbuf || !htoc) return std::set<int>();
+
+  bsearch_result_t result =
+      search(reinterpret_cast<byte*>(hbuf), reinterpret_cast<int*>(htoc),
+             htoc_length, needle, true, 2);
+
+  std::set<int> ids;
+  if (result.first) {
+    for (int ix = result.second.first; ix <= result.second.second; ++ix) {
+      int word_id = htoc[ix].word_id;
+      Toc *t = &toc[word_id];
+      if (g_shell->params.direct_dump_mode) {
+        byte *fields[F_COUNT] = {
+          dict_buf[F_ENTRY]   + t->start_pos[F_ENTRY],
+          dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
+          dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
+          dict_buf[F_PRON]    + t->start_pos[F_PRON]
+        };
+        std::string s("\\b");
+        render_result((lookup_result)fields,
+                      new RE2(s + reinterpret_cast<char*>(needle) + s));
+      }
+      ids.insert(word_id);
+    }
+  }
+  return ids;
+}
+
 std::set<int> Dict::search_in_sarray(int field, byte *needle) {
   byte *buf = dict_buf[field];
   int *sarray = dict_suffix_array[field];
@@ -372,37 +490,87 @@ std::set<int> Dict::search_in_sarray(int field, byte *needle) {
   return matched_offsets;
 }
 
+lookup_result_vec Dict::henkakei_lookup(byte *needle, int flags) {
+  std::set<int> matched_word_ids = henkakei_lookup_ids(needle, flags);
+  return ids_to_result(matched_word_ids);
+}
 
 lookup_result_vec Dict::pdic_match_forward_lookup(byte *needle, int flags) {
+  lookup_result_vec res, res_pdic;
+  if (flags & LOOKUP_HENKAKEI) {
+    res = henkakei_lookup(needle, flags);
+  }
+
   std::set<int> matched_word_ids = pdic_match_forward_lookup_ids(needle, flags);
   if (flags & LOOKUP_CASE_SENSITIVE) {
-    return ids_to_exact_cs_result(matched_word_ids, needle);
+    res_pdic = ids_to_exact_cs_result(matched_word_ids, needle);
   } else {
-    return ids_to_result(matched_word_ids);
+    res_pdic = ids_to_result(matched_word_ids);
   }
+  res.insert(res.end(), res_pdic.begin(), res_pdic.end());
+  return res;
 }
 
 lookup_result_vec Dict::exact_lookup(byte *needle, int flags) {
+  lookup_result_vec res, res_exact;
+  if (flags & LOOKUP_HENKAKEI) {
+    res = henkakei_lookup(needle, flags);
+  }
+
   std::set<int> matched_word_ids = exact_lookup_ids(needle, flags);
   if (flags & LOOKUP_CASE_SENSITIVE) {
-    return ids_to_exact_cs_result(matched_word_ids, needle);
+    res_exact = ids_to_exact_cs_result(matched_word_ids, needle);
   } else {
-    return ids_to_result(matched_word_ids);
+    res_exact = ids_to_result(matched_word_ids);
   }
+  res.insert(res.end(), res_exact.begin(), res_exact.end());
+  return res;
 }
 
 lookup_result_vec Dict::sarray_lookup(byte *needle, int flags) {
+  lookup_result_vec res, res_sarray;
+  if (flags & LOOKUP_HENKAKEI) {
+    res = henkakei_lookup(needle, flags);
+  }
+
   std::set<int> matched_word_ids = sarray_lookup_ids(needle, flags);
-  return ids_to_result(matched_word_ids);
+  if (flags & LOOKUP_CASE_SENSITIVE) {
+    res_sarray = ids_to_exact_cs_result(matched_word_ids, needle);
+  } else {
+    res_sarray = ids_to_result(matched_word_ids);
+  }
+  res.insert(res.end(), res_sarray.begin(), res_sarray.end());
+  return res;
 }
 
 lookup_result_vec Dict::regexp_lookup(RE2 *re, int flags) {
+  /*
+  lookup_result_vec res;
+  if (flags & LOOKUP_HENKAKEI) {
+    res = henkakei_lookup(needle, flags);
+  }
+  */
+
   std::set<int> matched_word_ids = regexp_lookup_ids(re, flags);
-  return ids_to_result(matched_word_ids);
+  lookup_result_vec res = ids_to_result(matched_word_ids);
+
+  /*
+  if (flags & LOOKUP_HENKAKEI) {
+    lookup_result_vec res_henkakei = henkakei_lookup(needle, flags);
+    res.insert(res.end(), res_henkakei.begin(), res_henkakei.end());
+  }
+  */
+  return res;
 }
 
 lookup_result_vec Dict::full_lookup(byte *needle, RE2 *re, int flags) {
   std::set<int> matched_word_ids;
+  /*
+  std::set<int> matched_word_ids_henkakei =
+      henkakei_lookup_ids(needle, flags);
+  matched_word_ids.insert(matched_word_ids_henkakei.begin(),
+                          matched_word_ids_henkakei.end());
+  */
 
   std::set<int> matched_word_ids_normal =
       pdic_match_forward_lookup_ids(needle, flags);
@@ -419,7 +587,13 @@ lookup_result_vec Dict::full_lookup(byte *needle, RE2 *re, int flags) {
   matched_word_ids.insert(matched_word_ids_regexp.begin(),
                           matched_word_ids_regexp.end());
 
-  return ids_to_result(matched_word_ids);
+  lookup_result_vec res = ids_to_result(matched_word_ids);
+
+  if (flags & LOOKUP_HENKAKEI) {
+    lookup_result_vec res_henkakei = henkakei_lookup(needle, flags);
+    res.insert(res.end(), res_henkakei.begin(), res_henkakei.end());
+  }
+  return res;
 }
 
 lookup_result_vec Dict::ids_to_result(const std::set<int>& word_ids) {
@@ -573,6 +747,15 @@ void Dict::unload_additional_files() {
       dict_suffix_array[field] = static_cast<int*>(NULL);
     }
   }
+
+  if (htoc) {
+    unloadmem(reinterpret_cast<byte*>(htoc));
+    htoc = static_cast<HenkakeiToc*>(NULL);
+  }
+  if (hbuf) {
+    unloadmem(reinterpret_cast<byte*>(hbuf));
+    hbuf = static_cast<char*>(NULL);
+  }
 }
 
 int Dict::rev(int field, int pos) {
@@ -637,6 +820,19 @@ bool Dict::load_additional_files() {
               / sizeof(*suffix_array_buf);
           this->dict_suffix_array[field] = suffix_array_buf;
         }
+      }
+    }
+
+    // 変化形（英辞郎のみ）
+    if (this->is_eijiro()) {
+      if (!this->htoc) {
+        this->htoc = reinterpret_cast<HenkakeiToc*>(
+            loadmem((path + SX_HENKAKEI_TOC).c_str()));
+        this->htoc_length = mem_size(reinterpret_cast<byte*>(this->htoc))
+            / sizeof(HenkakeiToc);
+        this->hbuf = reinterpret_cast<char*>(
+            loadmem((path + SX_HENKAKEI_BUF).c_str()));
+        // printf("L1F %d\n", this->htoc_length);
       }
     }
   }

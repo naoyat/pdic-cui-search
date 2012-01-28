@@ -11,10 +11,6 @@
 #include "./types.h"
 #include "./util.h"
 
-#ifdef DO_COUNT_COMPARISON
-extern int cmp_count;
-#endif
-
 // gtest 1.6だとEXPECT_EQ()で行けるんだけど1.5だとエラーが出るので
 #define EXPECT_SEARCH_RESULT_EQ(expected, result) do {\
   EXPECT_EQ(expected.first, result.first); \
@@ -68,105 +64,66 @@ TEST(search, search) {
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("aaron")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(true, std::make_pair(0, 0)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(5, cmp_count);  // 1+1 + 3 + 0+0
-#endif
 
   // matches once
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("able")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(true, std::make_pair(1, 1)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(7, cmp_count);  // 1+1 + 2 + 1+2
-#endif
 
   // matches twice
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("ant")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(true, std::make_pair(2, 3)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(6, cmp_count);  // 1+1 + 3 + 0+1
-#endif
 
   // matches once
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("antenna")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(true, std::make_pair(4, 4)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(9, cmp_count);  // 1+1 + 1 + 3+3
-#endif
 
   // matches once
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("apple")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(true, std::make_pair(5, 5)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(6, cmp_count);  // 1+1 + 3 + 0+1
-#endif
 
   // matches once
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("aunt")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(true, std::make_pair(6, 6)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(6, cmp_count);  // 1+1 + 4 + 0+1
-#endif
 
   // matches once
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("bear")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(true, std::make_pair(7, 7)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(8, cmp_count);  // 1+1 + 2 + 4+0
-#endif
 
   // matches once
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("best")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(true, std::make_pair(8, 8)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(5, cmp_count);  // 1+1 + 3 + 0
-#endif
 
 
   // no match ("apartment" can exist between "ant" and "apple")
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("apartment")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(false, std::make_pair(4, 5)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(5, cmp_count);  // 1+1 + 3
-#endif
 
   // no match (before the first one)
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("aaa")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(false, std::make_pair(-1, 0)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(1, cmp_count);
-#endif
 
   // no match (after the last one)
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("cat")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(false, std::make_pair(8, 9)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(2, cmp_count);
-#endif
 
   // illegal input
   result = search(buf, offsets, word_count,
                   BYTE(const_cast<char*>("")), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(false, std::make_pair(-1, 0)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(0, cmp_count);
-#endif
 
   result = search(buf, offsets, word_count,
                   BYTE(NULL), true);
   EXPECT_SEARCH_RESULT_EQ(std::make_pair(false, std::make_pair(-1, 0)), result);
-#ifdef DO_COUNT_COMPARISON
-  EXPECT_EQ(0, cmp_count);
-#endif
 
 
   // *non-exact match*

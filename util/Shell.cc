@@ -219,6 +219,12 @@ bool Shell::do_command(char *cmdstr) {
           Dict *dict = dicts[*current_dict_id];
           dict->make_macdic_xml();
         }
+      } else if (cmd[1] == "henkakei") {
+          // 変化形テーブルを作成。あとで関数名考える
+        traverse(current_dict_ids, current_dict_id) {
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_henkakei_table();
+        }
       } else {
         printf("[command] make {toc|xml}\n");
       }
@@ -245,6 +251,8 @@ bool Shell::do_command(char *cmdstr) {
           index->iterate_all_datablocks(&cb_dump_entry, NULL);
         } else if (what_to_dump == "all") {
           index->iterate_all_datablocks(&cb_dump, NULL);
+          // } else if (what_to_dump == "henkakei") {
+          // index->iterate_all_datablocks(&cb_dump_eijiro_henkakei, NULL);
         } else {
           printf("// [ERROR] I don't know how to dump '%s'...\n",
                  what_to_dump.c_str());
@@ -451,7 +459,8 @@ ShellParams::ShellParams() {
   render_count_limit   = DEFAULT_RENDER_COUNT_LIMIT;
   stop_on_limit_mode   = true;
 
-  default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_EXACT_MATCH;
+  default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                           | LOOKUP_EXACT_MATCH;
   debug_flags          = 0;
 }
 
@@ -465,15 +474,18 @@ int ShellParams::set_render_count_limit(int limit) {
 
 int ShellParams::set_lookup_mode(const char *mode_str) {
   if (strcmp(mode_str, "normal") == 0) {
-    default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_EXACT_MATCH;
+    default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                             | LOOKUP_MATCH_FORWARD;
   } else if (strcmp(mode_str, "exact") == 0) {
-    default_lookup_flags = LOOKUP_EXACT_MATCH;
+    default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                             | LOOKUP_EXACT_MATCH;
   } else if (strcmp(mode_str, "forward") == 0) {
-    default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_MATCH_FORWARD;
+    default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                             | LOOKUP_MATCH_FORWARD;
   } else if (strcmp(mode_str, "sarray") == 0) {
-    default_lookup_flags = LOOKUP_SARRAY;
+    default_lookup_flags = LOOKUP_SARRAY | LOOKUP_HENKAKEI;
   } else if (strcmp(mode_str, "regexp") == 0) {
-    default_lookup_flags = LOOKUP_REGEXP;
+    default_lookup_flags = LOOKUP_REGEXP | LOOKUP_HENKAKEI;
   } else if (strcmp(mode_str, "all") == 0) {
     default_lookup_flags = LOOKUP_FROM_ALL;
   } else {
@@ -483,13 +495,15 @@ int ShellParams::set_lookup_mode(const char *mode_str) {
 }
 
 const char *ShellParams::get_lookup_mode() {
-  if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_MATCH_FORWARD)
+  if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                                | LOOKUP_MATCH_FORWARD)
     return "normal";
-  else if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_EXACT_MATCH)
+  else if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                                     | LOOKUP_EXACT_MATCH)
     return "exact";
-  else if (default_lookup_flags == LOOKUP_SARRAY)
+  else if (default_lookup_flags == LOOKUP_SARRAY | LOOKUP_HENKAKEI)
     return "sarray";
-  else if (default_lookup_flags == LOOKUP_REGEXP)
+  else if (default_lookup_flags == LOOKUP_REGEXP | LOOKUP_HENKAKEI)
     return "regexp";
   else
     return "all";
