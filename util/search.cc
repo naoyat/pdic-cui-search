@@ -17,10 +17,6 @@
 #include "./utf8.h"
 #include "./util.h"
 
-#ifdef DO_COUNT_COMPARISON
-int cmp_count;
-#endif
-
 std::pair<byte*, int*> concat_strings(byte *strings[],
                                       int string_count,
                                       int end_marker) {
@@ -144,27 +140,17 @@ std::pair<int*, int> make_light_suffix_array(byte *buf, int buf_size) {
 // NEG-endを見るべき
 bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
                         byte *needle, bool exact_match) {
-#ifdef DO_COUNT_COMPARISON
-  cmp_count = 0;
-#endif
-
   if (!offsets_len || is_empty(needle))
     return std::make_pair(false, std::make_pair(-1, 0));
   int needle_len = strlen(reinterpret_cast<char*>(needle));
 
   int cmp = exact_match ? bstrcmp(buf+offsets[0], needle)
       : bstrncmp(buf+offsets[0], needle, needle_len);
-#ifdef DO_COUNT_COMPARISON
-  ++cmp_count;
-#endif
   if (cmp > 0)
     return std::make_pair(false, std::make_pair(-1, 0));
 
   cmp = exact_match ? bstrcmp(buf+offsets[offsets_len-1], needle)
       : bstrncmp(buf+offsets[offsets_len-1], needle, needle_len);
-#ifdef DO_COUNT_COMPARISON
-  ++cmp_count;
-#endif
   if (cmp < 0)
     return std::make_pair(false, std::make_pair(offsets_len-1, offsets_len));
 
@@ -176,9 +162,6 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
 
     cmp = exact_match ? bstrcmp(buf+offsets[mid], needle)
         : bstrncmp(buf+offsets[mid], needle, needle_len);
-#ifdef DO_COUNT_COMPARISON
-  ++cmp_count;
-#endif
     if (cmp == 0) {
       // looking for neg-max
       lo = neg_max, hi = mid - 1;
@@ -186,9 +169,6 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
         mid = ((unsigned int)lo + (unsigned int)hi + 1) >> 1;
         cmp = exact_match ? bstrcmp(buf+offsets[mid], needle)
             : bstrncmp(buf+offsets[mid], needle, needle_len);
-#ifdef DO_COUNT_COMPARISON
-  ++cmp_count;
-#endif
         if (cmp == 0) {
           hi = mid - 1;
         } else {
@@ -203,9 +183,6 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
         mid = ((unsigned int)lo + (unsigned int)hi) >> 1;
         cmp = exact_match ? bstrcmp(buf+offsets[mid], needle)
             : bstrncmp(buf+offsets[mid], needle, needle_len);
-#ifdef DO_COUNT_COMPARISON
-  ++cmp_count;
-#endif
         if (cmp == 0)
           lo = mid + 1;
         else
