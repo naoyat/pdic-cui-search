@@ -32,7 +32,7 @@ WObj::WObj() : surface_(""), pos_() {
   // this->surface_ = std::string("");
 }
 
-WObj::WObj(byte *surface) : surface_((char*)surface), pos_() {
+WObj::WObj(byte *surface) : surface_(reinterpret_cast<char*>(surface)), pos_() {
   // this->surface_ = std::string((char*)surface);
 }
 
@@ -57,8 +57,10 @@ bool WObj::pos_canbe(const char *pos) const {
   // printf("(cannot be %s.)\n", pos);
   return false;
 }
+
 void WObj::dump(int indent) {
-  cout << string(indent, ' '); cout << surface() << endl;
+  cout << string(indent, ' ');
+  cout << surface() << endl;
 }
 
 //
@@ -71,18 +73,20 @@ Word::Word() : WObj(), meanings_map_(), usages_(), info_() {
   // this->surface_ = "";
 }
 
-Word::Word(lookup_result fields) : WObj(fields[F_ENTRY]), meanings_map_(), usages_(), info_() {
+Word::Word(lookup_result fields)
+    : WObj(fields[F_ENTRY]), meanings_map_(), usages_(), info_() {
   parse_fields(fields, fields[F_ENTRY]);
 }
 
-Word::Word(lookup_result fields, byte *surface) : WObj(surface), meanings_map_(), usages_(), info_() {
+Word::Word(lookup_result fields, byte *surface)
+    : WObj(surface), meanings_map_(), usages_(), info_() {
   parse_fields(fields, surface);
 }
 
 void Word::parse_fields(lookup_result fields, byte *surface) {
   if (!fields) return;
   this->fields_ = (lookup_result)clone(fields, sizeof(fields[0])*F_COUNT);
-  this->surface_ = std::string((char*)(
+  this->surface_ = std::string(reinterpret_cast<char*>(
                                    surface ? surface : fields_[F_ENTRY]));
 
   pair< map<string, meanings_t>, vector<usage_t> > result =
@@ -94,16 +98,17 @@ void Word::parse_fields(lookup_result fields, byte *surface) {
   info_.clear();
 
   if (is_not_empty(fields_[F_PRON])) {
-    info_["発音:IPA"] = (char*)fields_[F_PRON];
+    info_["発音:IPA"] = reinterpret_cast<char*>(fields_[F_PRON]);
   }
 
   if (is_not_empty(fields[F_EXAMPLE])) {
     usages_.push_back(make_pair(make_pair("", 0),
-                                make_pair((char*)fields_[F_EXAMPLE], "")));
+                                make_pair(reinterpret_cast<char*>(
+                                              fields_[F_EXAMPLE]), "")));
   }
 
   const char *to_moves[] = { "＠", "変化", "分節" };
-  for (int i=0; i<3; ++i) {
+  for (int i = 0; i < 3; ++i) {
     string what_to_move(to_moves[i]);
     if (meanings_map_.find(what_to_move) != meanings_map_.end()) {
       info_[what_to_move] = meanings_map_[what_to_move][0].second;
@@ -142,7 +147,8 @@ void Word::render_full() {
             cout << "\t(" << jt->first << ") " << jt->second << endl;
           }
         } else {
-          cout << "\t" << it->first << " : " << it->second.size() << "件" << endl;
+          cout << "\t" << it->first << " : "
+               << it->second.size() << "件" << endl;
           traverse(it->second, jt) {
             cout << "\t\t(" << jt->first << ") " << jt->second << endl;
           }
@@ -192,16 +198,16 @@ std::string Word::translate() {
   return "*";
   // return "";  // string((char*)fields_[F_JWORD]);
 }
-//void Word::dump(int indent) {
-//  cout << string(indent, ' '); cout << surface() << endl;1
-//}
+// void Word::dump(int indent) {
+//   cout << string(indent, ' '); cout << surface() << endl;1
+// }
 
 std::string Word::translate(const std::string& pos) {
   if (meanings_map_.find(pos) == meanings_map_.end())
-    return ""; // surface(); // std::string("---");
+    return "";  // surface(); // std::string("---");
 
   meanings_t meanings = meanings_map_[pos];
-  if (meanings.size() == 0) return surface(); // "---";
+  if (meanings.size() == 0) return surface();  // "---";
 
   return omit(meanings[0].second);
 

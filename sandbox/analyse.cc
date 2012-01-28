@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "pdic/Dict.h"
@@ -36,7 +37,8 @@ extern bool alt_first_only;
 //
 lookup_result e_just(byte *needle) {
   std::string ej_dict("EIJI-132");
-  if (g_shell->nametable.find(ej_dict) == g_shell->nametable.end())  // if not found
+  // if not found
+  if (g_shell->nametable.find(ej_dict) == g_shell->nametable.end())
     return (lookup_result)NULL;
 
   int ej_dict_id = g_shell->nametable[ej_dict];
@@ -51,18 +53,20 @@ lookup_result e_just(byte *needle) {
 
   traverse(result_vec, it) {
     lookup_result result = *it;
-    if (strcmp((char*)result[F_ENTRY], (char*)needle) == 0) return result;
+    if (strcmp(reinterpret_cast<char*>(result[F_ENTRY]),
+               reinterpret_cast<char*>(needle)) == 0)
+      return result;
   }
   return result_vec[0];
 }
 
 void analyse_text(byte *text, int length) {
-  re2::StringPiece input((char*)text, length);
+  re2::StringPiece input(reinterpret_cast<char*>(text), length);
 
   vector<string> tokens;
 
   string token;
-  //int sentence_type = 0;
+  // int sentence_type = 0;
   while (RE2::FindAndConsume(&input, "([^ ]+)", &token)) {
     tokens.push_back(token);
   }
@@ -81,12 +85,12 @@ void analyse_text(byte *text, int length) {
   }
 
   if (last_ch)
-    printf("sentence type: (%c)\n", last_ch); // ! ? .
+    printf("sentence type: (%c)\n", last_ch);  // ! ? .
 
   vector<Word*> words;
 
   // 単語（スペースで区切られたトークン的な意味で）→ Wordクラスオブジェクト
-  for (int i=0; i<L; ++i) {
+  for (int i = 0; i < L; ++i) {
     string surface(tokens[i]);
     int surface_length = surface.size();
 
@@ -112,16 +116,17 @@ void analyse_text(byte *text, int length) {
     lookup_result result = NULL;
 
     traverse(candidates, it) {
-      result = e_just((byte*)it->c_str());
+      result = e_just(BYTE(const_cast<char*>(it->c_str())));
       if (result) break;
     }
 
     if (!result) {
       token = tokens[i];
-      result = e_just((byte*)token.c_str());
+      result = e_just(BYTE(const_cast<char*>(token.c_str())));
     }
 
-    words.push_back(new Word(result, (byte*)surface.c_str()));
+    words.push_back(new Word(result,
+                             BYTE(const_cast<char*>(surface.c_str()))));
   }
 
   vector<WObj*> objs = parse(words);
@@ -139,8 +144,8 @@ void analyse_text(byte *text, int length) {
   cout << endl;
   */
   Einsatz ez(2);
-  
-  vector<pair<string,string> > styles;
+
+  vector<pair<string, string> > styles;
   styles.push_back(make_pair(ANSI_BOLD_ON, ANSI_BOLD_OFF));
   styles.push_back(make_pair("", ""));
   ez.add_style_begins(styles);

@@ -21,11 +21,11 @@ typedef std::pair<std::pair<std::string, int>,
                   std::pair<std::string, std::string> > usage_t;
 
 class WObj {
-public:
+ public:
   WObj();
   explicit WObj(byte *surface);
   explicit WObj(std::string surface);
-  ~WObj() {}
+  virtual ~WObj() {}
 
   virtual std::string surface() const { return surface_; }
   virtual std::vector<std::string> pos() const { return pos_; }

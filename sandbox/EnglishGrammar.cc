@@ -15,7 +15,7 @@ using namespace std;
 
 EObj::EObj(Word *word) : WObj(word->surface()) {
   this->word_ = word;
-  this->the_pos_ = "";// word->pos()[0];
+  this->the_pos_ = "";  // word->pos()[0];
 }
 
 EObj::EObj(Word *word, std::string pos) : WObj() {
@@ -27,6 +27,7 @@ EnglishVerb::EnglishVerb(Word *word) : EObj(word, "[V]") {
   //  this->word_ = word;
   // this->the_pos_ = "*[V]*";
 }
+
 std::string EnglishVerb::translate() {
   string tr = word_->translate("動");
   if (tr != "") return tr;
@@ -38,6 +39,7 @@ std::string EnglishVerb::translate() {
   if (tr != "") return tr;
   return "(V)";
 }
+
 void EnglishVerb::dump(int indent) {
   cout << string(indent, ' ') << "V: " << surface() << endl;
 }
@@ -69,23 +71,27 @@ void EnglishName::dump(int indent) {
 }
 
 
-EnglishPronoun::EnglishPronoun(Word *word) : EnglishEntity(word, "[Pron]") {
+EnglishPronoun::EnglishPronoun(Word *word)
+    : EnglishEntity(word, "[Pron]") {
 }
 void EnglishPronoun::dump(int indent) {
   cout << string(indent, ' ') << "Pron: " << surface() << endl;
 }
 
 
-EnglishModifier::EnglishModifier(Word *word, std::string pos) : EObj(word, pos) {
+EnglishModifier::EnglishModifier(Word *word, std::string pos)
+    : EObj(word, pos) {
 }
 
-EnglishAdjective::EnglishAdjective(Word *word) : EnglishModifier(word, "[Adj]") {
+EnglishAdjective::EnglishAdjective(Word *word)
+    : EnglishModifier(word, "[Adj]") {
 }
 void EnglishAdjective::dump(int indent) {
   cout << string(indent, ' ') << "A: " << surface() << endl;
 }
 
-EnglishDeterminer::EnglishDeterminer(Word *word) : EnglishModifier(word, "[Det]") {
+EnglishDeterminer::EnglishDeterminer(Word *word)
+    : EnglishModifier(word, "[Det]") {
 }
 void EnglishDeterminer::dump(int indent) {
   cout << string(indent, ' ') << "D: " << surface() << endl;
@@ -109,9 +115,10 @@ void EnglishAdverb::dump(int indent) {
 
 EnglishPreposition::EnglishPreposition(Word *word) : EObj(word, "[Prep]") {
 }
+
 std::string EnglishPreposition::translate() {
   std::string tr = word_->translate("前");
-  if (tr.substr(0,3) == "\xef\xbd\x9e")  // U+FF5E, "〜" in MS932
+  if (tr.substr(0, 3) == "\xef\xbd\x9e")  // U+FF5E, "〜" in MS932
     return tr.substr(3);
   else
     return tr;
@@ -126,7 +133,7 @@ std::string EnglishConjunction::translate() {
   std::string tr = word_->translate("接続");
   if (tr != "") return tr;
   // if (tr.substr(0,3) == "\xef\xbd\x9e")  // U+FF5E, "〜" in MS932
-  //return tr.substr(3);
+  // return tr.substr(3);
   return word_->surface();
 }
 void EnglishConjunction::dump(int indent) {
@@ -157,7 +164,8 @@ void EnglishPP::dump(int indent) {
 }
 
 
-EnglishNP::EnglishNP(EnglishEntity *entity, vector<EnglishModifier*> modifiers) {
+EnglishNP::EnglishNP(EnglishEntity *entity,
+                     vector<EnglishModifier*> modifiers) {
   this->modifiers_.assign(modifiers.begin(), modifiers.end());
   this->entities_.push_back(entity);
   this->pps_.clear();
@@ -188,6 +196,7 @@ std::string EnglishNP::surface() const {
   ss << ")";
   return ss.str();
 }
+
 std::string EnglishNP::translate() {
   std::stringstream ss;
   if (modifiers_.size() > 0 || pps_.size() > 0) {
@@ -205,9 +214,10 @@ std::string EnglishNP::translate() {
     ss << " " << (*it)->translate();
   }
   // ss << "\"";
-  
+
   return ss.str();
 }
+
 void EnglishNP::dump(int indent) {
   cout << string(indent, ' ') << "NP:" << endl;
   traverse(modifiers_, it) {
@@ -243,12 +253,13 @@ std::string EnglishAP::surface() const {
 std::string EnglishAP::translate() {
   std::stringstream ss;
   traverse(adjectives_, it) {
-    ss << (*it)->translate(); //  << "+";
+    ss << (*it)->translate();  // << "+";
   }
   return ss.str();
 }
+
 void EnglishAP::dump(int indent) {
-  cout << string(indent, ' ') << "AP:" << endl;;
+  cout << string(indent, ' ') << "AP:" << endl;
   traverse(adjectives_, it) {
     (*it)->dump(indent + 2);
   }
@@ -324,11 +335,13 @@ std::string EnglishVP::translate() {
   string aux = "";
   string surface_ = strlower(verbs_[0]->surface());
   if (verbs_.size() == 1) {
-    if (surface_ == "is" || surface_ == "are" || surface_ == "am" || surface_ == "was" || surface_ == "were"
-        || surface_ == "isn't" || surface_ == "aren't" || surface_ == "wasn't" || surface_ == "weren't"
+    if (surface_ == "is" || surface_ == "are" || surface_ == "am"
+        || surface_ == "was" || surface_ == "were"
+        || surface_ == "isn't" || surface_ == "aren't"
+        || surface_ == "wasn't" || surface_ == "weren't"
         || surface_ == "ain't") {
       aux = "";
-      ss << "＝"; // "である";
+      ss << "＝";  // "である";
     } else {
       aux = "を";
       ss << verbs_[0]->translate();

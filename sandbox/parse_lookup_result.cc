@@ -11,7 +11,7 @@
 
 using namespace std;
 
-pair<string,string> split_line(char *begin, char *end) {
+pair<string, string> split_line(char *begin, char *end) {
   re2::StringPiece text(begin, end - begin);
   std::string eng, jap;
   if (RE2::FullMatch(text, "([ -~]+)(.*)", &eng, &jap)) {
@@ -21,8 +21,8 @@ pair<string,string> split_line(char *begin, char *end) {
   }
 }
 
-pair<string,string> parse_usage(char **begin, char *end) {
-  char *next_begin = (char *)memchr(*begin, '\r', end - *begin);
+pair<string, string> parse_usage(char **begin, char *end) {
+  char *next_begin = static_cast<char*>(memchr(*begin, '\r', end - *begin));
   end = next_begin ? next_begin : end;
   next_begin = next_begin ? next_begin+2 : end;
 
@@ -36,10 +36,10 @@ pair<string,string> parse_usage(char **begin, char *end) {
     remark_begin = end;
   }
 
-  pair<string,string> usage = split_line(*begin, end);
+  pair<string, string> usage = split_line(*begin, end);
 
-  //if (alt_show_usage)
-  //if (alt_show_remark)
+  // if (alt_show_usage)
+  // if (alt_show_remark)
   std::string remark(remark_begin, remark_end - remark_begin);
   // printf(" (%s)", remark.c_str());
 
@@ -48,7 +48,7 @@ pair<string,string> parse_usage(char **begin, char *end) {
   return usage;
 }
 
-pair<string,int> parse_pos(char **begin, char *end) {
+pair<string, int> parse_pos(char **begin, char *end) {
   // if (strncmp(begin, "【", 3) == 0) return make_pair("", 0);
   char *pos_begin = *begin + 3;
   char *pos_end = strnstr(pos_begin, "】", end - pos_begin);
@@ -60,13 +60,15 @@ pair<string,int> parse_pos(char **begin, char *end) {
         return make_pair("*", sub_id);
       } else {
         // 1-動, 2-名 などの 1-, 2- を無視してみる
-        char *hyphen = (char*)memchr(pos_begin+1, '-', pos_end - (pos_begin+1));
+        char *hyphen = static_cast<char*>(
+            memchr(pos_begin+1, '-', pos_end - (pos_begin+1)));
         if (hyphen) pos_begin = hyphen+1;
       }
     }
 
     // pos: line+3 .. end
-    char *sub = (char*)memchr(pos_begin+1, '-', pos_end - (pos_begin+1));
+    char *sub = static_cast<char*>(
+        memchr(pos_begin+1, '-', pos_end - (pos_begin+1)));
     string pos;
     int sub_id;
     if (sub) {
@@ -115,26 +117,26 @@ vector<string> parse_line(char **begin, char *end) {
   return meanings;
 }
 
-pair< map<string, meanings_t>,vector<usage_t> > parse_jword(byte* jword) {
+pair< map<string, meanings_t>, vector<usage_t> > parse_jword(byte* jword) {
   map<string, meanings_t> meanings_map;
   vector<usage_t> usages;
 
   string pos = "";
   int sub_id = 0;
 
-  char *data_begin = (char*)jword;
-  char *data_end = data_begin + strlen((char*)jword);
+  char *data_begin = reinterpret_cast<char*>(jword);
+  char *data_end = data_begin + strlen(data_begin);
 
   char *begin = data_begin;
   while (begin < data_end) {
     // if (0 <= *begin && *begin < 0x20) ++begin;
-    char *newline = (char *)memchr(begin, '\r', data_end - begin);
+    char *newline = static_cast<char*>(memchr(begin, '\r', data_end - begin));
     char *end = newline ? newline : data_end;
     char *next_begin = newline ? newline+2 : data_end;
 
     while (begin < end) {
       if (strncmp(begin, "【", 3) == 0) {
-        pair<string,int> pos_ = parse_pos(&begin, end);
+        pair<string, int> pos_ = parse_pos(&begin, end);
         if (pos_.first != "") {
           pos    = pos_.first;
           sub_id = pos_.second;
@@ -146,14 +148,14 @@ pair< map<string, meanings_t>,vector<usage_t> > parse_jword(byte* jword) {
           if (meanings_map.find(pos) == meanings_map.end()) {
             meanings_map[pos] = meanings_t();
           }
-          meanings_map[pos].push_back( make_pair(sub_id, meanings[0]) );
+          meanings_map[pos].push_back(make_pair(sub_id, meanings[0]));
           // !!! "◆" 以降の付加情報(meanings[1])を捨てている
         }
       } else if (strncmp(begin, "・", 3) == 0) {
-        pair<string,string> usage = parse_usage(&begin, end);
+        pair<string, string> usage = parse_usage(&begin, end);
         while (0 <= *begin && *begin < 0x20) ++begin;
 
-        usages.push_back( make_pair(make_pair(pos,sub_id), usage) );
+        usages.push_back(make_pair(make_pair(pos, sub_id), usage));
       } else {
         vector<string> meanings = parse_line(&begin, end);
         while (0 <= *begin && *begin < 0x20) ++begin;
@@ -161,9 +163,9 @@ pair< map<string, meanings_t>,vector<usage_t> > parse_jword(byte* jword) {
           if (meanings_map.find("*") == meanings_map.end()) {
             meanings_map["*"] = meanings_t();
           }
-          meanings_map["*"].push_back( make_pair(0, meanings[0]) );
+          meanings_map["*"].push_back(make_pair(0, meanings[0]));
         }
-        // printf("？%s", (byte)begin[0], (byte)begin[1], (byte)begin[2], begin);
+        // printf("？%s",(byte)begin[0],(byte)begin[1],(byte)begin[2],begin);
         // meanings_map[""].push_back(make_pair(0, string(begin, end-begin)));
         // break;
       }

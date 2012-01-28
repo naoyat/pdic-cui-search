@@ -55,8 +55,7 @@ std::vector<std::string> split(std::string str, int delim) {
   return result;
 }
 
-std::vector<std::string> split(std::string str, std::string delim)
-{
+std::vector<std::string> split(std::string str, std::string delim) {
   std::vector<std::string> result;
 
   if (str.length() == 0) return result;

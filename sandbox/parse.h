@@ -21,7 +21,8 @@ class EnglishVP;
 // lookup_result e_just(byte *needle);
 
 EnglishEntity* parse_entity(const std::vector<Word*>& words, unsigned int *ix);
-EnglishModifier* parse_modifier(const std::vector<Word*>& words, unsigned int *ix);
+EnglishModifier* parse_modifier(const std::vector<Word*>& words,
+                                unsigned int *ix);
 EnglishNP* parse_np(const std::vector<Word*>& words, unsigned int *ix);
 EnglishPP* parse_pp(const std::vector<Word*>& words, unsigned int *ix);
 EnglishVP* parse_vp(const std::vector<Word*>& words, unsigned int *ix);

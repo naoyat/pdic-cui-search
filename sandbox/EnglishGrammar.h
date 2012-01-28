@@ -2,8 +2,8 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef SANDBOX_ENGLISH_GRAMMAR_H_
-#define SANDBOX_ENGLISH_GRAMMAR_H_
+#ifndef SANDBOX_ENGLISHGRAMMAR_H_
+#define SANDBOX_ENGLISHGRAMMAR_H_
 
 #include <string>
 #include <vector>
@@ -11,7 +11,7 @@
 #include "sandbox/Word.h"
 
 class EObj : public WObj {
-public:
+ public:
   explicit EObj(Word *word);
   EObj(Word *word, std::string pos);
   ~EObj() {}
@@ -28,7 +28,8 @@ public:
   }
 
   // virtual void dump(int indent = 0) {
-  //   for (int i=0; i<indent; ++i) putchar(' '); printf("%s\n", surface().c_str());
+  //   for (int i=0; i<indent; ++i) putchar(' ');
+  //   printf("%s\n", surface().c_str());
   // }
 
   // virtual std::string translate(std::string pos) {
@@ -56,7 +57,7 @@ class EnglishVerb : public EObj {
 // Noun - 名詞
 //
 class EnglishEntity : public EObj {
-public:
+ public:
   // explicit EnglishModifier(Word *word);
   EnglishEntity(Word *word, std::string pos);
   ~EnglishEntity() {}
@@ -96,7 +97,7 @@ class EnglishPronoun : public EnglishEntity {
 };
 
 class EnglishModifier : public EObj {
-public:
+ public:
   // explicit EnglishModifier(Word *word);
   EnglishModifier(Word *word, std::string pos);
   ~EnglishModifier() {}
@@ -113,9 +114,10 @@ class EnglishDeterminer : public EnglishModifier {
   explicit EnglishDeterminer(Word *word);
   ~EnglishDeterminer() {}
 
-  std::string translate() { return ""; } // return word_->translate(); }
+  std::string translate() { return ""; }  // return word_->translate(); }
   void dump(int indent = 0);
 };
+
 //
 // Adjective - 形容詞
 //
@@ -136,7 +138,7 @@ class EnglishAdverb : public EObj {
   explicit EnglishAdverb(Word *word);
   ~EnglishAdverb() {}
 
-  std::string translate(); // { return word_->translate("副"); }
+  std::string translate();  // { return word_->translate("副"); }
   void dump(int indent = 0);
 };
 
@@ -170,7 +172,7 @@ class EnglishConjunction : public EObj {
 class EnglishNP;
 
 class EnglishPP : public WObj {
-public:
+ public:
   EnglishPP(EnglishPreposition *prep, EnglishNP *np);
   ~EnglishPP() {}
 
@@ -178,15 +180,16 @@ public:
   std::string translate();
   void dump(int indent = 0);
 
-private:
+ private:
   EnglishPreposition *prep_;
   EnglishNP *np_;
 };
 
 
 class EnglishNP : public WObj {
-public:
-  explicit EnglishNP(EnglishEntity* entity, std::vector<EnglishModifier*> modifiers);
+ public:
+  explicit EnglishNP(EnglishEntity* entity,
+                     std::vector<EnglishModifier*> modifiers);
   ~EnglishNP() {}
 
   void append_entity(EnglishEntity* entity);
@@ -196,7 +199,7 @@ public:
   std::string translate();
   void dump(int indent = 0);
 
-private:
+ private:
   std::vector<EnglishModifier*> modifiers_;
   std::vector<EnglishEntity*> entities_;
   std::vector<EnglishPP*> pps_;
@@ -204,7 +207,7 @@ private:
 
 
 class EnglishAP : public WObj {
-public:
+ public:
   explicit EnglishAP(EnglishAdjective* adj);
   ~EnglishAP() {}
 
@@ -214,13 +217,13 @@ public:
   std::string translate();
   void dump(int indent = 0);
 
-private:
+ private:
   std::vector<EnglishAdjective*> adjectives_;
 };
 
 
 class EnglishVP : public WObj {
-public:
+ public:
   explicit EnglishVP(EnglishVerb *verb);
   ~EnglishVP() {}
 
@@ -234,7 +237,7 @@ public:
   std::string translate();
   void dump(int indent = 0);
 
-private:
+ private:
   std::vector<EnglishVerb*> verbs_;
   EnglishNP *np_;
   EnglishAP *ap_;
@@ -243,7 +246,7 @@ private:
 };
 
 class EnglishSentence : public WObj {
-public:
+ public:
   EnglishSentence(EnglishNP* np, EnglishVP* vp);
   ~EnglishSentence() {}
 
@@ -251,9 +254,9 @@ public:
   std::string translate();
   void dump(int indent = 0);
 
-private:
+ private:
   EnglishNP *np_;
   EnglishVP *vp_;
 };
 
-#endif  // SANDBOX_ENGLISH_GRAMMAR_H_
+#endif  // SANDBOX_ENGLISHGRAMMAR_H_
