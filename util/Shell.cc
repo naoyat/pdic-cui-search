@@ -431,17 +431,6 @@ void Shell::render_status() {
 
 ShellParams::ShellParams() {
   printf("ShellParams()...\n");
-<<<<<<< HEAD
-  separator_mode = false;
-  verbose_mode = false;
-  direct_dump_mode = false;
-  full_search_mode = false;
-  ansi_coloring_mode = false;
-  more_newline_mode = false;
-  render_count_limit = DEFAULT_RENDER_COUNT_LIMIT;
-  stop_on_limit_mode = true;
-  default_lookup_flags = LOOKUP_NORMAL | LOOKUP_EXACT_MATCH;
-=======
   separator_mode       = false;
   verbose_mode         = false;
   direct_dump_mode     = false;
@@ -453,7 +442,6 @@ ShellParams::ShellParams() {
 
   default_lookup_flags = LOOKUP_PDIC_INDEX | LOOKUP_EXACT_MATCH;
   debug_flags          = 0;
->>>>>>> d890d56... LOOKUPフラグを整理。xxxx_lookup() 系関数をまとめて、フラグ渡しにした
 }
 
 int ShellParams::set_render_count_limit(int limit) {

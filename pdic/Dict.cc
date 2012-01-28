@@ -457,15 +457,9 @@ std::set<int> Dict::search_in_sarray(int field, byte *needle) {
   return matched_offsets;
 }
 
-<<<<<<< HEAD
-std::set<int> Dict::search_in_henkakei(byte *needle) {
+std::set<int> Dict::search_in_henkakei(byte *needle, int flags) {
   return std::set<int>();
 }
-
-lookup_result_vec Dict::normal_lookup(byte *needle, bool exact_match) {
-  std::set<int> matched_word_ids = normal_lookup_ids(needle, exact_match);
-  return ids_to_result(matched_word_ids);
-=======
 
 lookup_result_vec Dict::pdic_match_forward_lookup(byte *needle, int flags) {
   std::set<int> matched_word_ids = pdic_match_forward_lookup_ids(needle, flags);
@@ -483,7 +477,6 @@ lookup_result_vec Dict::exact_lookup(byte *needle, int flags) {
   } else {
     return ids_to_result(matched_word_ids);
   }
->>>>>>> d890d56... LOOKUPフラグを整理。xxxx_lookup() 系関数をまとめて、フラグ渡しにした
 }
 
 lookup_result_vec Dict::sarray_lookup(byte *needle, int flags) {

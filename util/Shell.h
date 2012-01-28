@@ -35,6 +35,7 @@ class ShellParams {
   int  render_count_limit;
   bool stop_on_limit_mode;
   int  default_lookup_flags;
+  int  debug_flags;
 };
 
 

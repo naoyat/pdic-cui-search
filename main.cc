@@ -10,7 +10,6 @@
 #include "util/ansi_color.h"
 #include "util/dump.h"
 #include "util/Shell.h"
-#include "sandbox/analyse.h"
 
 Shell *g_shell = NULL;
 
@@ -77,16 +76,12 @@ int main(int argc, char **argv) {
         // else fall thru
 
       default:
-        if (g_shell->params.debug_flags & 1) {
-          analyse_text(reinterpret_cast<byte*>(line), linelen);
-        } else {
-          int flags = g_shell->params.default_lookup_flags;
-          if (tail == '*') {
-            line[linelen-1] = '\0';
-            flags &= ~LOOKUP_MATCH_BACKWARD;
-          }
-          lookup(reinterpret_cast<byte*>(line), flags);
+        int flags = g_shell->params.default_lookup_flags;
+        if (tail == '*') {
+          line[linelen-1] = '\0';
+          flags &= ~LOOKUP_MATCH_BACKWARD;
         }
+        lookup(reinterpret_cast<byte*>(line), flags);
         break;
     }
   }
