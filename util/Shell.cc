@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "pdic/Dict.h"
+#include "pdic/Dict_callbacks.h"
 #include "pdic/lookup.h"
 #include "pdic/PDICDatafield.h"
 #include "pdic/PDICHeader.h"
@@ -274,6 +275,12 @@ bool Shell::do_command(char *cmdstr) {
           Dict *dict = dicts[*current_dict_id];
           dict->make_macdic_xml();
         }
+      } else if (cmd[1] == "henkakei") {
+          // 変化形テーブルを作成。あとで関数名考える
+        traverse(current_dict_ids, current_dict_id) {
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_henkakei_table();
+        }
       } else {
         printf("[command] make {toc|xml}\n");
       }
@@ -300,6 +307,8 @@ bool Shell::do_command(char *cmdstr) {
           index->iterate_all_datablocks(&cb_dump_entry, NULL);
         } else if (what_to_dump == "all") {
           index->iterate_all_datablocks(&cb_dump, NULL);
+          // } else if (what_to_dump == "henkakei") {
+          // index->iterate_all_datablocks(&cb_dump_eijiro_henkakei, NULL);
         } else {
           printf("// [ERROR] I don't know how to dump '%s'...\n",
                  what_to_dump.c_str());

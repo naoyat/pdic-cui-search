@@ -11,6 +11,7 @@
 
 #include "util/types.h"
 
+#define LOOKUP_HENKAKEI     0x0008
 #define LOOKUP_NORMAL       0x0010
 #define LOOKUP_SARRAY       0x0100
 #define LOOKUP_REGEXP       0x1000

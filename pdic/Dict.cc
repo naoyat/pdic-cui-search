@@ -58,6 +58,7 @@ extern int _dict_buf_size[F_COUNT], _dict_buf_offset[F_COUNT];
 extern std::vector<Toc> _toc;
 extern std::set<int> _result_id_set;
 extern Dict *_dict;
+extern std::vector<std::pair<std::string, int> > _henkakei_table;
 
 extern int match_count, render_count;
 extern bool render_count_limit_exceeded, said_that;
@@ -72,6 +73,11 @@ Dict::Dict(const std::string& name, byte *filemem) {
   for (int field = 0; field < F_COUNT; ++field) {
     dict_buf[field] = static_cast<byte*>(NULL);
     dict_suffix_array[field] = static_cast<int*>(NULL);
+  }
+
+  if (this->is_eijiro()) {
+    hbuf = static_cast<char*>(NULL);
+    htoc = static_cast<HenkakeiToc*>(NULL);
   }
 
   _prefix = new char[name.size()+1];
@@ -104,13 +110,85 @@ int Dict::make_macdic_xml() {
   return 0;
 }
 
-int Dict::make_toc() {
-  printf("%s: インデックスを作成します...\n", name.c_str());
+int Dict::make_henkakei_table() {
+  if (!this->is_eijiro()) return 0;
 
+  // unload
+  if (htoc) {
+    unloadmem(reinterpret_cast<byte*>(htoc));
+    htoc = static_cast<HenkakeiToc*>(NULL);
+  }
+  if (hbuf) {
+    unloadmem(reinterpret_cast<byte*>(hbuf));
+    hbuf = static_cast<char*>(NULL);
+  }
+
+  _dict = this;
+  _henkakei_table.clear();
+
+  index->iterate_all_datablocks(&cb_dump_eijiro_henkakei, NULL);
+
+  std::sort(_henkakei_table.begin(), _henkakei_table.end());
+
+  int memorysize = 1;
+  traverse(_henkakei_table, it) {
+    memorysize += it->first.size() + 1;
+    // printf("%s : %d\n", it->first.c_str(), it->second);
+  }
+
+  _dict = NULL;
+
+  int htoc_len = _henkakei_table.size();
+
+  printf("henkakei table size = %d, memory size = %d+%d\n",
+         htoc_len, memorysize, (int)(htoc_len*sizeof(HenkakeiToc)));
+
+  htoc = static_cast<HenkakeiToc*>(
+      malloc(htoc_len * sizeof(HenkakeiToc)));
+  hbuf = static_cast<char*>(
+      malloc(memorysize));
+
+  hbuf[0] = 0;  // sentinel
+  for (int i = 0, ofs = 1; i < htoc_len; ++i) {
+    int len = _henkakei_table[i].first.size();
+
+    htoc[i].henkakei_datafield_pos = ofs;
+    htoc[i].word_id = _henkakei_table[i].second;
+
+    memcpy(hbuf + ofs, _henkakei_table[i].first.data(), len);
+    ofs += len;
+    hbuf[ofs++] = 0;
+  }
+
+  std::string savepath = this->prefix();
+
+  savemem((savepath + SX_HENKAKEI_BUF).c_str(),
+          reinterpret_cast<byte*>(hbuf),
+          memorysize);
+  savemem((savepath + SX_HENKAKEI_TOC).c_str(),
+          reinterpret_cast<byte*>(htoc),
+          sizeof(HenkakeiToc)*htoc_len);
+  free(static_cast<void*>(htoc));
+  free(static_cast<void*>(hbuf));
+
+  _henkakei_table.clear();
+
+  // reload
+  this->htoc = reinterpret_cast<HenkakeiToc*>(
+      loadmem((path + SX_HENKAKEI_TOC).c_str()));
+  this->hbuf = reinterpret_cast<char*>(
+      loadmem((path + SX_HENKAKEI_BUF).c_str()));
+
+  return 0;
+}
+
+int Dict::make_toc() {
   // 現在使用中のインデックスをアンロードしてから
   this->unload_additional_files();
 
   time_reset();
+
+  printf("%s: インデックスを作成します...\n", name.c_str());
 
   // initialize
 
@@ -208,6 +286,12 @@ int Dict::make_toc() {
          0.001*time2.first, 0.001*time2.second);
 
   this->load_additional_files();
+
+  // 変化形【英辞郎のみ】
+  if (this->is_eijiro()) {
+    printf("%s: 変化形を抽出しています...\n", name.c_str());
+    make_henkakei_table();
+  }
 
   return toc_len;
 }
@@ -361,6 +445,10 @@ std::set<int> Dict::search_in_sarray(int field, byte *needle) {
   }
 
   return matched_offsets;
+}
+
+std::set<int> Dict::search_in_henkakei(byte *needle) {
+  return std::set<int>();
 }
 
 lookup_result_vec Dict::normal_lookup(byte *needle, bool exact_match) {
@@ -523,6 +611,15 @@ void Dict::unload_additional_files() {
       dict_suffix_array[field] = static_cast<int*>(NULL);
     }
   }
+
+  if (htoc) {
+    unloadmem(reinterpret_cast<byte*>(htoc));
+    htoc = static_cast<HenkakeiToc*>(NULL);
+  }
+  if (hbuf) {
+    unloadmem(reinterpret_cast<byte*>(hbuf));
+    hbuf = static_cast<char*>(NULL);
+  }
 }
 
 int Dict::rev(int field, int pos) {
@@ -556,6 +653,14 @@ int Dict::rev(int field, int pos) {
 
 bool Dict::load_additional_files() {
   unload_additional_files();
+
+  // 変化形（英辞郎のみ）
+  if (this->is_eijiro()) {
+    this->htoc = reinterpret_cast<HenkakeiToc*>(
+        loadmem((path + SX_HENKAKEI_TOC).c_str()));
+    this->hbuf = reinterpret_cast<char*>(
+        loadmem((path + SX_HENKAKEI_BUF).c_str()));
+  }
 
   for (uint i = 0; i < g_shell->loadpaths.size(); ++i) {
     std::string path = g_shell->loadpaths[i] + "/" + this->prefix();

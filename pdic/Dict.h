@@ -22,6 +22,8 @@ class Criteria;
 
 #define SX_TOC   ".toc"
 #define SX_XML   ".xml"
+#define SX_HENKAKEI_BUF  ".hbuf"
+#define SX_HENKAKEI_TOC  ".htoc"
 
 #define F_COUNT    4
 #define F_ENTRY    0
@@ -37,6 +39,11 @@ typedef struct {
   int start_pos[F_COUNT];  // in .entry/.jword/.exmp/.pron
 } Toc;
 
+typedef struct {
+  int henkakei_datafield_pos;
+  int word_id;
+} HenkakeiToc;
+
 class Dict {
  public:
   Dict(const std::string& name, byte *filemem);
@@ -47,17 +54,21 @@ class Dict {
   char *prefix() { return _prefix; }
   int   make_toc();
   int   make_macdic_xml();
+  int   make_henkakei_table();
   void  unload_additional_files();
   bool  load_additional_files();
 
   std::set<int> search_in_sarray(int field, byte *needle);
+  std::set<int> search_in_henkakei(byte *needle);
 
   lookup_result_vec normal_lookup(byte *needle, bool exact_match);
+  lookup_result_vec henkakei_lookup(byte *needle);
   lookup_result_vec sarray_lookup(byte *needle);
   lookup_result_vec regexp_lookup(RE2 *re);
   lookup_result_vec full_lookup(byte *needle, RE2 *re);
 
   std::set<int> normal_lookup_ids(byte *needle, bool exact_match);
+  std::set<int> henkakei_lookup_ids(byte *needle);
   std::set<int> sarray_lookup_ids(byte *needle);
   std::set<int> regexp_lookup_ids(RE2 *re);
 
@@ -72,12 +83,20 @@ class Dict {
   int   toc_length;
   byte* dict_buf[F_COUNT];
   int*  dict_suffix_array[F_COUNT], dict_suffix_array_length[F_COUNT];
+
+  // 変化形（英辞郎のみ）
+  char* hbuf;
+  HenkakeiToc* htoc;
+
   std::map<std::pair<int, int>, int> revmap;
   std::map<int, int> revmap_pdic_datafield_pos;
 
  private:
   lookup_result_vec ids_to_result(const std::set<int>& word_ids);
   int  rev(int field, int start_pos);
+  bool is_eijiro() {
+    return memcmp(this->name.data(), "EIJI", 4) == 0;
+  }
 };
 
 // match count

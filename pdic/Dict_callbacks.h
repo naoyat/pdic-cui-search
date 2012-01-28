@@ -19,4 +19,7 @@ void cb_dump_entry(PDICDatafield *datafield);
 void cb_dump(PDICDatafield *datafield);
 void cb_save(PDICDatafield *datafield);
 
+// 英辞郎データから全変化形を取り出したい
+void cb_dump_eijiro_henkakei(PDICDatafield *datafield);
+
 #endif  // PDIC_DICT_CALLBACKS_H_
