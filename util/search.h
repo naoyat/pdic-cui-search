@@ -16,6 +16,6 @@ std::pair<int*, int> make_full_suffix_array(byte* buf, int buf_size);
 std::pair<int*, int> make_light_suffix_array(byte* buf, int buf_size);
 
 bsearch_result_t search(byte* buf, int* offsets, int offsets_len,
-                        byte* needle, bool exact_match);
+                        byte* needle, bool exact_match, int offset_mag = 1);
 
 #endif  // UTIL_SEARCH_H_

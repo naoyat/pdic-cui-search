@@ -139,7 +139,7 @@ std::pair<int*, int> make_light_suffix_array(byte *buf, int buf_size) {
 // PDICのindexなど、配列に入っている要素と要素の間に見えない要素がある場合、
 // NEG-endを見るべき
 bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
-                        byte *needle, bool exact_match) {
+                        byte *needle, bool exact_match, int offset_mag) {
   if (!offsets_len || is_empty(needle))
     return std::make_pair(false, std::make_pair(-1, 0));
   int needle_len = strlen(reinterpret_cast<char*>(needle));
@@ -149,8 +149,8 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
   if (cmp > 0)
     return std::make_pair(false, std::make_pair(-1, 0));
 
-  cmp = exact_match ? bstrcmp(buf+offsets[offsets_len-1], needle)
-      : bstrncmp(buf+offsets[offsets_len-1], needle, needle_len);
+  cmp = exact_match ? bstrcmp(buf+offsets[(offsets_len-1)*offset_mag], needle)
+      : bstrncmp(buf+offsets[(offsets_len-1)*offset_mag], needle, needle_len);
   if (cmp < 0)
     return std::make_pair(false, std::make_pair(offsets_len-1, offsets_len));
 
@@ -160,15 +160,15 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
   while (lo <= hi) {
     int mid = ((unsigned int)lo + (unsigned int)hi) >> 1;
 
-    cmp = exact_match ? bstrcmp(buf+offsets[mid], needle)
-        : bstrncmp(buf+offsets[mid], needle, needle_len);
+    cmp = exact_match ? bstrcmp(buf+offsets[mid*offset_mag], needle)
+        : bstrncmp(buf+offsets[mid*offset_mag], needle, needle_len);
     if (cmp == 0) {
       // looking for neg-max
       lo = neg_max, hi = mid - 1;
       while (lo < hi) {
         mid = ((unsigned int)lo + (unsigned int)hi + 1) >> 1;
-        cmp = exact_match ? bstrcmp(buf+offsets[mid], needle)
-            : bstrncmp(buf+offsets[mid], needle, needle_len);
+        cmp = exact_match ? bstrcmp(buf+offsets[mid*offset_mag], needle)
+            : bstrncmp(buf+offsets[mid*offset_mag], needle, needle_len);
         if (cmp == 0) {
           hi = mid - 1;
         } else {
@@ -181,8 +181,8 @@ bsearch_result_t search(byte *buf, int* offsets, int offsets_len,
       lo = mid + 1, hi = pos_min;
       while (lo < hi) {
         mid = ((unsigned int)lo + (unsigned int)hi) >> 1;
-        cmp = exact_match ? bstrcmp(buf+offsets[mid], needle)
-            : bstrncmp(buf+offsets[mid], needle, needle_len);
+        cmp = exact_match ? bstrcmp(buf+offsets[mid*offset_mag], needle)
+            : bstrncmp(buf+offsets[mid*offset_mag], needle, needle_len);
         if (cmp == 0)
           lo = mid + 1;
         else
