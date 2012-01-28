@@ -141,7 +141,8 @@ int Dict::make_henkakei_table() {
   int htoc_len = _henkakei_table.size();
 
   printf("henkakei table size = %d, memory size = %d+%d\n",
-         htoc_len, memorysize, (int)(htoc_len*sizeof(HenkakeiToc)));
+         htoc_len, memorysize,
+         static_cast<int>(htoc_len * sizeof(HenkakeiToc)));
 
   htoc = static_cast<HenkakeiToc*>(
       malloc(htoc_len * sizeof(HenkakeiToc)));
