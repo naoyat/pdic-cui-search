@@ -3,7 +3,7 @@
 
 CXX = g++
 # CXXFLAGS=-Wall -O3 -g -I.
-CXXFLAGS=-Wall -O2 -I.
+CXXFLAGS=-Wall -O0 -I. -g # -pg
 
 .cc.o: $*.h
 	$(CXX) $(CXXFLAGS) -c $*.cc

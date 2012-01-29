@@ -27,7 +27,7 @@ using namespace std;
 //
 // class WObj
 //
-WObj::WObj() : surface_(""), pos_() {
+WObj::WObj() : surface_(), pos_() {
   // printf("!!! ctor WOBj() called.\n");
   // this->surface_ = std::string("");
 }
@@ -75,12 +75,25 @@ Word::Word() : WObj(), meanings_map_(), usages_(), info_() {
 
 Word::Word(lookup_result fields)
     : WObj(fields[F_ENTRY]), meanings_map_(), usages_(), info_() {
+  printf("!!! ctor Word({\"%s\", ...}) called.\n",
+         reinterpret_cast<char*>(fields[F_ENTRY]));
   parse_fields(fields, fields[F_ENTRY]);
 }
 
 Word::Word(lookup_result fields, byte *surface)
     : WObj(surface), meanings_map_(), usages_(), info_() {
+  printf("!!! ctor Word({\"%s\", ...}, (byte*)surface=\"%s\") called.\n",
+         reinterpret_cast<char*>(fields[F_ENTRY]),
+         reinterpret_cast<char*>(surface));
   parse_fields(fields, surface);
+}
+
+Word::Word(lookup_result fields, std::string surface)
+    : WObj(surface), meanings_map_(), usages_(), info_() {
+  printf("!!! ctor Word({\"%s\", ...}, (std::string)surface=\"%s\") called.\n",
+         reinterpret_cast<char*>(fields[F_ENTRY]), surface.c_str());
+  parse_fields(fields,
+               BYTE(const_cast<char*>(surface.c_str())));
 }
 
 void Word::parse_fields(lookup_result fields, byte *surface) {
@@ -180,11 +193,15 @@ void Word::render_full() {
 std::string omit(string s) {
   vector<string> splitted = split(s, "、");
   string tr = splitted[0];
-  RE2::GlobalReplace(&tr, "〔.*〕", "");
-  RE2::GlobalReplace(&tr, "《.*》", "");
-  RE2::GlobalReplace(&tr, "［.*］", "");
   RE2::GlobalReplace(&tr, "（.*）", "");
-  RE2::GlobalReplace(&tr, "^\xef\xbd\x9e", "");  // U+FF5E, "〜" in MS932
+  RE2::GlobalReplace(&tr, "〔.*〕", "");
+  RE2::GlobalReplace(&tr, "［.*］", "");
+  RE2::GlobalReplace(&tr, "〈.*〉", "");
+  RE2::GlobalReplace(&tr, "《.*》", "");
+
+  //  RE2::GlobalReplace(&tr, "^\xef\xbd\x9eを", "");  // U+FF5E, "〜" in MS932
+  RE2::GlobalReplace(&tr, "^\xef\xbd\x9e", "〜");  // U+FF5E, "〜" in MS932
+
   RE2::GlobalReplace(&tr, "…$", "");
   return tr;
 }
@@ -198,27 +215,22 @@ std::string Word::translate() {
   return "*";
   // return "";  // string((char*)fields_[F_JWORD]);
 }
-// void Word::dump(int indent) {
-//   cout << string(indent, ' '); cout << surface() << endl;1
-// }
+/*
+void Word::dump(int indent) {
+  printf("Word::dump(%d)..\n", indent);
+  // cout << string(indent, ' ');
+  // cout << surface() << endl;
+}
+*/
 
 std::string Word::translate(const std::string& pos) {
   if (meanings_map_.find(pos) == meanings_map_.end())
     return "";  // surface(); // std::string("---");
 
   meanings_t meanings = meanings_map_[pos];
-  if (meanings.size() == 0) return surface();  // "---";
+  if (meanings.size() == 0) return surface();
 
   return omit(meanings[0].second);
-
-  /*
-  stringstream ss;
-  traverse(meanings, it) {
-    ss << "(" << it->first << ") " << it->second << " ";
-  }
-  return ss.str();
-  // return string((char*)fields_[F_JWORD]);
-  */
 }
 
 void Word::render() {

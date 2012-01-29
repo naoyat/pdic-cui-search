@@ -47,6 +47,7 @@ class Word : public WObj {
   Word();
   explicit Word(lookup_result fields);
   Word(lookup_result fields, byte* surface);
+  Word(lookup_result fields, std::string surface);
   ~Word();
 
   void render();
@@ -54,7 +55,7 @@ class Word : public WObj {
 
   virtual std::string translate();
   virtual std::string translate(const std::string& pos);
-  // virtual void dump(int indent = 0);
+  //virtual void dump(int indent = 0);
 
  private:
   void parse_fields(lookup_result fields, byte* surface);

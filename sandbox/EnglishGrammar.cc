@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "util/ansi_color.h"
 #include "util/stlutil.h"
 
 using namespace std;
@@ -24,24 +25,33 @@ EObj::EObj(Word *word, std::string pos) : WObj() {
 }
 
 EnglishVerb::EnglishVerb(Word *word) : EObj(word, "[V]") {
-  //  this->word_ = word;
-  // this->the_pos_ = "*[V]*";
 }
 
 std::string EnglishVerb::translate() {
   string tr = word_->translate("動");
-  if (tr != "") return tr;
-  tr = word_->translate("他動");
-  if (tr != "") return tr;
-  tr = word_->translate("自動");
-  if (tr != "") return tr;
-  tr = word_->translate("助動");
-  if (tr != "") return tr;
-  return "(V)";
+  if (tr == "") tr = word_->translate("他動");
+  if (tr == "") tr = word_->translate("自動");
+  if (tr == "") tr = word_->translate("助動");
+  if (tr == "") return surface();
+
+  RE2::GlobalReplace(&tr, "^を", "");
+  return tr;
 }
 
 void EnglishVerb::dump(int indent) {
   cout << string(indent, ' ') << "V: " << surface() << endl;
+}
+
+
+EnglishBe::EnglishBe(Word *word) : EnglishVerb(word) {
+}
+
+std::string EnglishBe::translate() {
+  return " = ";
+}
+
+void EnglishBe::dump(int indent) {
+  cout << string(indent, ' ') << "V(be): " << surface() << endl;
 }
 
 
@@ -101,12 +111,6 @@ EnglishAdverb::EnglishAdverb(Word *word) : EObj(word, "[Adv]") {
 }
 std::string EnglishAdverb::translate() {
   std::string tr = word_->translate("副");
-  /*
-  return "ADV"+ tr;
-  if (tr.substr(0,3) == "\xef\xbd\x9e")  // U+FF5E, "〜" in MS932
-    return tr.substr(3);
-  else
-  */
   return tr;
 }
 void EnglishAdverb::dump(int indent) {
@@ -182,23 +186,27 @@ void EnglishNP::add_pp(EnglishPP *pp) {
 std::string EnglishNP::surface() const {
   std::stringstream ss;
   ss << "(";
+
   traverse(modifiers_, it) {
     ss << (*it)->surface() << " ";
   }
-  ss << "[";
+  ss << "<";
   traverse(entities_, it) {
-    ss << " " << (*it)->surface();
+    if (it != entities_.begin()) ss << " ";
+    ss << (*it)->surface();
   }
-  ss << " ]";
+  ss << ">";
   traverse(pps_, it) {
     ss << " " << (*it)->surface();
   }
+
   ss << ")";
   return ss.str();
 }
 
 std::string EnglishNP::translate() {
   std::stringstream ss;
+
   if (modifiers_.size() > 0 || pps_.size() > 0) {
     // ss << "{";
     traverse(pps_, it) {
@@ -209,11 +217,10 @@ std::string EnglishNP::translate() {
     }
     // ss << "}";
   }
-  // ss << "\"";
   traverse(entities_, it) {
-    ss << " " << (*it)->translate();
+    if (it != entities_.begin()) ss << " ";
+    ss << (*it)->translate();
   }
-  // ss << "\"";
 
   return ss.str();
 }
@@ -246,7 +253,9 @@ void EnglishAP::append_adjective(EnglishAdjective* adj) {
 std::string EnglishAP::surface() const {
   std::stringstream ss;
   traverse(adjectives_, it) {
-    ss << (*it)->surface() << " ";
+    if (it != adjectives_.begin())
+      ss << " ";
+    ss << (*it)->surface();
   }
   return ss.str();
 }
@@ -293,22 +302,34 @@ void EnglishVP::add_adverb(EnglishAdverb* adv) {
 
 std::string EnglishVP::surface() const {
   std::stringstream ss;
+
+  if (verbs_[0]->isBeVerb()) {
+    // V+C => C です
+  } else {
+    // V+O => O を V する
+  }
+
   ss << "(";
   traverse(adverbs_, it) {
     ss << (*it)->surface() << " ";
   }
-  ss << "[";
+  ss << "<";
   traverse(verbs_, it) {
-    ss << " " << (*it)->surface();
+    if (it != verbs_.begin()) ss << " ";
+    ss << (*it)->surface();
   }
-  ss << " ]";
-  if (ap_) {
-    ss << " " << ap_->surface();
-  } else {
-    if (np_) ss << " " << np_->surface();
-    traverse(pps_, it) {
-      ss << " " << (*it)->surface();
+  ss << ">";
+
+  if (verbs_[0]->isBeVerb()) {
+    if (ap_) {
+      ss << " " << ap_->surface();
     }
+  }
+
+  if (np_) ss << " " << np_->surface();
+
+  traverse(pps_, it) {
+    ss << " " << (*it)->surface();
   }
   ss << ")";
   return ss.str();
@@ -317,62 +338,68 @@ std::string EnglishVP::surface() const {
 std::string EnglishVP::translate() {
   std::stringstream ss;
 
-  if (ap_) {
-    ss << ap_->translate();
+  if (verbs_[0]->isBeVerb()) {
+    ss << "-は ";
+    if (ap_) {
+      ss << ap_->translate();
+    }
+    if (np_) {
+      ss << np_->translate();
+    }
+    ss << "です";
+  } else {
+    if (np_) {
+      ss << np_->translate();
+    }
+    ss << "を";
   }
 
-  if (adverbs_.size() > 0 || pps_.size() > 0) {
-    // ss << "{";
+  if (adverbs_.size() > 0) {
+    ss << " adv#{";
     traverse(adverbs_, it) {
       ss << (*it)->translate();
     }
+    ss << "}";
+  }
+
+  if (pps_.size() > 0) {
+    ss << " pp+#{";
     traverse(pps_, it) {
       ss << (*it)->translate();
     }
-    // ss << "}";
+    ss << "}";
   }
 
-  string aux = "";
   string surface_ = strlower(verbs_[0]->surface());
   if (verbs_.size() == 1) {
-    if (surface_ == "is" || surface_ == "are" || surface_ == "am"
-        || surface_ == "was" || surface_ == "were"
-        || surface_ == "isn't" || surface_ == "aren't"
-        || surface_ == "wasn't" || surface_ == "weren't"
-        || surface_ == "ain't") {
-      aux = "";
-      ss << "＝";  // "である";
+    if (verbs_[0]->isBeVerb()) {
+      //
     } else {
-      aux = "を";
       ss << verbs_[0]->translate();
     }
   } else {
     if (surface_ == "don't") {
-      aux = "";
       ss << "(not-";
       traverse(verbs_, it) {
         ss << (*it)->translate();
       }
       ss << ")";
     } else if (surface_ == "was" || surface_ == "were") {
-      aux = "";
       ss << "(";
       traverse(verbs_, it) {
         ss << (*it)->translate();
       }
       ss << ")された";
     } else {
-      aux = "";
       traverse(verbs_, it) {
         ss << (*it)->translate();
       }
     }
   }
 
-  string tr;
-  if (np_) tr += np_->translate() + aux;
-  return tr + ss.str();
-  // return ss.str();
+  // string tr;
+  // if (np_) tr += np_->translate() + aux;
+  return ss.str();
 }
 void EnglishVP::dump(int indent) {
   cout << string(indent, ' ') << "VP:" << endl;
@@ -383,7 +410,10 @@ void EnglishVP::dump(int indent) {
     (*it)->dump(indent + 2);
   }
   */
-  cout << string(indent + 2, ' ') << "V:";
+  if (verbs_[0]->isBeVerb())
+    cout << string(indent + 2, ' ') << "V<be>:";
+  else
+    cout << string(indent + 2, ' ') << "V:";
   traverse(verbs_, it) {
     cout << " " << (*it)->surface();
   }
@@ -409,7 +439,7 @@ EnglishSentence::EnglishSentence(EnglishNP* np, EnglishVP* vp) {
 }
 
 std::string EnglishSentence::surface() const {
-  return "(" + np_->surface() + " " + vp_->surface() + ")";
+  return np_->surface() + " " + vp_->surface();
 }
 std::string EnglishSentence::translate() {
   // return "("+np_->translate() + ")" が "(" + vp_->translate() +")";

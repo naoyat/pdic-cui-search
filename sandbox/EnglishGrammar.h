@@ -51,6 +51,19 @@ class EnglishVerb : public EObj {
 
   std::string translate();
   void dump(int indent = 0);
+
+  virtual bool isBeVerb() const { return false; }
+};
+
+class EnglishBe : public EnglishVerb {
+ public:
+  explicit EnglishBe(Word *word);
+  ~EnglishBe() {}
+
+  std::string translate();
+  void dump(int indent = 0);
+
+  bool isBeVerb() const { return true; }
 };
 
 //

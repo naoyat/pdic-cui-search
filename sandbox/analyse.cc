@@ -45,9 +45,15 @@ lookup_result e_just(byte *needle) {
 
   g_shell->params.direct_dump_mode = false;
   // int flags = LOOKUP_EXACT_MATCH | LOOKUP_CASE_SENSITIVE;
-  int flags = LOOKUP_EXACT_MATCH;
+  int flags = LOOKUP_HENKAKEI;
   lookup_result_vec result_vec =
-      g_shell->dicts[ej_dict_id]->pdic_match_forward_lookup(needle, flags);
+      g_shell->dicts[ej_dict_id]->henkakei_lookup(needle, flags);
+
+  if (result_vec.size() == 0) {
+    flags = LOOKUP_EXACT_MATCH | LOOKUP_HENKAKEI;
+    result_vec =
+        g_shell->dicts[ej_dict_id]->pdic_match_forward_lookup(needle, flags);
+  }
 
   if (result_vec.size() == 0) return NULL;
 
@@ -60,14 +66,15 @@ lookup_result e_just(byte *needle) {
   return result_vec[0];
 }
 
+void tekitou() {}
+
 void analyse_text(byte *text, int length) {
   re2::StringPiece input(reinterpret_cast<char*>(text), length);
 
   vector<string> tokens;
-
-  string token;
-  // int sentence_type = 0;
-  while (RE2::FindAndConsume(&input, "([^ ]+)", &token)) {
+  while (true) {
+    string token;
+    if (!RE2::FindAndConsume(&input, "([^ ]+)", &token)) break;
     tokens.push_back(token);
   }
 
@@ -84,13 +91,24 @@ void analyse_text(byte *text, int length) {
       break;
   }
 
+  cout << tokens;
   if (last_ch)
-    printf("sentence type: (%c)\n", last_ch);  // ! ? .
+    printf(", sentence type: (%c)", last_ch);  // ! ? .
+  cout << endl;
 
   vector<Word*> words;
 
   // 単語（スペースで区切られたトークン的な意味で）→ Wordクラスオブジェクト
   for (int i = 0; i < L; ++i) {
+    /*
+    int num;
+    if (RE2::FullMatch(tokens[i], "(\\d+)", &num)) {
+      // printf("(number %d)\n", num);
+      words.push_back(new Word(NULL,
+                               BYTE(const_cast<char*>(tokens[i].c_str()))));
+      continue;
+    }
+    */
     string surface(tokens[i]);
     int surface_length = surface.size();
 
@@ -121,20 +139,41 @@ void analyse_text(byte *text, int length) {
     }
 
     if (!result) {
-      token = tokens[i];
+      string token = tokens[i];
       result = e_just(BYTE(const_cast<char*>(token.c_str())));
     }
 
-    words.push_back(new Word(result,
-                             BYTE(const_cast<char*>(surface.c_str()))));
+    if (result) {
+      Word *word = new Word(result, surface);
+      cout << "surface = " << word->surface() << endl;
+      word->dump(0);
+      words.push_back(word);
+    } else {
+      printf("(%s) is not found..\n", tokens[i].c_str());
+    }
   }
 
+  //printf("words.size() = %d\n", (int)words.size());
   vector<WObj*> objs = parse(words);
+  tekitou();
 
-
-  traverse(objs, it) {
-    (*it)->dump(0);
+  printf("tr<words>\n");
+  traverse(words, it) {
+    // printf("obj addr: %p %p\n",it, *it);
     // cout << " - " << (*it)->surface() << endl;
+    // Word *w = (Word*)(*it);
+    // w->dump(0);
+    (*it)->dump(0);
+  }
+
+  //printf("objs.size() = %d\n", (int)objs.size());
+  printf("tr<obj>\n");
+  traverse(objs, it) {
+    // printf("obj addr: %p %p\n",it, *it);
+    // cout << " - " << (*it)->surface() << endl;
+    // Word *w = (Word*)(*it);
+    // w->dump(0);
+    (*it)->dump(0);
   }
   /*
   cout << "word objects:";
