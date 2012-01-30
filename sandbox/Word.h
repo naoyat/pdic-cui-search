@@ -12,6 +12,7 @@
 #include <vector>
 #include <utility>
 
+#include "sandbox/WObj.h"
 #include "util/types.h"
 
 // [(sub_id, meaning)]
@@ -20,42 +21,26 @@ typedef std::vector<std::pair<int, std::string> > meanings_t;
 typedef std::pair<std::pair<std::string, int>,
                   std::pair<std::string, std::string> > usage_t;
 
-class WObj {
- public:
-  WObj();
-  explicit WObj(byte *surface);
-  explicit WObj(std::string surface);
-  virtual ~WObj() {}
-
-  virtual std::string surface() const { return surface_; }
-  virtual std::vector<std::string> pos() const { return pos_; }
-  virtual bool pos_canbe(const char *pos) const;
-
-  virtual std::string translate() { return "---"; }
-  virtual std::string translate(const std::string& pos) { return "---"; }
-  virtual void dump(int indent = 0);
-
-  static char *class_name(WObj *obj);
-
- protected:
-  std::string surface_;
-  std::vector<std::string> pos_;
-};
-
 class Word : public WObj {
  public:
   Word();
   explicit Word(lookup_result fields);
   Word(lookup_result fields, byte* surface);
   Word(lookup_result fields, std::string surface);
-  ~Word();
+
+  Word(const Word& word);
+  Word(const Word& word, const char *the_pos);
+  Word& operator=(const Word& word);
+  virtual ~Word();
+
+  virtual const char* type() { return "Word"; }
 
   void render();
   void render_full();
 
   virtual std::string translate();
-  virtual std::string translate(const std::string& pos);
-  //virtual void dump(int indent = 0);
+  virtual std::string translate_with_pos(const char *pos);
+  virtual void dump(int indent = 0);
 
  private:
   void parse_fields(lookup_result fields, byte* surface);

@@ -10,174 +10,175 @@
 
 #include "sandbox/Word.h"
 
-class EObj : public WObj {
- public:
-  explicit EObj(Word *word);
-  EObj(Word *word, std::string pos);
-  ~EObj() {}
-
-  virtual std::string surface() const {
-    return word_->surface();
-  }
-  std::vector<std::string> pos() const {
-    return std::vector<std::string>(1, the_pos_);
-  }
-
-  virtual std::string translate() {
-    return word_->translate(the_pos_);
-  }
-
-  // virtual void dump(int indent = 0) {
-  //   for (int i=0; i<indent; ++i) putchar(' ');
-  //   printf("%s\n", surface().c_str());
-  // }
-
-  // virtual std::string translate(std::string pos) {
-  //   return word_->translate(pos);
-  // }
-
- protected:
-  Word *word_;
-  std::string the_pos_;
-};
-
 //
 // Verb - 動詞
 //
-class EnglishVerb : public EObj {
+class EnglishVerb : public Word {
  public:
-  explicit EnglishVerb(Word *word);
-  ~EnglishVerb() {}
+  EnglishVerb(const Word& word);
+  virtual ~EnglishVerb();
 
-  std::string translate();
-  void dump(int indent = 0);
+  virtual const char* type() { return "EnglishVerb"; }
+
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 
   virtual bool isBeVerb() const { return false; }
 };
 
+
 class EnglishBe : public EnglishVerb {
  public:
-  explicit EnglishBe(Word *word);
-  ~EnglishBe() {}
+  EnglishBe(const Word& word);
+  virtual ~EnglishBe();
 
-  std::string translate();
-  void dump(int indent = 0);
+  virtual const char* type() { return "EnglishBe"; }
+
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 
   bool isBeVerb() const { return true; }
 };
 
+
 //
-// Noun - 名詞
+// EnglishEntity
 //
-class EnglishEntity : public EObj {
+class EnglishEntity : public Word {
  public:
   // explicit EnglishModifier(Word *word);
-  EnglishEntity(Word *word, std::string pos);
-  ~EnglishEntity() {}
+  EnglishEntity(const Word& word, const char *pos);
+  virtual ~EnglishEntity();
+
+  virtual const char* type() { return "EnglishEntity"; }
 };
 
+
+//
+// EnglishNoun
+//
 class EnglishNoun : public EnglishEntity {
  public:
-  explicit EnglishNoun(Word *word);
-  ~EnglishNoun() {}
+  EnglishNoun(const Word& word);
+  virtual ~EnglishNoun();
 
-  std::string translate();
-  void dump(int indent = 0);
+  virtual const char* type() { return "EnglishNoun"; }
+
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 };
+
 
 //
 // Name - 固有名詞
 //
 class EnglishName : public EnglishEntity {
  public:
-  explicit EnglishName(Word *word);
-  ~EnglishName() {}
+  EnglishName(const Word& word);
+  virtual ~EnglishName();
 
-  std::string translate();
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 };
+
 
 //
 // Pronoun - 代名詞 { I you he/she/it we they; me him/her, .. }
 //
 class EnglishPronoun : public EnglishEntity {
  public:
-  explicit EnglishPronoun(Word *word);
-  ~EnglishPronoun() {}
+  EnglishPronoun(const Word& word);
+  virtual ~EnglishPronoun();
 
-  std::string translate() { return word_->translate("代名"); }
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 };
 
-class EnglishModifier : public EObj {
+
+//
+// EnglishModifier
+//
+class EnglishModifier : public Word {
  public:
   // explicit EnglishModifier(Word *word);
-  EnglishModifier(Word *word, std::string pos);
-  ~EnglishModifier() {}
-
-  // std::string translate() { return word_->translate(); }
-  // void dump(int indent = 0);
+  EnglishModifier(const Word& word, const char *pos);
+  virtual ~EnglishModifier();
 };
+
 
 //
 // Determiner - 冠詞 { the, a/an }
 //
 class EnglishDeterminer : public EnglishModifier {
  public:
-  explicit EnglishDeterminer(Word *word);
-  ~EnglishDeterminer() {}
+  EnglishDeterminer(const Word& word);
+  virtual ~EnglishDeterminer();
 
   std::string translate() { return ""; }  // return word_->translate(); }
-  void dump(int indent = 0);
+  // virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 };
+
 
 //
 // Adjective - 形容詞
 //
 class EnglishAdjective : public EnglishModifier {
- public:
-  explicit EnglishAdjective(Word *word);
-  ~EnglishAdjective() {}
+public:
+  EnglishAdjective(const Word& word);
+  virtual ~EnglishAdjective();
 
-  std::string translate() { return word_->translate("形"); }
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 };
+
 
 //
 // Adverb - 副詞
 //
-class EnglishAdverb : public EObj {
+class EnglishAdverb : public Word {
  public:
-  explicit EnglishAdverb(Word *word);
-  ~EnglishAdverb() {}
+  EnglishAdverb(const Word& word);
+  virtual ~EnglishAdverb();
 
-  std::string translate();  // { return word_->translate("副"); }
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 };
 
 
 //
 // Preposition - 前置詞
 //
-class EnglishPreposition : public EObj {
+class EnglishPreposition : public Word {
  public:
-  explicit EnglishPreposition(Word *word);
-  ~EnglishPreposition() {}
+  EnglishPreposition(const Word& word);
+  virtual ~EnglishPreposition();
 
-  std::string translate();
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 };
+
 
 //
 // Conjunction - 接続詞
 //
-class EnglishConjunction : public EObj {
+class EnglishConjunction : public Word {
  public:
-  explicit EnglishConjunction(Word *word);
-  ~EnglishConjunction() {}
+  EnglishConjunction(const Word& word);
+  virtual ~EnglishConjunction();
 
-  std::string translate();
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 };
 
 
@@ -187,11 +188,14 @@ class EnglishNP;
 class EnglishPP : public WObj {
  public:
   EnglishPP(EnglishPreposition *prep, EnglishNP *np);
-  ~EnglishPP() {}
+  virtual ~EnglishPP();
+
+  virtual const char* type() { return "EnglishPP"; }
 
   std::string surface() const;
-  std::string translate();
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 
  private:
   EnglishPreposition *prep_;
@@ -203,14 +207,17 @@ class EnglishNP : public WObj {
  public:
   explicit EnglishNP(EnglishEntity* entity,
                      std::vector<EnglishModifier*> modifiers);
-  ~EnglishNP() {}
+  virtual ~EnglishNP();
+
+  virtual const char* type() { return "EnglishNP"; }
 
   void append_entity(EnglishEntity* entity);
   void add_pp(EnglishPP *pp);
 
   std::string surface() const;
-  std::string translate();
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
 
  private:
   std::vector<EnglishModifier*> modifiers_;
@@ -222,13 +229,16 @@ class EnglishNP : public WObj {
 class EnglishAP : public WObj {
  public:
   explicit EnglishAP(EnglishAdjective* adj);
-  ~EnglishAP() {}
+  virtual ~EnglishAP();
+
+  virtual const char* type() { return "EnglishAP"; }
 
   void append_adjective(EnglishAdjective* adj);
 
   std::string surface() const;
-  std::string translate();
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate_with_pos(const char *pos);
+  virtual void dump(int indent = 0);
 
  private:
   std::vector<EnglishAdjective*> adjectives_;
@@ -238,7 +248,9 @@ class EnglishAP : public WObj {
 class EnglishVP : public WObj {
  public:
   explicit EnglishVP(EnglishVerb *verb);
-  ~EnglishVP() {}
+  virtual ~EnglishVP();
+
+  virtual const char* type() { return "EnglishVP"; }
 
   void append_verb(EnglishVerb* verb);
   void add_np(EnglishNP* np);
@@ -247,8 +259,9 @@ class EnglishVP : public WObj {
   void add_adverb(EnglishAdverb* adv);
 
   std::string surface() const;
-  std::string translate();
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate_with_pos(const char *pos);
+  virtual void dump(int indent = 0);
 
  private:
   std::vector<EnglishVerb*> verbs_;
@@ -258,14 +271,18 @@ class EnglishVP : public WObj {
   std::vector<EnglishAdverb*> adverbs_;
 };
 
+
 class EnglishSentence : public WObj {
  public:
   EnglishSentence(EnglishNP* np, EnglishVP* vp);
-  ~EnglishSentence() {}
+  virtual ~EnglishSentence();
+
+  virtual const char* type() { return "EnglishSentence"; }
 
   std::string surface() const;
-  std::string translate();
-  void dump(int indent = 0);
+  virtual std::string translate();
+  // virtual std::string translate_with_pos(const char *pos);
+  virtual void dump(int indent = 0);
 
  private:
   EnglishNP *np_;
