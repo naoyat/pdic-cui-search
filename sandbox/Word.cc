@@ -8,6 +8,7 @@
 #include <re2/re2.h>
 
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -23,51 +24,28 @@ using namespace std;
 #include "sandbox/parse_lookup_result.h"
 
 Word::Word() : WObj(), meanings_map_(), usages_(), info_() {
-  printf("!!! ctor Word() called.\n");
-  // Word(NULL, (byte*)"");
-  // this->fields_ = NULL;
-  // this->surface_ = "";
-  /*
-  meanings_map_.clear();
-  usages_.clear();
-  info_.clear();
-  */
+  printf("Word();\n");
 }
 
 Word::Word(lookup_result fields)
     : WObj(fields[F_ENTRY]), meanings_map_(), usages_(), info_() {
-  printf("!!! ctor Word({\"%s\", ...}) called.\n",
+  printf("Word(fields:{\"%s\",...});\n",
          reinterpret_cast<char*>(fields[F_ENTRY]));
-  /*
-  meanings_map_.clear();
-  usages_.clear();
-  info_.clear();
-  */
   parse_fields(fields, fields[F_ENTRY]);
 }
 
 Word::Word(lookup_result fields, byte *surface)
     : WObj(surface), meanings_map_(), usages_(), info_() {
-  printf("!!! ctor Word({\"%s\", ...}, (byte*)surface=\"%s\") called.\n",
+  printf("Word(fields:{\"%s\",...},surface:\"%s\");\n",
          reinterpret_cast<char*>(fields[F_ENTRY]),
          reinterpret_cast<char*>(surface));
-  /*
-  meanings_map_.clear();
-  usages_.clear();
-  info_.clear();
-  */
   parse_fields(fields, surface);
 }
 
-Word::Word(lookup_result fields, std::string surface)
+Word::Word(lookup_result fields, std::string& surface)
     : WObj(surface), meanings_map_(), usages_(), info_() {
-  printf("!!! ctor Word({\"%s\", ...}, (std::string)surface=\"%s\") called.\n",
+  printf("Word(fields:{\"%s\",...},(std::string)surface:\"%s\");\n",
          reinterpret_cast<char*>(fields[F_ENTRY]), surface.c_str());
-  /*
-  meanings_map_.clear();
-  usages_.clear();
-  info_.clear();
-  */
   parse_fields(fields,
                BYTE(const_cast<char*>(surface.c_str())));
 }
@@ -78,7 +56,7 @@ Word::Word(lookup_result fields, std::string surface)
 Word::Word(const Word& word) {
   this->surface_      = word.surface_;
   this->the_pos_      = word.the_pos_;
-  this->pos_          = word.pos_;
+  this->pos_.assign(word.pos_.begin(), word.pos_.end());
   this->fields_       = word.fields_;
   // this->fields_       = (lookup_result)clone(word.fields_, sizeof(lookup_result));
   this->meanings_map_ = word.meanings_map_;
@@ -89,7 +67,7 @@ Word::Word(const Word& word) {
 Word::Word(const Word& word, const char *the_pos) {
   this->surface_      = word.surface_;
   this->the_pos_      = the_pos;  // <--
-  this->pos_          = word.pos_;
+  this->pos_.assign(word.pos_.begin(), word.pos_.end());
   // this->the_pos_      = word.the_pos_;
   this->fields_       = word.fields_;
   this->meanings_map_ = word.meanings_map_;
@@ -100,7 +78,7 @@ Word::Word(const Word& word, const char *the_pos) {
 Word& Word::operator=(const Word& word) {
   this->surface_      = word.surface_;
   this->the_pos_      = word.the_pos_;
-  this->pos_          = word.pos_;
+  this->pos_.assign(word.pos_.begin(), word.pos_.end());
   this->fields_       = word.fields_;
   this->meanings_map_ = word.meanings_map_;
   this->usages_       = word.usages_;
@@ -110,7 +88,7 @@ Word& Word::operator=(const Word& word) {
 }
 
 
-void Word::parse_fields(lookup_result fields, byte *surface) {
+void Word::parse_fields(lookup_result fields, byte *surface){
   if (!fields) return;
   this->fields_ = (lookup_result)clone(fields, sizeof(fields[0])*F_COUNT);
   this->surface_ = std::string(reinterpret_cast<char*>(
@@ -146,7 +124,7 @@ void Word::parse_fields(lookup_result fields, byte *surface) {
   pos_.clear();
   if (meanings_map_.size() > 0) {
     traverse(meanings_map_, it) {
-      pos_.push_back((*it).first);
+      pos_.push_back((*it).first.c_str());
     }
   }
 }
@@ -223,17 +201,17 @@ std::string omit(string s) {
 }
 
 std::string Word::translate() {
-  if (the_pos_) return translate_with_pos(the_pos_);
-
-  traverse(pos_, it) {
-    return translate_with_pos((*it).c_str());
-  }
+  if (the_pos_)
+    return translate_with_pos(the_pos_);
+  else
+    traverse(pos_, it) return translate_with_pos(*it);
 
   return "*";
 }
 
 std::string Word::translate_with_pos(const char *pos) {
   std::string pos_s(pos);
+  typeof(meanings_map_.begin()) it = meanings_map_.find(pos_s);
   if (meanings_map_.find(pos_s) == meanings_map_.end()) return "";
   // surface(); // std::string("---");
 
@@ -244,7 +222,7 @@ std::string Word::translate_with_pos(const char *pos) {
 }
 
 void Word::dump(int indent) {
-  printf("Word::dump(%d)..\n", indent);
+  // printf("Word::dump(%d)..\n", indent);
   cout << string(indent, ' ');
   cout << surface() << endl;
 }

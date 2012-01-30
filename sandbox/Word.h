@@ -26,7 +26,7 @@ class Word : public WObj {
   Word();
   explicit Word(lookup_result fields);
   Word(lookup_result fields, byte* surface);
-  Word(lookup_result fields, std::string surface);
+  Word(lookup_result fields, std::string& surface);
 
   Word(const Word& word);
   Word(const Word& word, const char *the_pos);

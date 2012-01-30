@@ -24,15 +24,14 @@ using namespace std;
 #include "sandbox/parse_lookup_result.h"
 
 WObj::WObj() : surface_(), pos_() {
-  // printf("!!! ctor WOBj() called.\n");
-  // this->surface_ = std::string("");
-  // printf("WObj: setting empty surface.\n");
-  this->surface_ = "void";
+  // printf("WObj();\n");
+  this->surface_ = "";
   this->the_pos_ = NULL;
   this->pos_.clear();
 }
 
 WObj::WObj(byte *surface) : surface_(reinterpret_cast<char*>(surface)), pos_() {
+  printf("WObj(surface:\"%s\");\n", (char*)surface);
   // this->surface_ = std::string((char*)surface);
   // printf("WObj: setting surface {%s}.\n", (char*)surface);
   this->surface_ = std::string(reinterpret_cast<char*>(surface));
@@ -40,7 +39,8 @@ WObj::WObj(byte *surface) : surface_(reinterpret_cast<char*>(surface)), pos_() {
   this->pos_.clear();
 }
 
-WObj::WObj(std::string surface) : surface_(surface), pos_() {
+WObj::WObj(std::string& surface) : surface_(surface), pos_() {
+  printf("WObj((std::string)surface:\"%s\");\n", surface.c_str());
   // printf("WObj: setting surface {%s}.\n", surface.c_str());
   this->surface_ = surface;
   this->the_pos_ = NULL;
@@ -48,26 +48,28 @@ WObj::WObj(std::string surface) : surface_(surface), pos_() {
 }
 
 WObj::WObj(const WObj& wobj) {
-  this->surface_      = wobj.surface_;
-  this->the_pos_      = wobj.the_pos_;
-  this->pos_          = wobj.pos_;
+  printf("WObj(copy:wobj \"%s\");\n", wobj.surface().c_str());
+  this->surface_ = wobj.surface_;
+  this->the_pos_ = wobj.the_pos_;
+  this->pos_.assign(wobj.pos_.begin(), wobj.pos_.end());
 }
 
 WObj& WObj::operator=(const WObj& wobj) {
-  this->surface_      = wobj.surface_;
-  this->the_pos_      = wobj.the_pos_;
-  this->pos_          = wobj.pos_;
+  printf("WObj op=(wobj \"%s\");\n", wobj.surface().c_str());
+  this->surface_ = wobj.surface_;
+  this->the_pos_ = wobj.the_pos_;
+  this->pos_.assign(wobj.pos_.begin(), wobj.pos_.end());
   return *this;
 }
 
 WObj::~WObj() {
-  printf("~WObj();\n");
+  // printf("~WObj();\n");
 }
 
-bool WObj::pos_canbe(const char *pos) const {
-  const std::vector<std::string> my_pos = this->pos_;
+bool WObj::pos_canbe(const char *pos) {
+  const std::vector<const char*> my_pos = this->pos_;
   traverse(this->pos_, it) {
-    if (strcmp(pos, (*it).c_str()) == 0) return true;
+    if (strcmp(pos, *it) == 0) return true;
   }
   /*
   for (unsigned int i = 0, c = my_pos.size(); i < c; ++i) {
@@ -83,11 +85,11 @@ bool WObj::pos_canbe(const char *pos) const {
 }
 
 std::string WObj::translate() {
-  if (the_pos_) return translate_with_pos(the_pos_);
+  if (the_pos_)
+    return translate_with_pos(the_pos_);
+  else
+    traverse(pos_, it) return translate_with_pos(*it);
 
-  traverse(pos_, it) {
-    return translate_with_pos((*it).c_str());
-  }
   return "*";
 }
 

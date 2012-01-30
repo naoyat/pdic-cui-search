@@ -18,8 +18,8 @@ using namespace std;
 //
 // EnglishVerb
 //
-EnglishVerb::EnglishVerb(const Word& word) : Word(word, "[V]") {
-  printf("EnglishVerb(copy:word);\n");
+EnglishVerb::EnglishVerb(Word& word) : Word(word, "[V]") {
+  printf("EnglishVerb(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishVerb::~EnglishVerb() {
@@ -46,8 +46,8 @@ void EnglishVerb::dump(int indent) {
 //
 // ENglishBe
 //
-EnglishBe::EnglishBe(const Word& word) : EnglishVerb(word) {
-  printf("EnglishBe(copy:word);\n");
+EnglishBe::EnglishBe(Word& word) : EnglishVerb(word) {
+  printf("EnglishBe(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishBe::~EnglishBe() {
@@ -66,8 +66,8 @@ void EnglishBe::dump(int indent) {
 //
 // EnglishEntity
 //
-EnglishEntity::EnglishEntity(const Word& word, const char *pos) : Word(word, pos) {
-  printf("EnglishEntity(copy:word; pos=%s);\n", pos);
+EnglishEntity::EnglishEntity(Word& word, const char *pos) : Word(word, pos) {
+  printf("EnglishEntity(copy:word \"%s\"; pos=%s);\n", word.surface().c_str(), pos);
 }
 
 EnglishEntity::~EnglishEntity() {
@@ -78,8 +78,8 @@ EnglishEntity::~EnglishEntity() {
 //
 // ENglishNoun
 //
-EnglishNoun::EnglishNoun(const Word& word) : EnglishEntity(word, "[N]") {
-  printf("EnglishNoun(copy:word);\n");
+EnglishNoun::EnglishNoun(Word& word) : EnglishEntity(word, "[N]") {
+  printf("EnglishNoun(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishNoun::~EnglishNoun() {
@@ -99,8 +99,8 @@ void EnglishNoun::dump(int indent) {
 //
 // EnglishName
 //
-EnglishName::EnglishName(const Word& word) : EnglishEntity(word, "[Name]") {
-  printf("EnglishName(copy:word);\n");
+EnglishName::EnglishName(Word& word) : EnglishEntity(word, "[Name]") {
+  printf("EnglishName(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishName::~EnglishName() {
@@ -113,16 +113,16 @@ std::string EnglishName::translate() {
   return surface();
 }
 void EnglishName::dump(int indent) {
-  cout << string(indent, ' ') << "Name: " << surface() << endl;
+  cout << string(indent, ' ') << "N<name>: " << surface() << endl;
 }
 
 
 //
 // EnglishPronoun
 //
-EnglishPronoun::EnglishPronoun(const Word& word)
+EnglishPronoun::EnglishPronoun(Word& word)
     : EnglishEntity(word, "[Pron]") {
-  printf("EnglishPronoun(copy:word);\n");
+  printf("EnglishPronoun(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishPronoun::~EnglishPronoun() {
@@ -135,16 +135,16 @@ std::string EnglishPronoun::translate() {
 }
 
 void EnglishPronoun::dump(int indent) {
-  cout << string(indent, ' ') << "Pron: " << surface() << endl;
+  cout << string(indent, ' ') << "N<pron>: " << surface() << endl;
 }
 
 
 //
 // EnglishModifier
 //
-EnglishModifier::EnglishModifier(const Word& word, const char *pos)
+EnglishModifier::EnglishModifier(Word& word, const char *pos)
     : Word(word, pos) {
-  printf("EnglishModifier(copy:word; pos=%s);\n", pos);
+  printf("EnglishModifier(copy:word \"%s\"; pos=%s);\n", word.surface().c_str(), pos);
 }
 
 EnglishModifier::~EnglishModifier() {
@@ -155,9 +155,9 @@ EnglishModifier::~EnglishModifier() {
 //
 // EnglishDeterminer
 //
-EnglishDeterminer::EnglishDeterminer(const Word& word)
+EnglishDeterminer::EnglishDeterminer(Word& word)
     : EnglishModifier(word, "[Det]") {
-  printf("EnglishDeterminer(copy:word);\n");
+  printf("EnglishDeterminer(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishDeterminer::~EnglishDeterminer() {
@@ -172,9 +172,9 @@ void EnglishDeterminer::dump(int indent) {
 //
 // EnglishAdjective
 //
-EnglishAdjective::EnglishAdjective(const Word& word)
+EnglishAdjective::EnglishAdjective(Word& word)
     : EnglishModifier(word, "[Adj]") {
-  printf("EnglishAdjective(copy:word);\n");
+  printf("EnglishAdjective(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishAdjective::~EnglishAdjective() {
@@ -194,8 +194,8 @@ void EnglishAdjective::dump(int indent) {
 //
 // EnglishAdverb
 //
-EnglishAdverb::EnglishAdverb(const Word& word) : Word(word, "[Adv]") {
-  printf("EnglishAdverb(copy:word);\n");
+EnglishAdverb::EnglishAdverb(Word& word) : Word(word, "[Adv]") {
+  printf("EnglishAdverb(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishAdverb::~EnglishAdverb() {
@@ -214,8 +214,8 @@ void EnglishAdverb::dump(int indent) {
 //
 // EnglishPreposition
 //
-EnglishPreposition::EnglishPreposition(const Word& word) : Word(word, "[Prep]") {
-  printf("EnglishPreposition(copy:word);\n");
+EnglishPreposition::EnglishPreposition(Word& word) : Word(word, "[Prep]") {
+  printf("EnglishPreposition(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishPreposition::~EnglishPreposition() {
@@ -237,8 +237,8 @@ void EnglishPreposition::dump(int indent) {
 //
 // EnglishConjunction
 //
-EnglishConjunction::EnglishConjunction(const Word& word) : Word(word, "[Conj]") {
-  printf("EnglishConjunction(copy:word);\n");
+EnglishConjunction::EnglishConjunction(Word& word) : Word(word, "[Conj]") {
+  printf("EnglishConjunction(copy:word \"%s\");\n", word.surface().c_str());
 }
 
 EnglishConjunction::~EnglishConjunction() {
@@ -263,7 +263,7 @@ void EnglishConjunction::dump(int indent) {
 EnglishPP::EnglishPP(EnglishPreposition *prep, EnglishNP *np) {
   this->prep_ = prep;
   this->np_ = np;
-  this->pos_ = std::vector<std::string>(1, "[PP]");
+  this->pos_ = std::vector<const char*>(1, "[PP]");
   printf("EnglishPP(*prep, *np);\n");
 }
 
@@ -271,7 +271,7 @@ EnglishPP::~EnglishPP() {
   printf("~EnglishPP();\n");
 }
 
-std::string EnglishPP::surface() const {
+std::string EnglishPP::surface() {
   return "(" + prep_->surface() + " " + np_->surface() + ")";
 }
 
@@ -297,7 +297,7 @@ EnglishNP::EnglishNP(EnglishEntity *entity,
   this->modifiers_.assign(modifiers.begin(), modifiers.end());
   this->entities_.push_back(entity);
   this->pps_.clear();
-  this->pos_ = std::vector<std::string>(1, "[NP]");
+  this->pos_ = std::vector<const char*>(1, "[NP]");
   printf("EnglishNP(*entity, *modifiers);\n");
 }
 
@@ -313,18 +313,20 @@ void EnglishNP::add_pp(EnglishPP *pp) {
   this->pps_.push_back(pp);
 }
 
-std::string EnglishNP::surface() const {
+std::string EnglishNP::surface() {
   std::stringstream ss;
   ss << "(";
   traverse(modifiers_, it) {
     ss << (*it)->surface() << " ";
   }
+
   ss << "<";
   traverse(entities_, it) {
     if (it != entities_.begin()) ss << " ";
     ss << (*it)->surface();
   }
   ss << ">";
+
   traverse(pps_, it) {
     ss << " " << (*it)->surface();
   }
@@ -346,6 +348,7 @@ std::string EnglishNP::translate() {
     }
     // ss << "}";
   }
+
   traverse(entities_, it) {
     if (it != entities_.begin()) ss << " ";
     ss << (*it)->translate();
@@ -377,7 +380,7 @@ void EnglishNP::dump(int indent) {
 //
 EnglishAP::EnglishAP(EnglishAdjective* adj) {
   this->adjectives_.push_back(adj);
-  this->pos_ = std::vector<std::string>(1, "[AP]");
+  this->pos_ = std::vector<const char*>(1, "[AP]");
   printf("EnglishAP(*adj);\n");
 }
 
@@ -389,7 +392,7 @@ void EnglishAP::append_adjective(EnglishAdjective* adj) {
   this->adjectives_.push_back(adj);
 }
 
-std::string EnglishAP::surface() const {
+std::string EnglishAP::surface() {
   std::stringstream ss;
   traverse(adjectives_, it) {
     if (it != adjectives_.begin())
@@ -423,7 +426,7 @@ EnglishVP::EnglishVP(EnglishVerb *verb) {
   this->np_ = NULL;
   this->ap_ = NULL;
   this->pps_.clear();
-  this->pos_ = std::vector<std::string>(1, "[VP]");
+  this->pos_ = std::vector<const char*>(1, "[VP]");
   printf("EnglishVP(*verb);\n");
 }
 
@@ -451,7 +454,7 @@ void EnglishVP::add_adverb(EnglishAdverb* adv) {
   this->adverbs_.push_back(adv);
 }
 
-std::string EnglishVP::surface() const {
+std::string EnglishVP::surface() {
   std::stringstream ss;
 
   if (verbs_[0]->isBeVerb()) {
@@ -590,7 +593,7 @@ void EnglishVP::dump(int indent) {
 EnglishSentence::EnglishSentence(EnglishNP* np, EnglishVP* vp) {
   this->np_ = np;
   this->vp_ = vp;
-  this->pos_ = std::vector<std::string>(1, "[S]");
+  this->pos_ = std::vector<const char*>(1, "[S]");
   printf("EnglishSentence(*np, *vp);\n");
 }
 
@@ -598,7 +601,15 @@ EnglishSentence::~EnglishSentence() {
   printf("~EnglishSentence();\n");
 }
 
-std::string EnglishSentence::surface() const {
+// copy constructor
+EnglishSentence::EnglishSentence(const EnglishSentence& st) {
+  printf("EnglishSentence(copy:st; *np, *vp);\n");
+  this->np_  = st.np_;
+  this->vp_  = st.vp_;
+  this->pos_ = st.pos_;
+}
+
+std::string EnglishSentence::surface() {
   return np_->surface() + " " + vp_->surface();
 }
 

@@ -1,7 +1,8 @@
 .SUFFIXES:
 .SUFFIXES: .cc .o
 
-CXX = g++
+#CXX = g++
+CXX = clang++
 # CXXFLAGS=-Wall -O3 -g -I.
 CXXFLAGS=-Wall -O0 -I. -g # -pg
 

@@ -15,7 +15,7 @@
 //
 class EnglishVerb : public Word {
  public:
-  EnglishVerb(const Word& word);
+  EnglishVerb(Word& word);
   virtual ~EnglishVerb();
 
   virtual const char* type() { return "EnglishVerb"; }
@@ -24,13 +24,13 @@ class EnglishVerb : public Word {
   // virtual std::string translate(const char *pos);
   virtual void dump(int indent = 0);
 
-  virtual bool isBeVerb() const { return false; }
+  virtual bool isBeVerb() { return false; }
 };
 
 
 class EnglishBe : public EnglishVerb {
  public:
-  EnglishBe(const Word& word);
+  EnglishBe(Word& word);
   virtual ~EnglishBe();
 
   virtual const char* type() { return "EnglishBe"; }
@@ -39,7 +39,7 @@ class EnglishBe : public EnglishVerb {
   // virtual std::string translate(const char *pos);
   virtual void dump(int indent = 0);
 
-  bool isBeVerb() const { return true; }
+  bool isBeVerb() { return true; }
 };
 
 
@@ -49,7 +49,7 @@ class EnglishBe : public EnglishVerb {
 class EnglishEntity : public Word {
  public:
   // explicit EnglishModifier(Word *word);
-  EnglishEntity(const Word& word, const char *pos);
+  EnglishEntity(Word& word, const char *pos);
   virtual ~EnglishEntity();
 
   virtual const char* type() { return "EnglishEntity"; }
@@ -61,7 +61,7 @@ class EnglishEntity : public Word {
 //
 class EnglishNoun : public EnglishEntity {
  public:
-  EnglishNoun(const Word& word);
+  EnglishNoun(Word& word);
   virtual ~EnglishNoun();
 
   virtual const char* type() { return "EnglishNoun"; }
@@ -77,7 +77,7 @@ class EnglishNoun : public EnglishEntity {
 //
 class EnglishName : public EnglishEntity {
  public:
-  EnglishName(const Word& word);
+  EnglishName(Word& word);
   virtual ~EnglishName();
 
   virtual std::string translate();
@@ -91,7 +91,7 @@ class EnglishName : public EnglishEntity {
 //
 class EnglishPronoun : public EnglishEntity {
  public:
-  EnglishPronoun(const Word& word);
+  EnglishPronoun(Word& word);
   virtual ~EnglishPronoun();
 
   virtual std::string translate();
@@ -106,7 +106,7 @@ class EnglishPronoun : public EnglishEntity {
 class EnglishModifier : public Word {
  public:
   // explicit EnglishModifier(Word *word);
-  EnglishModifier(const Word& word, const char *pos);
+  EnglishModifier(Word& word, const char *pos);
   virtual ~EnglishModifier();
 };
 
@@ -116,7 +116,7 @@ class EnglishModifier : public Word {
 //
 class EnglishDeterminer : public EnglishModifier {
  public:
-  EnglishDeterminer(const Word& word);
+  EnglishDeterminer(Word& word);
   virtual ~EnglishDeterminer();
 
   std::string translate() { return ""; }  // return word_->translate(); }
@@ -131,7 +131,7 @@ class EnglishDeterminer : public EnglishModifier {
 //
 class EnglishAdjective : public EnglishModifier {
 public:
-  EnglishAdjective(const Word& word);
+  EnglishAdjective(Word& word);
   virtual ~EnglishAdjective();
 
   virtual std::string translate();
@@ -145,7 +145,7 @@ public:
 //
 class EnglishAdverb : public Word {
  public:
-  EnglishAdverb(const Word& word);
+  EnglishAdverb(Word& word);
   virtual ~EnglishAdverb();
 
   virtual std::string translate();
@@ -159,7 +159,7 @@ class EnglishAdverb : public Word {
 //
 class EnglishPreposition : public Word {
  public:
-  EnglishPreposition(const Word& word);
+  EnglishPreposition(Word& word);
   virtual ~EnglishPreposition();
 
   virtual std::string translate();
@@ -173,7 +173,7 @@ class EnglishPreposition : public Word {
 //
 class EnglishConjunction : public Word {
  public:
-  EnglishConjunction(const Word& word);
+  EnglishConjunction(Word& word);
   virtual ~EnglishConjunction();
 
   virtual std::string translate();
@@ -192,7 +192,7 @@ class EnglishPP : public WObj {
 
   virtual const char* type() { return "EnglishPP"; }
 
-  std::string surface() const;
+  std::string surface();
   virtual std::string translate();
   // virtual std::string translate(const char *pos);
   virtual void dump(int indent = 0);
@@ -214,7 +214,7 @@ class EnglishNP : public WObj {
   void append_entity(EnglishEntity* entity);
   void add_pp(EnglishPP *pp);
 
-  std::string surface() const;
+  std::string surface();
   virtual std::string translate();
   // virtual std::string translate(const char *pos);
   virtual void dump(int indent = 0);
@@ -235,7 +235,7 @@ class EnglishAP : public WObj {
 
   void append_adjective(EnglishAdjective* adj);
 
-  std::string surface() const;
+  std::string surface();
   virtual std::string translate();
   // virtual std::string translate_with_pos(const char *pos);
   virtual void dump(int indent = 0);
@@ -258,7 +258,7 @@ class EnglishVP : public WObj {
   void add_ap(EnglishAP* ap);
   void add_adverb(EnglishAdverb* adv);
 
-  std::string surface() const;
+  std::string surface();
   virtual std::string translate();
   // virtual std::string translate_with_pos(const char *pos);
   virtual void dump(int indent = 0);
@@ -277,9 +277,11 @@ class EnglishSentence : public WObj {
   EnglishSentence(EnglishNP* np, EnglishVP* vp);
   virtual ~EnglishSentence();
 
+  EnglishSentence(const EnglishSentence& st);
+
   virtual const char* type() { return "EnglishSentence"; }
 
-  std::string surface() const;
+  std::string surface();
   virtual std::string translate();
   // virtual std::string translate_with_pos(const char *pos);
   virtual void dump(int indent = 0);

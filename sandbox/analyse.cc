@@ -67,7 +67,7 @@ lookup_result e_just(byte *needle) {
 }
 
 
-void render_objs_as_table(const vector<WObj>& objs) {
+void render_objs_as_table(vector<WObj>& objs) {
   printf("Einsatz...\n");
   Einsatz ez(2);
 
@@ -77,13 +77,16 @@ void render_objs_as_table(const vector<WObj>& objs) {
   ez.add_style_begins(styles);
 
   traverse(objs, it) {
+    printf("obj ptr: %p, type = %s\n", &*it, (*it).type());
+
     vector<string> vs;
-    WObj *obj = const_cast<WObj*>(&*it);
+    WObj* obj = (WObj*)(&*it);
     // cout << (*it)->surface() << " " << (*it)->pos() << endl;
-    printf("obj ptr: %p\n", obj);
-    cout << obj->type() << endl;
+    // cout << " #surface# " << obj->surface() << endl;
+    // cout << " #translate# " << obj->translate() << endl;
     vs.push_back(obj->surface());
     vs.push_back(obj->translate());
+    // cout << " ## " << endl;
     traverse(obj->pos(), jt) {
       vs.push_back(*jt);
     }
@@ -172,7 +175,7 @@ void analyse_text(byte *text, int length) {
     if (result) {
       Word word(result, surface);
       cout << "surface = " << word.surface() << endl;
-      word.dump(0);
+      // word.dump(0);
       words.push_back(word);
       cout << "==? ";
       if (words.size() > 0)
@@ -185,17 +188,20 @@ void analyse_text(byte *text, int length) {
   }
 
   printf("before parsing......\n");
-
   //printf("words.size() = %d\n", (int)words.size());
-  const vector<WObj> objs = parse(words);
+  vector<WObj> objs( parse(words) );
   printf("after parsing......\n");
 
 
-  printf("tr<words>\n");
+  // printf("tr<words>\n");
+  /*
   traverse(words, it) {
-    cout << "type of object: " << (*it).type() << endl;
+    // cout << "type of object: " << (*it).type() << endl; // ok
     (*it).dump(0);
   }
+  */
+
+  printf("MAYBE STILL ALIVE HERE...\n");
 
   render_objs_as_table(objs);
   /*

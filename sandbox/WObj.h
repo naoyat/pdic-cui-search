@@ -16,7 +16,7 @@ class WObj {
  public:
   WObj();
   explicit WObj(byte *surface);
-  explicit WObj(std::string surface);
+  explicit WObj(std::string& surface);
   virtual ~WObj();
 
   WObj(const WObj& wobj);
@@ -24,9 +24,11 @@ class WObj {
 
   virtual const char* type() { return "WObj"; }
 
-  virtual std::string surface() const { return surface_; }
-  virtual std::vector<std::string> pos() const { return pos_; }
-  virtual bool pos_canbe(const char *pos) const;
+  virtual std::string surface() { return surface_; }
+  virtual std::string surface() const {
+    return const_cast<WObj*>(this)->surface(); }
+  virtual std::vector<const char *>& pos() { return pos_; }
+  virtual bool pos_canbe(const char *pos);
 
   virtual std::string translate();
   virtual std::string translate_with_pos(const char *pos);
@@ -40,7 +42,7 @@ class WObj {
 
  protected:
   std::string surface_;
-  std::vector<std::string> pos_;
+  std::vector<const char *> pos_;
 
   const char *the_pos_;  // 品詞が確定している場合にセット
 };
