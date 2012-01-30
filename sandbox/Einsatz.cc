@@ -33,6 +33,8 @@ int width_of_text(const std::string& str) {
 }
 
 void Einsatz::add(std::vector<std::string> texts) {
+  if (texts_.size() == 0) return;
+
   int curr_levels = texts.size();
   if (curr_levels > levels_) {
     int old_levels = levels_;

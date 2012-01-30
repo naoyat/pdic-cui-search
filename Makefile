@@ -15,7 +15,8 @@ OBJECTS = \
 	obj/util/search.o obj/util/stlutil.o obj/util/timeutil.o obj/util/utf8.o \
 	obj/util/util.o obj/util/Shell.o \
 	obj/sandbox/alt.o obj/sandbox/parse_lookup_result.o \
-	obj/sandbox/analyse.o obj/sandbox/parse.o obj/sandbox/Word.o obj/sandbox/EnglishGrammar.o \
+	obj/sandbox/analyse.o obj/sandbox/parse.o \
+	obj/sandbox/WObj.o obj/sandbox/Word.o obj/sandbox/EnglishGrammar.o \
 	obj/sandbox/Einsatz.o
 
 TEST_OBJECTS = test/filemem_gtest.o test/search_gtest.o \

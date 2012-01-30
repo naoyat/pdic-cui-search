@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "sandbox/Word.h"
 #include "util/types.h"
 
 class WObj;
@@ -20,13 +21,13 @@ class EnglishVP;
 
 // lookup_result e_just(byte *needle);
 
-EnglishEntity* parse_entity(const std::vector<Word*>& words, unsigned int *ix);
-EnglishModifier* parse_modifier(const std::vector<Word*>& words,
+EnglishEntity* parse_entity(const std::vector<Word>& words, unsigned int *ix);
+EnglishModifier* parse_modifier(const std::vector<Word>& words,
                                 unsigned int *ix);
-EnglishNP* parse_np(const std::vector<Word*>& words, unsigned int *ix);
-EnglishPP* parse_pp(const std::vector<Word*>& words, unsigned int *ix);
-EnglishVP* parse_vp(const std::vector<Word*>& words, unsigned int *ix);
+EnglishNP* parse_np(const std::vector<Word>& words, unsigned int *ix);
+EnglishPP* parse_pp(const std::vector<Word>& words, unsigned int *ix);
+EnglishVP* parse_vp(const std::vector<Word>& words, unsigned int *ix);
 
-std::vector<WObj*> parse(const std::vector<Word*>& words);
+std::vector<WObj> parse(const std::vector<Word>& words);
 
 #endif  // SANDBOX_PARSE_H_

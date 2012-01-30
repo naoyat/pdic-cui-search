@@ -66,7 +66,33 @@ lookup_result e_just(byte *needle) {
   return result_vec[0];
 }
 
-void tekitou() {}
+
+void render_objs_as_table(const vector<WObj>& objs) {
+  printf("Einsatz...\n");
+  Einsatz ez(2);
+
+  vector<pair<string, string> > styles;
+  styles.push_back(make_pair(ANSI_BOLD_ON, ANSI_BOLD_OFF));
+  styles.push_back(make_pair("", ""));
+  ez.add_style_begins(styles);
+
+  traverse(objs, it) {
+    vector<string> vs;
+    WObj *obj = const_cast<WObj*>(&*it);
+    // cout << (*it)->surface() << " " << (*it)->pos() << endl;
+    printf("obj ptr: %p\n", obj);
+    cout << obj->type() << endl;
+    vs.push_back(obj->surface());
+    vs.push_back(obj->translate());
+    traverse(obj->pos(), jt) {
+      vs.push_back(*jt);
+    }
+    // cout << vs << endl;
+    ez.add(vs);
+  }
+  ez.render();
+}
+
 
 void analyse_text(byte *text, int length) {
   re2::StringPiece input(reinterpret_cast<char*>(text), length);
@@ -96,7 +122,7 @@ void analyse_text(byte *text, int length) {
     printf(", sentence type: (%c)", last_ch);  // ! ? .
   cout << endl;
 
-  vector<Word*> words;
+  vector<Word> words;
 
   // 単語（スペースで区切られたトークン的な意味で）→ Wordクラスオブジェクト
   for (int i = 0; i < L; ++i) {
@@ -144,27 +170,35 @@ void analyse_text(byte *text, int length) {
     }
 
     if (result) {
-      Word *word = new Word(result, surface);
-      cout << "surface = " << word->surface() << endl;
-      word->dump(0);
+      Word word(result, surface);
+      cout << "surface = " << word.surface() << endl;
+      word.dump(0);
       words.push_back(word);
+      cout << "==? ";
+      if (words.size() > 0)
+        words[0].dump(3);
+      else
+        cout << "words[] was empty..." << endl;
     } else {
       printf("(%s) is not found..\n", tokens[i].c_str());
     }
   }
 
+  printf("before parsing......\n");
+
   //printf("words.size() = %d\n", (int)words.size());
-  vector<WObj*> objs = parse(words);
-  tekitou();
+  const vector<WObj> objs = parse(words);
+  printf("after parsing......\n");
+
 
   printf("tr<words>\n");
   traverse(words, it) {
-    // printf("obj addr: %p %p\n",it, *it);
-    // cout << " - " << (*it)->surface() << endl;
-    // Word *w = (Word*)(*it);
-    // w->dump(0);
-    (*it)->dump(0);
+    cout << "type of object: " << (*it).type() << endl;
+    (*it).dump(0);
   }
+
+  render_objs_as_table(objs);
+  /*
 
   //printf("objs.size() = %d\n", (int)objs.size());
   printf("tr<obj>\n");
@@ -173,8 +207,11 @@ void analyse_text(byte *text, int length) {
     // cout << " - " << (*it)->surface() << endl;
     // Word *w = (Word*)(*it);
     // w->dump(0);
-    (*it)->dump(0);
+    cout << "type of object: " << ((WObj*)*it)->type() << endl;
+    ((WObj*)*it)->dump(0);
   }
+  */
+  
   /*
   cout << "word objects:";
   traverse(objs, it) {
@@ -182,40 +219,4 @@ void analyse_text(byte *text, int length) {
   }
   cout << endl;
   */
-  Einsatz ez(2);
-
-  vector<pair<string, string> > styles;
-  styles.push_back(make_pair(ANSI_BOLD_ON, ANSI_BOLD_OFF));
-  styles.push_back(make_pair("", ""));
-  ez.add_style_begins(styles);
-
-  traverse(objs, it) {
-    vector<string> vs;
-    // cout << (*it)->surface() << " " << (*it)->pos() << endl;
-    vs.push_back((*it)->surface());
-    vs.push_back((*it)->translate());
-    vector<string> poss = (*it)->pos();
-    traverse(poss, jt) {
-      vs.push_back(*jt);
-    }
-    // cout << vs << endl;
-    ez.add(vs);
-  }
-  ez.render();
-
-  /*
-  if (last_ch) cout << (char)last_ch;
-  cout << ANSI_BOLD_OFF << endl;
-  */
-
-  /*
-  traverse(words, it) {
-    (*it)->render();
-  }
-  */
-
-  // delete all
-  traverse(words, it) {
-    delete *it;
-  }
 }
