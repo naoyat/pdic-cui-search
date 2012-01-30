@@ -39,6 +39,6 @@ EnglishVP* parse_vp(std::vector<Word>& words, unsigned int *ix);
 EnglishConjunction* parse_conj(std::vector<Word>& words, unsigned int *ix);
 EnglishSentence* parse_sentence(std::vector<Word>& words, unsigned int *ix);
 
-std::vector<WObj> parse(std::vector<Word>& words);
+std::vector<WObj*> parse(std::vector<Word>& words);
 
 #endif  // SANDBOX_PARSE_H_

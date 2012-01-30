@@ -67,7 +67,7 @@ lookup_result e_just(byte *needle) {
 }
 
 
-void render_objs_as_table(vector<WObj>& objs) {
+void render_objs_as_table(vector<WObj*>& objs) {
   printf("Einsatz...\n");
   Einsatz ez(2);
 
@@ -77,10 +77,10 @@ void render_objs_as_table(vector<WObj>& objs) {
   ez.add_style_begins(styles);
 
   traverse(objs, it) {
-    printf("obj ptr: %p, type = %s\n", &*it, (*it).type());
+    printf("obj ptr: %p, type = %s\n", *it, (*it)->type());
 
     vector<string> vs;
-    WObj* obj = (WObj*)(&*it);
+    WObj* obj = (WObj*)(*it);
     // cout << (*it)->surface() << " " << (*it)->pos() << endl;
     // cout << " #surface# " << obj->surface() << endl;
     // cout << " #translate# " << obj->translate() << endl;
@@ -189,7 +189,7 @@ void analyse_text(byte *text, int length) {
 
   printf("before parsing......\n");
   //printf("words.size() = %d\n", (int)words.size());
-  vector<WObj> objs( parse(words) );
+  vector<WObj*> objs( parse(words) );
   printf("after parsing......\n");
 
 

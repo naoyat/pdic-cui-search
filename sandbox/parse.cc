@@ -49,18 +49,25 @@ void clear_memo() {
 void* get_memo(unsigned int chk_type, unsigned int* ix) {
   unsigned int key = (chk_type << 20) | *ix;
   if (chk_memo.find(key) != chk_memo.end()) {
+    printf("get_memo: we have memoized one! (type=%d) ix: %d->%d, %p\n",
+           chk_type, *ix, chk_memo[key].first, chk_memo[key].second);
     *ix = chk_memo[key].first;
     return chk_memo[key].second;
   }
   return NULL;
 }
 
-void set_memo(unsigned int chk_type,
-              unsigned int start_ix, unsigned int* ix,
+void *set_memo(unsigned int chk_type,
+              unsigned int begin_ix, unsigned int end_ix,
               void *obj) {
-  unsigned int key = (chk_type << 20) | start_ix;
-  chk_memo[key] = make_pair(*ix, obj);
+  if (end_ix <= begin_ix && obj != NULL) {
+    printf("set_memo: invalid ix! (type=%d): %d->%d\n", chk_type, begin_ix, end_ix);
+  }
+  unsigned int key = (chk_type << 20) | begin_ix;
+  chk_memo[key] = make_pair(end_ix, obj);
+  return obj;  // thru
 }
+
 
 EnglishEntity* parse_entity(vector<Word>& words, unsigned int *ix) {
   if (*ix == words.size()) return NULL;
@@ -98,11 +105,12 @@ EnglishEntity* parse_entity(vector<Word>& words, unsigned int *ix) {
     ent = new EnglishNoun(*word);
   }
 
-  if (!ent) *ix = curr_ix;
+  return static_cast<EnglishEntity*>(
+      ent
+      ? set_memo(CHK_ENTITY, curr_ix, *ix, ent)
+      : set_memo(CHK_ENTITY, curr_ix, *ix=curr_ix, NULL));
+}  // parse_entity
 
-  set_memo(CHK_ENTITY, curr_ix, ix, ent);
-  return ent;
-}
 
 EnglishModifier* parse_modifier(vector<Word>& words, unsigned int *ix) {
   if (*ix == words.size()) return NULL;
@@ -126,11 +134,12 @@ EnglishModifier* parse_modifier(vector<Word>& words, unsigned int *ix) {
     mod = new EnglishAdjective(*word);
   }
 
-  if (!mod) *ix = curr_ix;
+  return static_cast<EnglishModifier*>(
+      mod
+      ? set_memo(CHK_MODIFIER, curr_ix, *ix, mod)
+      : set_memo(CHK_MODIFIER, curr_ix, *ix=curr_ix, NULL));
+}  // parse_modifier
 
-  set_memo(CHK_MODIFIER, curr_ix, ix, mod);
-  return mod;
-}
 
 EnglishNP* parse_np(vector<Word>& words, unsigned int *ix) {
   if (*ix == words.size()) return NULL;
@@ -166,9 +175,8 @@ EnglishNP* parse_np(vector<Word>& words, unsigned int *ix) {
 
   printf("NP 10\n");
   if (!np) {
-    *ix = curr_ix;
-    set_memo(CHK_NP, curr_ix, ix, np);
-    return np;
+    return static_cast<EnglishNP*>(
+        set_memo(CHK_NP, curr_ix, *ix=curr_ix, NULL));
   }
 
   printf("NP 11\n");
@@ -203,9 +211,9 @@ EnglishNP* parse_np(vector<Word>& words, unsigned int *ix) {
   // np != NULL
   cout << ANSI_BOLD_ON << "[NP] " << np->surface() << ANSI_BOLD_OFF << endl;
   np->dump();
-  set_memo(CHK_NP, curr_ix, ix, np);
-  return np;
-}
+  return static_cast<EnglishNP*>(set_memo(CHK_NP, curr_ix, *ix, np));
+}  // parse_np
+
 
 EnglishPP* parse_pp(vector<Word>& words, unsigned int *ix) {
   if (*ix == words.size()) return NULL;
@@ -218,8 +226,7 @@ EnglishPP* parse_pp(vector<Word>& words, unsigned int *ix) {
   printf(" - parse_pp([%s,..], %d)...\n", surface.c_str(), *ix);
 
   if (word->pos_canbe("前")) {
-    (*ix)++;
-    EnglishPreposition* prep = new EnglishPreposition(*word);
+    EnglishPreposition* prep = new EnglishPreposition(words[(*ix)++]);
 
     EnglishNP* np = parse_np(words, ix);
     if (np) {
@@ -230,11 +237,12 @@ EnglishPP* parse_pp(vector<Word>& words, unsigned int *ix) {
     }
   }
 
-  if (!pp) *ix = curr_ix;
+  return static_cast<EnglishPP*>(
+      pp
+      ? set_memo(CHK_PP, curr_ix, *ix, pp)
+      : set_memo(CHK_PP, curr_ix, *ix=curr_ix, NULL));
+}  // parse_pp
 
-  set_memo(CHK_PP, curr_ix, ix, pp);
-  return pp;
-}
 
 bool is_have_verb_surface(string surface) {
   string surface_ = strlower(surface);
@@ -260,6 +268,7 @@ bool is_be_verb_surface(string surface) {
   }
 }
 
+
 EnglishBe* parse_be(vector<Word>& words, unsigned int *ix) {
   if (*ix == words.size()) return NULL;
   int curr_ix = *ix;
@@ -284,11 +293,12 @@ EnglishBe* parse_be(vector<Word>& words, unsigned int *ix) {
     (*ix)++;
   }
 
-  if (!be) *ix = curr_ix;
+  return static_cast<EnglishBe*>(
+      be
+      ? set_memo(CHK_BE, curr_ix, *ix, be)
+      : set_memo(CHK_BE, curr_ix, *ix=curr_ix, NULL));
+}  // parse_be
 
-  set_memo(CHK_BE, curr_ix, ix, be);
-  return be;
-}
 
 EnglishVerb* parse_verb(vector<Word>& words, unsigned int *ix) {
   if (*ix == words.size()) return NULL;
@@ -315,11 +325,12 @@ EnglishVerb* parse_verb(vector<Word>& words, unsigned int *ix) {
     verb = new EnglishVerb(*word);
   }
 
-  if (!verb) *ix = curr_ix;
+  return static_cast<EnglishVerb*>(
+      verb
+      ? set_memo(CHK_VERB, curr_ix, *ix, verb)
+      : set_memo(CHK_VERB, curr_ix, *ix=curr_ix, NULL));
+}  // parse_verb
 
-  set_memo(CHK_VERB, curr_ix, ix, verb);
-  return verb;
-}
 
 EnglishAdverb* parse_adverb(vector<Word>& words, unsigned int *ix) {
   if (*ix == words.size()) return NULL;
@@ -335,11 +346,13 @@ EnglishAdverb* parse_adverb(vector<Word>& words, unsigned int *ix) {
     (*ix)++;
     adv = new EnglishAdverb(*word);
   }
-  if (!adv) *ix = curr_ix;
 
-  set_memo(CHK_ADVERB, curr_ix, ix, adv);
-  return adv;
-}
+  return static_cast<EnglishAdverb*>(
+      adv
+      ? set_memo(CHK_ADVERB, curr_ix, *ix, adv)
+      : set_memo(CHK_ADVERB, curr_ix, *ix=curr_ix, NULL));
+}  // parse_adverb
+
 
 EnglishAP* parse_ap(vector<Word>& words, unsigned int *ix) {
   if (*ix == words.size()) return NULL;
@@ -369,11 +382,12 @@ EnglishAP* parse_ap(vector<Word>& words, unsigned int *ix) {
     }
   }
 
-  if (!adj) *ix = curr_ix;
+  return static_cast<EnglishAP*>(
+      ap
+      ? set_memo(CHK_AP, curr_ix, *ix, ap)
+      : set_memo(CHK_AP, curr_ix, *ix=curr_ix, NULL));
+}  // parse_ap
 
-  set_memo(CHK_AP, curr_ix, ix, ap);
-  return ap;
-}
 
 EnglishVP* parse_vp(vector<Word>& words, unsigned int *ix) {
   if (*ix == words.size()) return NULL;
@@ -401,9 +415,8 @@ EnglishVP* parse_vp(vector<Word>& words, unsigned int *ix) {
   } else {
     EnglishVerb *verb = parse_verb(words, ix);
     if (!verb) {
-      // *ix = curr_ix;
-      set_memo(CHK_VP, curr_ix, ix, vp);
-      return NULL;
+      return static_cast<EnglishVP*>(
+          set_memo(CHK_VP, curr_ix, *ix=curr_ix, NULL));
     }
 
     vp = new EnglishVP(verb);
@@ -439,11 +452,11 @@ EnglishVP* parse_vp(vector<Word>& words, unsigned int *ix) {
     vp->dump();
   }
 
-  if (!vp) *ix = curr_ix;
-
-  set_memo(CHK_VP, curr_ix, ix, vp);
-  return vp;
-}
+  return static_cast<EnglishVP*>(
+      vp
+      ? set_memo(CHK_VP, curr_ix, *ix, vp)
+      : set_memo(CHK_VP, curr_ix, *ix=curr_ix, vp));
+}  // parse_vp
 
 
 EnglishConjunction* parse_conj(vector<Word>& words, unsigned int *ix) {
@@ -470,7 +483,7 @@ EnglishConjunction* parse_conj(vector<Word>& words, unsigned int *ix) {
 
   *ix = curr_ix;
   return NULL;
-}
+}  // parse_conj
 
 
 EnglishSentence* parse_sentence(vector<Word>& words, unsigned int *ix) {
@@ -498,21 +511,21 @@ EnglishSentence* parse_sentence(vector<Word>& words, unsigned int *ix) {
     }
   } while (false);
 
-  if (!st) {
+  if (!st)
     cout << ANSI_ITALICS_ON << "[!S] " << ANSI_ITALICS_OFF << endl;
-    // if (np) delete np;
-    *ix = curr_ix;
-  }
-  set_memo(CHK_SENTENCE, curr_ix, ix, st);
-  return st;
-}
+
+  return static_cast<EnglishSentence*>(
+      st
+      ? set_memo(CHK_SENTENCE, curr_ix, *ix, st)
+      : set_memo(CHK_SENTENCE, curr_ix, *ix=curr_ix, NULL));
+}  // parse_sentence
 
 
-std::vector<WObj> parse(std::vector<Word>& words) {
+std::vector<WObj*> parse(std::vector<Word>& words) {
   printf(" - parse(%d words)...\n", (int)words.size());
   clear_memo();
 
-  vector<WObj> objs;
+  vector<WObj*> objs;
   for (unsigned int ix = 0, c = words.size(); ix < c; ) {
     printf("\n[LOOP] ix=%d ... ", (int)ix);
 
@@ -533,6 +546,7 @@ std::vector<WObj> parse(std::vector<Word>& words) {
     WObj* obj = NULL;
     while (!obj) {
       if (ix == words.size()) break;
+      int ixkept = ix;
 
       string surface = words[ix].surface(), surface_ = strlower(surface);
       printf(ANSI_FGCOLOR_GREEN "\n[parse] ix=%d surface=\"%s\" ... " ANSI_FGCOLOR_DEFAULT,
@@ -545,6 +559,8 @@ std::vector<WObj> parse(std::vector<Word>& words) {
                curr_ix, ix-1, surface.c_str(), obj->surface().c_str());
         break;
       }
+      if (ix != ixkept) printf("XXX ix %d != ix' %d\n", ix, ixkept);
+
       printf(ANSI_FGCOLOR_GREEN "sentence... " ANSI_FGCOLOR_DEFAULT);
       obj = parse_sentence(words, &ix);
       if (obj) {
@@ -552,6 +568,8 @@ std::vector<WObj> parse(std::vector<Word>& words) {
                curr_ix, ix-1, surface.c_str(), obj->surface().c_str());
         break;
       }
+      if (ix != ixkept) printf("XXX ix %d != ix' %d\n", ix, ixkept);
+
       printf(ANSI_FGCOLOR_GREEN "np... " ANSI_FGCOLOR_DEFAULT);
       obj = parse_np(words, &ix);
       if (obj) {
@@ -559,6 +577,8 @@ std::vector<WObj> parse(std::vector<Word>& words) {
                curr_ix, ix-1, surface.c_str(), obj->surface().c_str());
         break;
       }
+      if (ix != ixkept) printf("XXX ix %d != ix' %d\n", ix, ixkept);
+
       printf(ANSI_FGCOLOR_GREEN "vp... " ANSI_FGCOLOR_DEFAULT);
       obj = parse_vp(words, &ix);
       if (obj) {
@@ -566,6 +586,8 @@ std::vector<WObj> parse(std::vector<Word>& words) {
                curr_ix, ix-1, surface.c_str(), obj->surface().c_str());
         break;
       }
+      if (ix != ixkept) printf("XXX ix %d != ix' %d\n", ix, ixkept);
+
       printf(ANSI_FGCOLOR_GREEN "pp... " ANSI_FGCOLOR_DEFAULT);
       obj = parse_pp(words, &ix);
       if (obj) {
@@ -573,15 +595,18 @@ std::vector<WObj> parse(std::vector<Word>& words) {
                curr_ix, ix-1, surface.c_str(), obj->surface().c_str());
         break;
       }
+      if (ix != ixkept) printf("XXX ix %d != ix' %d\n", ix, ixkept);
+
       printf(ANSI_FGCOLOR_GREEN "raw word... " ANSI_FGCOLOR_DEFAULT);
       obj = new Word(words[ix++]);  // const_cast<Word*>(&words[ix++]);
       if (obj) {
         // printf(" ! (%d-%d, [%s]) => ** %s\n",
         //        curr_ix, ix-1, surface.c_str(), obj->surface().c_str());
-        printf(" ! (%d-%d, [%s]) => ** %p\n",
-               curr_ix, ix-1, surface.c_str(), obj);
+        printf(" ! (%d-%d, [%s]) => ** %p %s\n",
+               curr_ix, ix-1, surface.c_str(), obj, obj->surface().c_str());
         break;
       }
+      if (ix != ixkept) printf("XXX ix %d != ix' %d\n", ix, ixkept);
 
       printf(ANSI_FGCOLOR_GREEN " OBJ NOT FOUND! (%d-%d, [%s]) => ??\n"  ANSI_FGCOLOR_DEFAULT,
              curr_ix, ix-1, surface.c_str());
@@ -589,7 +614,7 @@ std::vector<WObj> parse(std::vector<Word>& words) {
     printf("\n");
 
     // cout << " // now pushing back (" << obj->surface() << ")" << endl;
-    if (obj) objs.push_back(*obj);
+    if (obj) objs.push_back(obj);
   }
 
   // clear_memo();
