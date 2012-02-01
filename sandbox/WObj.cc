@@ -31,7 +31,7 @@ WObj::WObj() : surface_(), pos_() {
 }
 
 WObj::WObj(byte *surface) : surface_(reinterpret_cast<char*>(surface)), pos_() {
-  printf("WObj(surface:\"%s\");\n", (char*)surface);
+  // printf("WObj(surface:\"%s\");\n", (char*)surface);
   // this->surface_ = std::string((char*)surface);
   // printf("WObj: setting surface {%s}.\n", (char*)surface);
   this->surface_ = std::string(reinterpret_cast<char*>(surface));
@@ -40,7 +40,7 @@ WObj::WObj(byte *surface) : surface_(reinterpret_cast<char*>(surface)), pos_() {
 }
 
 WObj::WObj(std::string& surface) : surface_(surface), pos_() {
-  printf("WObj((std::string)surface:\"%s\");\n", surface.c_str());
+  // printf("WObj((std::string)surface:\"%s\");\n", surface.c_str());
   // printf("WObj: setting surface {%s}.\n", surface.c_str());
   this->surface_ = surface;
   this->the_pos_ = NULL;
@@ -48,14 +48,14 @@ WObj::WObj(std::string& surface) : surface_(surface), pos_() {
 }
 
 WObj::WObj(const WObj& wobj) {
-  printf("WObj(copy:wobj \"%s\");\n", wobj.surface().c_str());
+  // printf("WObj(copy:wobj \"%s\");\n", wobj.surface().c_str());
   this->surface_ = wobj.surface_;
   this->the_pos_ = wobj.the_pos_;
   this->pos_.assign(wobj.pos_.begin(), wobj.pos_.end());
 }
 
 WObj& WObj::operator=(const WObj& wobj) {
-  printf("WObj op=(wobj \"%s\");\n", wobj.surface().c_str());
+  // printf("WObj op=(wobj \"%s\");\n", wobj.surface().c_str());
   this->surface_ = wobj.surface_;
   this->the_pos_ = wobj.the_pos_;
   this->pos_.assign(wobj.pos_.begin(), wobj.pos_.end());

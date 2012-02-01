@@ -24,28 +24,28 @@ using namespace std;
 #include "sandbox/parse_lookup_result.h"
 
 Word::Word() : WObj(), meanings_map_(), usages_(), info_() {
-  printf("Word();\n");
+  // printf("Word();\n");
 }
 
 Word::Word(lookup_result fields)
     : WObj(fields[F_ENTRY]), meanings_map_(), usages_(), info_() {
-  printf("Word(fields:{\"%s\",...});\n",
-         reinterpret_cast<char*>(fields[F_ENTRY]));
+  // printf("Word(fields:{\"%s\",...});\n",
+  //        reinterpret_cast<char*>(fields[F_ENTRY]));
   parse_fields(fields, fields[F_ENTRY]);
 }
 
 Word::Word(lookup_result fields, byte *surface)
     : WObj(surface), meanings_map_(), usages_(), info_() {
-  printf("Word(fields:{\"%s\",...},surface:\"%s\");\n",
-         reinterpret_cast<char*>(fields[F_ENTRY]),
-         reinterpret_cast<char*>(surface));
+  // printf("Word(fields:{\"%s\",...},surface:\"%s\");\n",
+  //        reinterpret_cast<char*>(fields[F_ENTRY]),
+  //        reinterpret_cast<char*>(surface));
   parse_fields(fields, surface);
 }
 
 Word::Word(lookup_result fields, std::string& surface)
     : WObj(surface), meanings_map_(), usages_(), info_() {
-  printf("Word(fields:{\"%s\",...},(std::string)surface:\"%s\");\n",
-         reinterpret_cast<char*>(fields[F_ENTRY]), surface.c_str());
+  // printf("Word(fields:{\"%s\",...},(std::string)surface:\"%s\");\n",
+  //        reinterpret_cast<char*>(fields[F_ENTRY]), surface.c_str());
   parse_fields(fields,
                BYTE(const_cast<char*>(surface.c_str())));
 }
@@ -130,7 +130,7 @@ void Word::parse_fields(lookup_result fields, byte *surface){
 }
 
 Word::~Word() {
-  printf("~Word();\n");
+  // printf("~Word();\n");
 }
 
 //

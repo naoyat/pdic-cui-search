@@ -30,6 +30,7 @@ using namespace std;
 #define CHK_BE           4
 #define CHK_ADVERB       5
 #define CHK_CONJUNCTION  6
+#define CHK_PREPOSITION  7
 #define CHK_NP          10
 #define CHK_VP          11
 #define CHK_PP          12
@@ -49,8 +50,8 @@ void clear_memo() {
 void* get_memo(unsigned int chk_type, unsigned int* ix) {
   unsigned int key = (chk_type << 20) | *ix;
   if (chk_memo.find(key) != chk_memo.end()) {
-    printf("get_memo: we have memoized one! (type=%d) ix: %d->%d, %p\n",
-           chk_type, *ix, chk_memo[key].first, chk_memo[key].second);
+    // printf("get_memo: we have memoized one! (type=%d) ix: %d->%d, %p\n",
+    //        chk_type, *ix, chk_memo[key].first, chk_memo[key].second);
     *ix = chk_memo[key].first;
     return chk_memo[key].second;
   }
@@ -61,7 +62,9 @@ void *set_memo(unsigned int chk_type,
               unsigned int begin_ix, unsigned int end_ix,
               void *obj) {
   if (end_ix <= begin_ix && obj != NULL) {
+#ifdef DEBUG
     printf("set_memo: invalid ix! (type=%d): %d->%d\n", chk_type, begin_ix, end_ix);
+#endif
   }
   unsigned int key = (chk_type << 20) | begin_ix;
   chk_memo[key] = make_pair(end_ix, obj);
@@ -79,9 +82,10 @@ EnglishEntity* parse_entity(vector<Word>& words, unsigned int *ix) {
   string surface = word->surface();
   string surface_ = strlower(surface);
 
+#ifdef DEBUG
   printf("   - parse_ent(,%d)... ", *ix);
   cout << "surface=\"" << surface <<"\", pos=" << word->pos() << endl;
-
+#endif
   if (surface == "") {
     // do nothing (but why empty)
   } else if (surface_ == "don't") {
@@ -120,18 +124,20 @@ EnglishModifier* parse_modifier(vector<Word>& words, unsigned int *ix) {
   if (mod) return mod;
 
   Word* word = &words[*ix];
-  string surface_ = strlower(word->surface());
+  string surface = word->surface(), surface_ = strlower(surface);
 
+#ifdef DEBUG
   printf("   - parse_mod(,%d)... ", *ix);
   cout << "surface=\"" << surface_ <<"\", pos=" << word->pos() << endl;
-
-  if (surface_ == "the" || surface_ == "a" || surface_ == "an") {
+#endif
+  int num;
+  if (RE2::FullMatch(surface_, "(\\d+)", &num)) {
+    mod = new EnglishNumber(words[(*ix)++]);
+  } else if (surface_ == "the" || surface_ == "a" || surface_ == "an") {
     // a/an => "不" は良いが the => "副" なので
-    (*ix)++;
-    mod = new EnglishDeterminer(*word);
+    mod = new EnglishDeterminer(words[(*ix)++]);
   } else if (word->pos_canbe("形")) {
-    (*ix)++;
-    mod = new EnglishAdjective(*word);
+    mod = new EnglishAdjective(words[(*ix)++]);
   }
 
   return static_cast<EnglishModifier*>(
@@ -148,18 +154,16 @@ EnglishNP* parse_np(vector<Word>& words, unsigned int *ix) {
   if (np) return np;
 
   vector<EnglishModifier*> modifiers;
-  printf("NP 01\n");
   while (!np) {
-    printf("NP 02 (%d/%d)\n", *ix, (int)words.size());
     if (*ix == words.size()) break;
 
-    printf("NP 03\n");
     Word* word = &words[*ix];
     string surface_ = strlower(word->surface());
 
+#ifdef DEBUG
     printf(" - parse_np(,%d)... ", *ix);
     cout << "surface=\"" << surface_ <<"\", pos=" << word->pos() << endl;
-
+#endif
     if (EnglishEntity* ent = parse_entity(words, ix)) {  // modよりentが先
       np = new EnglishNP(ent, modifiers);
     } else if (EnglishModifier* mod = parse_modifier(words, ix)) {
@@ -173,15 +177,12 @@ EnglishNP* parse_np(vector<Word>& words, unsigned int *ix) {
     }
   }
 
-  printf("NP 10\n");
   if (!np) {
     return static_cast<EnglishNP*>(
         set_memo(CHK_NP, curr_ix, *ix=curr_ix, NULL));
   }
 
-  printf("NP 11\n");
   while (true) {
-    printf("NP 12 (%d/%d)\n", *ix, (int)words.size());
     if (*ix == words.size()) break;
     if (words[*ix].pos_canbe("代名")) break;
     if (words[*ix].pos_canbe("動")) break;
@@ -195,9 +196,7 @@ EnglishNP* parse_np(vector<Word>& words, unsigned int *ix) {
     np->append_entity(ent);
   }
 
-  printf("NP 21\n");
   while (true) {
-    printf("NP 22 (%d/%d)\n", *ix, (int)words.size());
     if (*ix == words.size()) break;
 
     EnglishPP* pp = parse_pp(words, ix);
@@ -207,12 +206,31 @@ EnglishNP* parse_np(vector<Word>& words, unsigned int *ix) {
     np->add_pp(pp);
   }
 
-  printf("NP 31\n");
   // np != NULL
   cout << ANSI_BOLD_ON << "[NP] " << np->surface() << ANSI_BOLD_OFF << endl;
   np->dump();
   return static_cast<EnglishNP*>(set_memo(CHK_NP, curr_ix, *ix, np));
 }  // parse_np
+
+
+EnglishPreposition* parse_preposition(vector<Word>& words, unsigned int *ix) {
+  if (*ix == words.size()) return NULL;
+  int curr_ix = *ix;
+  EnglishPreposition* prep = static_cast<EnglishPreposition*>(get_memo(CHK_PREPOSITION, ix));
+  if (prep) return prep;
+
+  Word* word = &words[*ix];
+  string surface = word->surface(), surface_ = strlower(surface);
+
+  if (word->pos_canbe("前") || surface_ == "like") {
+    prep = new EnglishPreposition(words[(*ix)++]);
+  }
+
+  return static_cast<EnglishPreposition*>(
+      prep
+      ? set_memo(CHK_PREPOSITION, curr_ix, *ix, prep)
+      : set_memo(CHK_PREPOSITION, curr_ix, *ix=curr_ix, NULL));
+}
 
 
 EnglishPP* parse_pp(vector<Word>& words, unsigned int *ix) {
@@ -223,17 +241,22 @@ EnglishPP* parse_pp(vector<Word>& words, unsigned int *ix) {
 
   Word* word = &words[*ix];
   string surface = word->surface();
+#ifdef DEBUG
   printf(" - parse_pp([%s,..], %d)...\n", surface.c_str(), *ix);
+#endif
 
-  if (word->pos_canbe("前")) {
-    EnglishPreposition* prep = new EnglishPreposition(words[(*ix)++]);
+  EnglishPreposition* prep = parse_preposition(words, ix);
+  if (prep) {
+    EnglishSentence* st = parse_sentence(words, ix);
+    if (st) {
+      pp = new EnglishPP(prep, st);
+      cout << "[PP] " << pp->surface() << endl;
+    }
 
     EnglishNP* np = parse_np(words, ix);
     if (np) {
       pp = new EnglishPP(prep, np);
       cout << "[PP] " << pp->surface() << endl;
-    } else {
-      // back
     }
   }
 
@@ -278,8 +301,9 @@ EnglishBe* parse_be(vector<Word>& words, unsigned int *ix) {
   Word* word = &words[*ix];
   string surface = word->surface();
   string surface_ = strlower(surface);
+#ifdef DEBUG
   printf("   - parse_be([%s,..], %d)...\n", surface.c_str(), *ix);
-
+#endif
   if (is_have_verb_surface(surface)
       && (*ix)+1 < words.size()
       && is_be_verb_surface(words[(*ix)+1].surface())) {
@@ -309,8 +333,9 @@ EnglishVerb* parse_verb(vector<Word>& words, unsigned int *ix) {
   Word* word = &words[*ix];
   string surface = word->surface();
   string surface_ = strlower(surface);
+#ifdef DEBUG
   printf("   - parse_verb([%s,..], %d)...\n", surface.c_str(), *ix);
-
+#endif
   if (surface_ == "won't" || surface == "wouldn't"
       || surface_ == "shouldn't" || surface_ == "couldn't") {
     (*ix)++;
@@ -340,8 +365,9 @@ EnglishAdverb* parse_adverb(vector<Word>& words, unsigned int *ix) {
 
   Word* word = &words[*ix];
   string surface_ = strlower(word->surface());
+#ifdef DEBUG
   printf("   - parse_adverb([%s,..], %d)...\n", word->surface().c_str(), *ix);
-
+#endif
   if (surface_ != "the" && word->pos_canbe("副")) {
     (*ix)++;
     adv = new EnglishAdverb(*word);
@@ -362,8 +388,9 @@ EnglishAP* parse_ap(vector<Word>& words, unsigned int *ix) {
 
   Word* word = &words[*ix];
   string surface = word->surface();
+#ifdef DEBUG
   printf(" - parse_ap([%s,..], %d)...\n", surface.c_str(), *ix);
-
+#endif
   EnglishAdjective *adj = NULL;
   if (word->pos_canbe("形")) {
     (*ix)++;
@@ -397,8 +424,9 @@ EnglishVP* parse_vp(vector<Word>& words, unsigned int *ix) {
 
   Word* word = &words[*ix];
   string surface_ = strlower(word->surface());
+#ifdef DEBUG
   printf(" - parse_vp([%s,..], %d)...\n", word->surface().c_str(), *ix);
-
+#endif
   vector<EnglishAdverb*> adverbs;
   while (EnglishAdverb* adv = parse_adverb(words, ix)) {
     adverbs.push_back(adv);
@@ -427,7 +455,8 @@ EnglishVP* parse_vp(vector<Word>& words, unsigned int *ix) {
 
   while (true) {
     if (*ix == words.size()) break;
-    if (words[*ix].surface() == "like") break;
+
+    if (words[*ix].surface() == "like") break;  // wouldなら飛ばさないんだけど
 
     EnglishVerb *verb = parse_verb(words, ix);
     if (!verb) break;
@@ -438,10 +467,10 @@ EnglishVP* parse_vp(vector<Word>& words, unsigned int *ix) {
     while (true) {
       if (*ix == words.size()) break;
 
-      if (EnglishNP* np = parse_np(words, ix)) {
-        vp->add_np(np);
-      } else if (EnglishPP* pp = parse_pp(words, ix)) {
+      if (EnglishPP* pp = parse_pp(words, ix)) {
         vp->add_pp(pp);
+      } else if (EnglishNP* np = parse_np(words, ix)) {
+        vp->add_np(np);
       } else if (EnglishAdverb* adv = parse_adverb(words, ix)) {
         vp->add_adverb(adv);
       } else {
@@ -469,8 +498,9 @@ EnglishConjunction* parse_conj(vector<Word>& words, unsigned int *ix) {
   Word* word = &words[*ix];
   string surface = word->surface();
   string surface_ = strlower(surface);
+#ifdef DEBUG
   printf("   - parse_conj([%s,..], %d)...\n", surface.c_str(), *ix);
-
+#endif
   if ((*ix == 0 && surface_ == "that")
       || surface_ == "an") {
     *ix = curr_ix;
@@ -497,10 +527,8 @@ EnglishSentence* parse_sentence(vector<Word>& words, unsigned int *ix) {
     EnglishNP* np = parse_np(words, ix);
     if (!np) break;
 
-    printf("NP found; then searchin' for vp...(%d/%d)\n", *ix, (int)words.size());
-    printf("40\n");
+    // printf("NP found; then searchin' for vp...(%d/%d)\n", *ix, (int)words.size());
     if (*ix == words.size()) break;
-    printf("41\n");
 
     if (EnglishVP* vp = parse_vp(words, ix)) {
       st = new EnglishSentence(np, vp);
@@ -510,9 +538,10 @@ EnglishSentence* parse_sentence(vector<Word>& words, unsigned int *ix) {
       // delete np;
     }
   } while (false);
-
+#ifdef DEBUG
   if (!st)
     cout << ANSI_ITALICS_ON << "[!S] " << ANSI_ITALICS_OFF << endl;
+#endif
 
   return static_cast<EnglishSentence*>(
       st
@@ -522,7 +551,9 @@ EnglishSentence* parse_sentence(vector<Word>& words, unsigned int *ix) {
 
 
 std::vector<WObj*> parse(std::vector<Word>& words) {
+#ifdef DEBUG
   printf(" - parse(%d words)...\n", (int)words.size());
+#endif
   clear_memo();
 
   vector<WObj*> objs;
@@ -549,9 +580,10 @@ std::vector<WObj*> parse(std::vector<Word>& words) {
       int ixkept = ix;
 
       string surface = words[ix].surface(), surface_ = strlower(surface);
+#ifdef DEBUG
       printf(ANSI_FGCOLOR_GREEN "\n[parse] ix=%d surface=\"%s\" ... " ANSI_FGCOLOR_DEFAULT,
              ix, surface.c_str());
-
+#endif
       printf(ANSI_FGCOLOR_GREEN "conj... " ANSI_FGCOLOR_DEFAULT);
       obj = parse_conj(words, &ix);
       if (obj) {

@@ -141,6 +141,20 @@ public:
 
 
 //
+// Number - 数詞
+//
+class EnglishNumber : public EnglishModifier {
+public:
+  EnglishNumber(Word& word);
+  virtual ~EnglishNumber();
+
+  virtual std::string translate();
+  // virtual std::string translate(const char *pos);
+  virtual void dump(int indent = 0);
+};
+
+
+//
 // Adverb - 副詞
 //
 class EnglishAdverb : public Word {
@@ -182,12 +196,13 @@ class EnglishConjunction : public Word {
 };
 
 
-
 class EnglishNP;
+class EnglishSentence;
 
 class EnglishPP : public WObj {
  public:
   EnglishPP(EnglishPreposition *prep, EnglishNP *np);
+  EnglishPP(EnglishPreposition *prep, EnglishSentence *st);
   virtual ~EnglishPP();
 
   virtual const char* type() { return "EnglishPP"; }
@@ -200,6 +215,7 @@ class EnglishPP : public WObj {
  private:
   EnglishPreposition *prep_;
   EnglishNP *np_;
+  EnglishSentence *st_;
 };
 
 

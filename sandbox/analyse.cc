@@ -68,7 +68,6 @@ lookup_result e_just(byte *needle) {
 
 
 void render_objs_as_table(vector<WObj*>& objs) {
-  printf("Einsatz...\n");
   Einsatz ez(2);
 
   vector<pair<string, string> > styles;
@@ -77,8 +76,6 @@ void render_objs_as_table(vector<WObj*>& objs) {
   ez.add_style_begins(styles);
 
   traverse(objs, it) {
-    printf("obj ptr: %p, type = %s\n", *it, (*it)->type());
-
     vector<string> vs;
     WObj* obj = (WObj*)(*it);
     // cout << (*it)->surface() << " " << (*it)->pos() << endl;
@@ -149,48 +146,94 @@ void analyse_text(byte *text, int length) {
         break;
     }
 
-    vector<string> candidates;
-    if (i == 0) {
-      std::string lower = strlower(tokens[i]);
-      if (lower != surface) candidates.push_back(lower);
-    }
-    candidates.push_back(surface);
+    const int kVerb = 1, kNoun = 2;
+    vector<pair<string,int> > candidates;
 
-    if (surface[surface_length - 1]  == 's') {
-      candidates.push_back(surface.substr(0, surface_length-1));
+    // -s
+    if (surface_length > 1) {
+      string body   = surface.substr(0, surface_length-1);
+      string suffix = surface.substr(surface_length-1, 1);
+      if (suffix == "s")
+        candidates.push_back(make_pair(body, kVerb|kNoun));
     }
+    if (surface_length > 2) {
+      string body   = surface.substr(0, surface_length-2);
+      string suffix = surface.substr(surface_length-2, 2);
+      if (suffix == "ed")
+        candidates.push_back(make_pair(body, kVerb));
+      if (suffix == "es")
+        candidates.push_back(make_pair(body, kVerb|kNoun));
+    }
+    if (surface_length > 3) {
+      string body   = surface.substr(0, surface_length-3);
+      string suffix = surface.substr(surface_length-3, 3);
+      if (suffix == "ing")
+        candidates.push_back(make_pair(body, kVerb));
+    }
+
+    // lowercase
+    if (i == 0) {
+      std::string lower = strlower(surface);
+      if (lower != surface) candidates.push_back(make_pair(lower, 0));
+    }
+
+    // as is
+    candidates.push_back(make_pair(surface, 0));
+
 
     lookup_result result = NULL;
 
+    vector<Word> possibilities;
+    cout << surface << " =>";
     traverse(candidates, it) {
-      result = e_just(BYTE(const_cast<char*>(it->c_str())));
-      if (result) break;
+      string cand_surface = it->first;
+      result = e_just(BYTE(const_cast<char*>(cand_surface.c_str())));
+      if (result) {
+        // Word word(result, cand_surface);
+        Word word(result, surface);
+        bool is_passed = false;
+        int poss = it->second;
+        if (poss == 0) {
+          is_passed = true;
+        }
+        if (poss & kVerb) {
+          if (word.pos_canbe("動")
+              || word.pos_canbe("自動")
+              || word.pos_canbe("他動"))
+            is_passed = true;
+        }
+        if (poss & kNoun) {
+          if (word.pos_canbe("名"))
+            is_passed = true;
+        }
+        if (is_passed) {
+          // cout << "\"" << it->surface() << "\", ";
+          cout << surface << " (\"" << cand_surface << "\"), ";
+          possibilities.push_back(word);
+        }
+      }
     }
+    cout << endl;
 
-    if (!result) {
-      string token = tokens[i];
-      result = e_just(BYTE(const_cast<char*>(token.c_str())));
-    }
-
-    if (result) {
-      Word word(result, surface);
-      cout << "surface = " << word.surface() << endl;
-      // word.dump(0);
-      words.push_back(word);
-      cout << "==? ";
+    if (possibilities.size() > 0) {
+      // Word word(result, surface);
+      words.push_back(possibilities[0]);
+      // cout << "==? ";
+      /*
       if (words.size() > 0)
         words[0].dump(3);
       else
         cout << "words[] was empty..." << endl;
+      */
     } else {
       printf("(%s) is not found..\n", tokens[i].c_str());
     }
   }
 
-  printf("before parsing......\n");
+  // printf("before parsing......\n");
   //printf("words.size() = %d\n", (int)words.size());
   vector<WObj*> objs( parse(words) );
-  printf("after parsing......\n");
+  // printf("after parsing......\n");
 
 
   // printf("tr<words>\n");
@@ -201,7 +244,7 @@ void analyse_text(byte *text, int length) {
   }
   */
 
-  printf("MAYBE STILL ALIVE HERE...\n");
+  // printf("MAYBE STILL ALIVE HERE...\n");
 
   render_objs_as_table(objs);
   /*
