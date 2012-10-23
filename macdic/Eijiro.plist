@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.apple.dictionary.MySample</string>
+	<key>CFBundleName</key>
+	<string>英辞郎</string>
+	<key>CFBundleShortVersionString</key>
+	<string>135</string>
+	<key>DCSDictionaryCopyright</key>
+	<string>Copyright © 2012 EDP</string>
+	<key>DCSDictionaryManufacturerName</key>
+	<string>EDP</string>
+	<key>DCSDictionaryFrontMatterReferenceID</key>
+	<string>front_back_matter</string>
+	<key>DCSDictionaryPrefsHTML</key>
+	<string>Eijiro_prefs.html</string>
+	<key>DCSDictionaryXSL</key>
+	<string>Eijiro.xsl</string>
+	<key>DCSDictionaryDefaultPrefs</key>
+	<dict>
+		<key>version</key>
+		<string>1</string>
+	</dict>
+</dict>
+</plist>
