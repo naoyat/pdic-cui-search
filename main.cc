@@ -15,12 +15,12 @@ Shell *g_shell = NULL;
 
 int main(int argc, char **argv) {
   printf(ANSI_UNDERLINE_ON
-         "PDIC CUI Search ver 0.7.1 (c)2012 @naoya_t. All Rights Reserved."
+         "PDIC CUI Search ver 0.7.2 (c)2012 @naoya_t. All Rights Reserved."
          ANSI_UNDERLINE_OFF "\n");
 
   g_shell = new Shell();
 
-  printf("読み込み中...\n");
+  // printf("読み込み中...\n");
   g_shell->load_rc();
 
   // if (argc >= 2) {

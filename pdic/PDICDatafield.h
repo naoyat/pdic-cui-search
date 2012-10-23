@@ -28,6 +28,7 @@ class PDICDatafield {
   byte* entry_word;
   int   entry_word_size;
   int   entry_word_attrib;
+  int   entry_word_level;
   byte* entry_index;
   int   entry_index_size;
   int   charcode;

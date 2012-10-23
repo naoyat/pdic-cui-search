@@ -26,6 +26,7 @@
 #include "util/stlutil.h"
 #include "util/timeutil.h"
 #include "util/util.h"
+#include "util/macdic_xml.h"
 
 Shell::Shell() {
 }
@@ -264,16 +265,17 @@ bool Shell::do_command(char *cmdstr) {
              join(alias->second, ", ").c_str());
     }
   } else if (cmd[0] == "make") {
-    if (cmd.size() == 2) {
+    if (cmd.size() >= 2) {
       if (cmd[1] == "toc") {
         traverse(current_dict_ids, current_dict_id) {
           Dict *dict = dicts[*current_dict_id];
           dict->make_toc();
         }
-      } else if (cmd[1] == "xml") {
+      } else if (cmd[1] == "macdic") {
         traverse(current_dict_ids, current_dict_id) {
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : INT_MAX;
           Dict *dict = dicts[*current_dict_id];
-          dict->make_macdic_xml();
+          dict->make_macdic_xml(limit, *current_dict_id);
         }
       } else if (cmd[1] == "henkakei") {
           // 変化形テーブルを作成。あとで関数名考える
@@ -282,10 +284,10 @@ bool Shell::do_command(char *cmdstr) {
           dict->make_henkakei_table();
         }
       } else {
-        printf("[command] make {toc|xml}\n");
+        printf("[command] make {toc|macdic}\n");
       }
     } else {
-      printf("[command] make {toc|xml}\n");
+      printf("[command] make {toc|macdic}\n");
     }
   } else if (cmd[0] == "dump") {
     if (cmd.size() == 1) {
@@ -305,6 +307,11 @@ bool Shell::do_command(char *cmdstr) {
           index->iterate_datablock(ix, &cb_dump_entry, NULL);
         } else if (what_to_dump == "words") {
           index->iterate_all_datablocks(&cb_dump_entry, NULL);
+        } else if (what_to_dump == "macdic") {
+          // index->iterate_all_datablocks(&cb_macdic_xml, NULL);
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : INT_MAX;
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_macdic_xml(limit, *current_dict_id);
         } else if (what_to_dump == "all") {
           index->iterate_all_datablocks(&cb_dump, NULL);
           // } else if (what_to_dump == "henkakei") {
@@ -430,7 +437,6 @@ void Shell::render_status() {
 #define DEFAULT_RENDER_COUNT_LIMIT 150
 
 ShellParams::ShellParams() {
-  printf("ShellParams()...\n");
   separator_mode       = false;
   verbose_mode         = false;
   direct_dump_mode     = false;

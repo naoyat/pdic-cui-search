@@ -20,10 +20,10 @@ TEST_DATA = test/filemem_gtest.dat
 TEST_OUTPUTS = test/filemem_gtest.savemem
 
 pdicsh: main.o $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o pdicsh main.o $(OBJECTS) -liconv -lre2
+	$(CXX) $(CXXFLAGS) -o pdicsh main.o $(OBJECTS) -liconv -lre2 -lcrypto
 
 pdicsh_re2: main.o $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o pdicsh_re2 main.o $(OBJECTS) libre2.a -liconv
+	$(CXX) $(CXXFLAGS) -o pdicsh_re2 main.o $(OBJECTS) libre2.a -liconv -lcrypto
 
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 	$(CXX) $(CXXFLAGS) -o pdic_gtest $(OBJECTS) $(TEST_OBJECTS) -lgtest -lgtest_main -liconv -lre2

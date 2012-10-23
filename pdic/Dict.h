@@ -53,7 +53,7 @@ class Dict {
   std::string info() { return name + " " + path; }
   char *prefix() { return _prefix; }
   int   make_toc();
-  int   make_macdic_xml();
+  int   make_macdic_xml(int limit=INT_MAX, int dict_id=0);
   int   make_henkakei_table();
   void  unload_additional_files();
   bool  load_additional_files();

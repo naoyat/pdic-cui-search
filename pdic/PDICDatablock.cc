@@ -17,6 +17,8 @@
 #include "util/types.h"
 #include "util/util.h"
 
+extern int dump_remain_count_;
+
 PDICDatablock::PDICDatablock(byte* filemem, PDICIndex* index, int ix) {
   this->filemem = filemem;
   this->datablock_start = filemem + index->datablock_offset(ix);
@@ -43,6 +45,7 @@ void PDICDatablock::iterate(action_proc* action, Criteria* criteria) {
 
   for (byte* pos = datablock_start, *endpos = pos + datablock_size;
        pos < endpos; ) {
+    if (dump_remain_count_ == 0) break;
     bool matched = false;
 
     // +0

@@ -16,6 +16,9 @@
 #include "util/utf8.h"
 #include "util/util.h"
 
+int dump_remain_count_ = 0; // ダンプ許容カウント
+int current_dict_id_ = 0; // 現在扱っている辞書のdict_id
+
 PDICIndex::PDICIndex(byte* filemem) {
   this->filemem = filemem;
   this->header = new PDICHeader(filemem);
@@ -120,8 +123,10 @@ void PDICIndex::iterate_datablock(int ix,
 
 void PDICIndex::iterate_all_datablocks(action_proc* action,
                                        Criteria* criteria) {
-  for (int ix = 0; ix < _nindex; ++ix)
+  for (int ix = 0; ix < _nindex; ++ix) {
+    if (dump_remain_count_ == 0) break;
     this->iterate_datablock(ix, action, criteria);
+  }
 }
 
 //

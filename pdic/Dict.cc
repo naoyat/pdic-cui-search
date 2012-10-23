@@ -32,6 +32,9 @@
 #include "util/Shell.h"
 #include "util/types.h"
 
+extern int dump_remain_count_;
+extern int current_dict_id_;
+
 const char *sx_buf[F_COUNT] = {
   ".entry", ".trans", ".exmp", ".pron"
 };
@@ -105,8 +108,10 @@ Dict::~Dict() {
   unload_additional_files();
 }
 
-int Dict::make_macdic_xml() {
-  macdic_xml_open(std::string(this->prefix()) + SX_XML);
+int Dict::make_macdic_xml(int limit, int dict_id) {
+  dump_remain_count_ = limit;
+  current_dict_id_ = dict_id;
+  macdic_xml_open(std::string("./macdic/") + std::string(this->prefix()) + SX_XML);
   index->iterate_all_datablocks(&cb_macdic_xml, NULL);
   macdic_xml_close();
 

@@ -69,6 +69,8 @@ readlineには（少なくとも現時点では）対応していません。（
     - ターゲット辞書を変更。
 .make toc
     - カレント辞書のsuffix arrayインデックスを生成します。（今のところ見出し語・訳語のみ）
+.make macdic
+    - Mac OS X付属のDictionary.app用のXMLファイルを生成します。
 .dump {header|index|words|datablock|all}
     - ダンプコマンド。〈これはいまのところ開発用〉
     - 見出し語の全リストが .dump words で取れるとか
