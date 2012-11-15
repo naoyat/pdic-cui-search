@@ -5,6 +5,7 @@
 #include "util/macdic_xml.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <openssl/md5.h>
 #include <re2/re2.h>

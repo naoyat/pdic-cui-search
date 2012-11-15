@@ -3,6 +3,7 @@
 // license that can be found in the COPYING file.
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <string>
 

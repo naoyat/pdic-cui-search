@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <re2/re2.h>
 
+#include <limits>
 #include <map>
 #include <set>
 #include <string>
@@ -53,7 +54,7 @@ class Dict {
   std::string info() { return name + " " + path; }
   char *prefix() { return _prefix; }
   int   make_toc();
-  int   make_macdic_xml(int limit=INT_MAX, int dict_id=0);
+  int   make_macdic_xml(int limit=std::numeric_limits<int>::max(), int dict_id=0);
   int   make_henkakei_table();
   void  unload_additional_files();
   bool  load_additional_files();

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <re2/re2.h>
 
+#include <limits>
 #include <map>
 #include <queue>
 #include <set>
@@ -273,7 +274,7 @@ bool Shell::do_command(char *cmdstr) {
         }
       } else if (cmd[1] == "macdic") {
         traverse(current_dict_ids, current_dict_id) {
-          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : INT_MAX;
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
           Dict *dict = dicts[*current_dict_id];
           dict->make_macdic_xml(limit, *current_dict_id);
         }
@@ -309,7 +310,7 @@ bool Shell::do_command(char *cmdstr) {
           index->iterate_all_datablocks(&cb_dump_entry, NULL);
         } else if (what_to_dump == "macdic") {
           // index->iterate_all_datablocks(&cb_macdic_xml, NULL);
-          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : INT_MAX;
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
           Dict *dict = dicts[*current_dict_id];
           dict->make_macdic_xml(limit, *current_dict_id);
         } else if (what_to_dump == "all") {
@@ -385,7 +386,7 @@ bool Shell::do_use(std::string name) {
 
 void Shell::render_current_result() {
   int keep = params.render_count_limit;
-  params.render_count_limit = INT_MAX;
+  params.render_count_limit = std::numeric_limits<int>::max();
   traverse(current_result_vec, it) {
     render_result(*it, current_pattern);
   }
@@ -394,7 +395,7 @@ void Shell::render_current_result() {
 
 void Shell::render_current_result(const std::set<int>& range) {
   int keep = params.render_count_limit;
-  params.render_count_limit = INT_MAX;
+  params.render_count_limit = std::numeric_limits<int>::max();
   traverse(range, it) {
     render_result(current_result_vec[*it], current_pattern);
   }
@@ -482,15 +483,15 @@ int ShellParams::set_lookup_mode(const char *mode_str) {
 }
 
 const char *ShellParams::get_lookup_mode() {
-  if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
-                                                | LOOKUP_MATCH_FORWARD)
+  if (default_lookup_flags == (LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                                 | LOOKUP_MATCH_FORWARD))
     return "normal";
-  else if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
-                                                     | LOOKUP_EXACT_MATCH)
+  else if (default_lookup_flags == (LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                                 | LOOKUP_EXACT_MATCH))
     return "exact";
-  else if (default_lookup_flags == LOOKUP_SARRAY | LOOKUP_HENKAKEI)
+  else if (default_lookup_flags == (LOOKUP_SARRAY | LOOKUP_HENKAKEI))
     return "sarray";
-  else if (default_lookup_flags == LOOKUP_REGEXP | LOOKUP_HENKAKEI)
+  else if (default_lookup_flags == (LOOKUP_REGEXP | LOOKUP_HENKAKEI))
     return "regexp";
   else
     return "all";
