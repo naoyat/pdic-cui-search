@@ -8,6 +8,7 @@
 #include <re2/stringpiece.h>
 
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -19,6 +20,7 @@
 #include "util/Shell.h"
 
 extern Shell *g_shell;
+extern int dump_remain_count_;
 
 const int kMaxNeedlePatternSize = 1000;
 
@@ -118,6 +120,8 @@ void lookup(byte *needle, int flags) {
   reset_match_count();
   reset_render_count();
   lookup_result_vec result_vec;
+
+  dump_remain_count_ = std::numeric_limits<int>::max();
 
   /*
   bool match_backward = true;

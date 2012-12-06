@@ -1,7 +1,7 @@
 .SUFFIXES:
 .SUFFIXES: .cc .o
 
-CXX = g++
+CXX = llvm-g++
 CXXFLAGS=-Wall -O3 -g -I.
 
 .cc.o: $*.h

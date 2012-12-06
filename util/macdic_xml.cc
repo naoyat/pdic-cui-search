@@ -70,8 +70,8 @@ void cb_macdic_xml(PDICDatafield *datafield) {
   ///if (!pron) return; /// DEBUG
 
   //if (!(entry[0] == 'a' || entry[0] == 'A' || strncmp("あ", (const char *)entry, 3)==0)) return;
-  //if (!(entry[0] == 'r' || entry[0] == 'R')) return;
-  //if (level == 0) return;
+//  if (!(entry[0] == 't' || entry[0] == 'T' || strncmp("た", (const char *)entry, 3)==0)) return;
+  //if (!strncmp("株式会社", (const char*)entry, 12)==0) return;
   
   if (trap_mode_) {
     printf("# TRAP(%s)(%s)(%s)\n", entry, jword, pron);
@@ -106,11 +106,23 @@ void cb_macdic_xml(PDICDatafield *datafield) {
     // printf("..%d/%d", p-p0, jl);
     const char *q1 = strstr(p, "【");
     if (!q1) break;
-    if (q1 >= p0+3 && strncmp(q1-3, "◆", 3) == 0) {
-      p = q1 + 3; continue;
+    if (q1 >= p0+3) {
+      // "【" の直前の文字が ◆ や〔 ならスキップ
+      if (strncmp(q1-3, "◆", 3) == 0 || strncmp(q1-3, "〔", 3) == 0) {
+        p = q1 + 3; continue;
+      }
     }
     const char *q2 = strstr(q1+3, "】");
     if (!q2) break;
+
+    /*{
+      char* tmp = new char[q2 - q1 - 2];
+      strncpy(tmp, q1+3, q2-q1-3);
+      tmp[q2-q1-3] = 0;
+      printf("【】%s\n", tmp);
+      delete tmp;
+      }*/
+    
     offsets.push_back(make_pair(q1-p0, (q2+3)-p0));
     //p = q1 + 9;
     p = q2 + 3;
@@ -148,6 +160,8 @@ void cb_macdic_xml(PDICDatafield *datafield) {
       if (p0[s2_from + s2_len - 2] == 0x0d) s2_len -= 2;
       // if (p0[s2_from + s2_len - 1] == 0x0a) s2_len -= 1;
       // if (p0[s2_from + s2_len - 1] == '\n') --s2_len;
+
+      // 末尾の「、」を切り捨てる
       if (strncmp("、", p0 + s2_from + s2_len - 3, 3) == 0) s2_len -= 3;
 
       if (trap_mode_) printf("#   B/true 3\n");
@@ -157,7 +171,11 @@ void cb_macdic_xml(PDICDatafield *datafield) {
       
       if (trap_mode_) printf("#   B/true 4\n");
 
-      if (s1 == "＠") prepend_mode = true;
+      if (s1 == "＠" || s1 == "変化" || s1 == "文節") {
+        prepend_mode = true;
+        if (s1 == "＠") s1 = string("カナ");
+      }
+      
       if (prepend_mode) {
         items_to_prepend.push_back(make_pair(s1, s2));
       } else {
@@ -178,8 +196,9 @@ void cb_macdic_xml(PDICDatafield *datafield) {
         RE2::GlobalReplace(&s2a, ";", "|");
         RE2::GlobalReplace(&s2a, "\\r\\n.*$", "");
         s2a = s2a + "|";
+#ifdef SHOW_HENKA
         printf("<変化> \"%s\"\n", s2a.c_str());
-
+#endif
         re2::StringPiece input(s2a);
         string var;
 
@@ -188,14 +207,18 @@ void cb_macdic_xml(PDICDatafield *datafield) {
           if (var == "") continue;
           string pre, paren, post;
           if (RE2::FullMatch(var, "([-A-Za-z]*)\\(([^)]*)\\)([-A-Za-z]*)", &pre, &paren, &post)) {
+#ifdef SHOW_HENKA
             printf("  - %s%s%s | %s%s\n",
                    pre.c_str(), paren.c_str(), post.c_str(),
                    pre.c_str(), post.c_str()
                    );
+#endif
             conj_forms.insert(pre + paren + post);
             conj_forms.insert(pre + post);
           } else {
+#ifdef SHOW_HENKA
             printf("  - %s\n", var.c_str());
+#endif
             conj_forms.insert(var);
           }
         }
@@ -215,15 +238,23 @@ void cb_macdic_xml(PDICDatafield *datafield) {
   std::string id = idstr((const char *)entry);
   if (trap_mode_) printf("#   id = \"%s\"\n", id.c_str());
 
-  fprintf(macdic_xml_fp, "\n"); // spacing
+#ifdef DEBUG_SPACING
+  fprintf(macdic_xml_fp, "\n"); // spacing between entries
+#endif
   // entryをescapeしないと (" -> &quot; とか)
   char *escaped_entry = escape((const char *)entry);
   fprintf(macdic_xml_fp,
-          "<d:entry id=\"%s\" d:title=\"%s\">\n",
+          "<d:entry id=\"%s\" d:title=\"%s\">",
           id.c_str(), escaped_entry);
+#ifdef DEBUG_SPACING
+  fprintf(macdic_xml_fp, "\n\t");
+#endif
   fprintf(macdic_xml_fp,
-          "\t<d:index d:value=\"%s\" />\n",
+          "<d:index d:value=\"%s\" />",
           escaped_entry);
+#ifdef DEBUG_SPACING
+  fprintf(macdic_xml_fp, "\b");
+#endif
 
   // ハッシュに格納してある変化形でも引けるようにする
   if (conj_forms.size() > 0) {
@@ -236,30 +267,62 @@ void cb_macdic_xml(PDICDatafield *datafield) {
       // if (elem == entry) continue;
       if (strcmp(elem, (const char *)entry) == 0) continue;
 
+#ifdef DEBUG_SPACING
+      fprintf(macdic_xml_fp, "\t");
+#endif
       fprintf(macdic_xml_fp,
-              "\t<d:index d:value=\"%s\" " "d:title=\"%s (%s)\" />\n",
+              "<d:index d:value=\"%s\" " "d:title=\"%s (%s)\" />",
               elem,
               elem, escaped_entry);
+#ifdef DEBUG_SPACING
+      fprintf(macdic_xml_fp, "\n");
+#endif
     }
   }
 
   if (trap_mode_) printf("#   H1= %s\n", escaped_entry);
   
   // H1= entry
-  fprintf(macdic_xml_fp, "\t<h1>%s</h1>\n", escaped_entry);
+#ifdef DEBUG_SPACING
+  fprintf(macdic_xml_fp, "\t");
+#endif
+  fprintf(macdic_xml_fp, "<h1>%s</h1>", escaped_entry);
+#ifdef DEBUG_SPACING
+  fprintf(macdic_xml_fp, "\n");
+#endif
   if (pron) {
+#ifdef DEBUG_SPACING
+    fprintf(macdic_xml_fp, "\t");
+#endif
     fprintf(macdic_xml_fp,
-            "\t<span class=\"syntax\"><span class=\"pr\">/ %s /</span></span>\n",
+            "<span class=\"syntax\"><span class=\"pr\">/ %s /</span></span>",
             pron);
+#ifdef DEBUG_SPACING
+    fprintf(macdic_xml_fp, "\n");
+#endif
   }
 
   // definition
-  fprintf(macdic_xml_fp, "\t<p>");
+#ifdef DEBUG_SPACING
+  fprintf(macdic_xml_fp, "\t");
+#endif
+  fprintf(macdic_xml_fp, "<p>");
+
+  if (level > 0) {
+    // fprintf(macdic_xml_fp, "<span class=\"wordclass\">レベル</span>%d<br />\n", level);
+    stringstream ss;
+    ss << level;
+    items_to_prepend.push_back(make_pair("レベル", ss.str()));
+  }
 
   // cout << "P:" << items_to_prepend << endl;
   if (items_to_prepend.size() > 0) {
+    fprintf(macdic_xml_fp, "<span class=\"prepend\">");
     for (int i=0; i<(int)items_to_prepend.size(); ++i) {
-      render_definition(items_to_prepend[i].first.c_str(), items_to_prepend[i].second.c_str());
+      // render_definition(items_to_prepend[i].first.c_str(), items_to_prepend[i].second.c_str());
+      fprintf(macdic_xml_fp, "【%s】", items_to_prepend[i].first.c_str());
+      parse_output(items_to_prepend[i].second.c_str());
+
       /*
       fprintf(macdic_xml_fp, "\n\t"); // DEBUG
       //fprintf(macdic_xml_fp, "<span class=\"wordclass\">%s</span><br />", items_to_prepend[i].first.c_str());
@@ -271,12 +334,13 @@ void cb_macdic_xml(PDICDatafield *datafield) {
               "%s", items_to_prepend[i].second.c_str());
       */
     }
-    //fprintf(macdic_xml_fp, "<br />\n");
+    fprintf(macdic_xml_fp, "</span>");
+#ifdef DEBUG_SPACING
+    fprintf(macdic_xml_fp, "\n");
+#endif
+    // fprintf(macdic_xml_fp, "<br />\n");
   }
 
-  if (level > 0) {
-    fprintf(macdic_xml_fp, "<span class=\"wordclass\">レベル</span>%d<br />\n", level);
-  }
 
   if (trap_mode_) printf("#   rendering...\n");
 
@@ -287,7 +351,10 @@ void cb_macdic_xml(PDICDatafield *datafield) {
 
   if (trap_mode_) printf("#   Z\n");
 
-  fprintf(macdic_xml_fp, "</p>\n");
+  fprintf(macdic_xml_fp, "</p>");
+#ifdef DEBUG_SPACING
+  fprintf(macdic_xml_fp, "\n");
+#endif
   fprintf(macdic_xml_fp, "</d:entry>\n");
   fflush(macdic_xml_fp);
 
@@ -382,6 +449,7 @@ void parse_output(const char *begin, const char *end) {
     printf("\n");
   }
 
+  /*
   const char *ql = strnstr(begin, "&lt;→", end-begin);
   if (ql) {
     const char *qlE = strnstr(ql+7, "&gt;", end-(ql+7));
@@ -397,6 +465,40 @@ void parse_output(const char *begin, const char *end) {
     free(word_buf);
 
     begin = qlE + 4;
+  }
+  */
+  const char *ql = strnstr(begin+1, "→", end-begin);
+  if (ql) {
+    bool flag = false;
+    const char *endTag = NULL;
+
+    if (strncmp(ql-4, "&lt;", 4) == 0) {
+      output(begin, ql-4);
+      endTag = "&gt;";
+      flag = true;
+    } else if (*(ql-1) == '<') {
+      output(begin, ql-1);
+      endTag = ">";
+      flag = true;
+    } else {
+      flag = false;
+    }
+
+    if (flag) {
+      const char *qlE = strnstr(ql+3, endTag, end-(ql+3));
+      // ql+3 ... qlE
+      int word_len = (int)(qlE - (ql+3));
+      char *word_buf = (char *)malloc(word_len + 1);
+      memcpy(word_buf, ql+3, word_len);
+      word_buf[word_len] = 0;
+      fprintf(macdic_xml_fp,
+              "&lt;→<a href=\"x-dictionary:r:%s\">%s</a>&gt;",
+              idstr(word_buf).c_str(),
+              word_buf);
+      free(word_buf);
+
+      begin = qlE + strlen(endTag);
+    }
   }
 
   const char *qf = strnstr(begin, "◆file:", end-begin);
@@ -437,7 +539,11 @@ void parse_output(const char *begin, const char *end) {
       output(qE, end);
     }
   }
-  fprintf(macdic_xml_fp, "<br />\n");
+
+  fprintf(macdic_xml_fp, "<br />"); 
+#ifdef DEBUG_SPACING
+  fprintf(macdic_xml_fp, "\n");
+#endif
   if (trap_mode_) printf("#   P z\n");
 }
 
@@ -447,7 +553,7 @@ void render_definition(const char *wordclass, const char *desc) {
     printf("#   render_definition: %s | %s\n", wordclass, desc);
   }
   
-  fprintf(macdic_xml_fp, "\n\t"); // DEBUG
+  // fprintf(macdic_xml_fp, "\n\t"); // DEBUG
   if (wordclass && strlen(wordclass) > 0) {
     fprintf(macdic_xml_fp, "<span class=\"wordclass\">%s</span>", wordclass);
     /// fprintf(macdic_xml_fp, "<br />\n");
@@ -464,9 +570,13 @@ void render_definition(const char *wordclass, const char *desc) {
     if (!q) break;
 
     if (example_mode) {
-      fprintf(macdic_xml_fp, "\t<span class=\"example\">・");
+      //fprintf(macdic_xml_fp, "\t<span class=\"example\">・");
+      fprintf(macdic_xml_fp, "<span class=\"example\">・");
       output(p, q);
-      fprintf(macdic_xml_fp, "</span><br />\n");
+      fprintf(macdic_xml_fp, "</span><br />");
+#ifdef DEBUG_SPACING
+      fprintf(macdic_xml_fp, "\n");
+#endif
     } else {
       parse_output(p, q);
       example_mode = true;
@@ -479,7 +589,11 @@ void render_definition(const char *wordclass, const char *desc) {
 
   if (example_mode) {
     // printf("・");
-    fprintf(macdic_xml_fp, "\t<span class=\"example\">・%s</span><br />\n", p);
+    fprintf(macdic_xml_fp, "<span class=\"example\">・%s</span><br />", p);
+    //fprintf(macdic_xml_fp, "\t<span class=\"example\">・%s</span><br />", p);
+#ifdef DEBUG_SPACING
+    fprintf(macdic_xml_fp, "\n");
+#endif
   } else {
     parse_output(p);
   }
