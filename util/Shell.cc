@@ -28,6 +28,9 @@
 #include "util/timeutil.h"
 #include "util/util.h"
 #include "util/macdic_xml.h"
+#include "util/sqlite3_sql.h"
+
+extern int sqlite3_sql_entry_id_;
 
 Shell::Shell() {
 }
@@ -228,7 +231,7 @@ bool Shell::do_command(char *cmdstr) {
     if (cmd.size() >= 2) {
       std::string filename = cmd[1];
       int dict_id = do_load(filename);
-
+      
       if (dict_id >= 0) {
         char *name = dicts[dict_id]->prefix();
         // printf("+" << name << std::endl;
@@ -278,6 +281,13 @@ bool Shell::do_command(char *cmdstr) {
           Dict *dict = dicts[*current_dict_id];
           dict->make_macdic_xml(limit, *current_dict_id);
         }
+      } else if (cmd[1] == "sql") {
+        sqlite3_sql_entry_id_ = 0;
+        traverse(current_dict_ids, current_dict_id) {
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_sqlite3_sql(limit, *current_dict_id);
+        }
       } else if (cmd[1] == "henkakei") {
           // 変化形テーブルを作成。あとで関数名考える
         traverse(current_dict_ids, current_dict_id) {
@@ -296,6 +306,7 @@ bool Shell::do_command(char *cmdstr) {
     } else if (current_dict_ids.size() == 0) {
       printf("// 辞書が選択されていません。\n");
     } else {
+      sqlite3_sql_entry_id_ = 0;
       traverse(current_dict_ids, current_dict_id) {
         PDICIndex *index = dicts[*current_dict_id]->index;
         std::string what_to_dump = cmd[1];
@@ -309,10 +320,13 @@ bool Shell::do_command(char *cmdstr) {
         } else if (what_to_dump == "words") {
           index->iterate_all_datablocks(&cb_dump_entry, NULL);
         } else if (what_to_dump == "macdic") {
-          // index->iterate_all_datablocks(&cb_macdic_xml, NULL);
           int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
           Dict *dict = dicts[*current_dict_id];
           dict->make_macdic_xml(limit, *current_dict_id);
+        } else if (what_to_dump == "sql") {
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_sqlite3_sql(limit, *current_dict_id);
         } else if (what_to_dump == "all") {
           index->iterate_all_datablocks(&cb_dump, NULL);
           // } else if (what_to_dump == "henkakei") {

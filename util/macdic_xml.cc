@@ -145,6 +145,11 @@ void cb_macdic_xml(PDICDatafield *datafield) {
   //printf("\n");
   bool prepend_mode = false;
   if (n > 0) {
+    if (offsets[0].first > 0) {
+      string s2((const char *)jword, offsets[0].first);
+      items.push_back(make_pair("", s2));
+    }
+
     // 【】あり
     offsets.push_back(make_pair(jl,0));
     

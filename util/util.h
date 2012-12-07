@@ -34,6 +34,11 @@ inline uint u16val(byte* data) {
   return *reinterpret_cast<uint16_t*>(data);
 }
 inline uint u32val(byte* data) {
+  /*
+  printf("u32val(%02x %02x %02x %02x) -> %lld\n",
+         data[0], data[1], data[2], data[3],
+         *reinterpret_cast<uint32_t*>(data));
+         */
   return *reinterpret_cast<uint32_t*>(data);
 }
 inline uint64_t u64val(byte* data) {

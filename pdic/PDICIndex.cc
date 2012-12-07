@@ -22,6 +22,7 @@ int current_dict_id_ = 0; // 現在扱っている辞書のdict_id
 PDICIndex::PDICIndex(byte* filemem) {
   this->filemem = filemem;
   this->header = new PDICHeader(filemem);
+  this->header->dump();
   header_needs_delete = true;
   load_index();
 }
@@ -29,6 +30,7 @@ PDICIndex::PDICIndex(byte* filemem) {
 PDICIndex::PDICIndex(byte* filemem, PDICHeader* header) {
   this->filemem = filemem;
   this->header = header;
+  this->header->dump();
   header_needs_delete = false;
   load_index();
 }
@@ -57,6 +59,7 @@ int PDICIndex::load_index() {
 
   int actual_nindex = 0;
   for (int ix = 0, ofs = 0; ix < _nindex && ofs < index_size; ++ix) {
+    //for (int ix = 0, ofs = 0; /*ix < _nindex && */ ofs < index_size; ++ix) {
     int phys_id;
     if (index_blkbit == 0) {
       phys_id = s16val(index_buf + ofs);
@@ -99,6 +102,7 @@ bsearch_result_t PDICIndex::bsearch_in_index(byte* needle, bool exact_match) {
 }
 
 void PDICIndex::dump() {
+  //  printf("!! _nindex = %d\n", _nindex); return;
   for (int ix = 0; ix < _nindex; ++ix) {
     printf("%04d +%d: ", 1+ix, phys_ids[ix]);
 
