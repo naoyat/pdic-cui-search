@@ -5,13 +5,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleIdentifier</key>
-	<string>jp.co.alc.eijiro7</string>
+	<string>jp.co.alc.Eijiro7</string>
 	<key>CFBundleName</key>
 	<string>英辞郎</string>
 	<key>CFBundleShortVersionString</key>
 	<string>136</string>
 	<key>DCSDictionaryCopyright</key>
-	<string>Copyright © 2012 EDP</string>
+	<string>Copyright © 2013 EDP</string>
 	<key>DCSDictionaryManufacturerName</key>
 	<string>EDP</string>
 	<key>DCSDictionaryFrontMatterReferenceID</key>

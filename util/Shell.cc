@@ -448,7 +448,6 @@ void Shell::render_status() {
   printf("%s", ANSI_FGCOLOR_DEFAULT);
 }
 
-
 #define DEFAULT_RENDER_COUNT_LIMIT 150
 
 ShellParams::ShellParams() {

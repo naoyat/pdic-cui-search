@@ -16,6 +16,7 @@ CREATE TABLE surfaces (
 );
 
 CREATE INDEX surfaces_surface on surfaces(surface);
+CREATE INDEX surfaces_entry_id on surfaces(entry_id);
 
 
 CREATE TABLE definitions (

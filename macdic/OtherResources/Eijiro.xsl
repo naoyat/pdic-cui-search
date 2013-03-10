@@ -7,49 +7,6 @@
 	doctype-system="http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" />
 
 <!--
-    targets
-
-<xsl:template match="*[@dic='01']">
-	<xsl:if test="$target-eiji = '1'">
-		<xsl:copy>
-			<xsl:apply-templates select="@*|node()" />
-		</xsl:copy>
-	</xsl:if>
-</xsl:template>
-
-<xsl:template match="*[@dic='02']">
-	<xsl:if test="$target-waei = '1'">
-		<xsl:copy>
-			<xsl:apply-templates select="@*|node()" />
-		</xsl:copy>
-	</xsl:if>
-</xsl:template>
-
-<xsl:template match="*[@dic='03']">
-	<xsl:if test="$target-reiji = '1'">
-		<xsl:copy>
-			<xsl:apply-templates select="@*|node()" />
-		</xsl:copy>
-	</xsl:if>
-</xsl:template>
-
-<xsl:template match="*[@dic='04']">
-	<xsl:if test="$target-reijitag = '1'">
-		<xsl:copy>
-			<xsl:apply-templates select="@*|node()" />
-		</xsl:copy>
-	</xsl:if>
-</xsl:template>
-
-<xsl:template match="*[@dic='05']">
-	<xsl:if test="$target-ryaku = '1'">
-		<xsl:copy>
-			<xsl:apply-templates select="@*|node()" />
-		</xsl:copy>
-	</xsl:if>
-</xsl:template>
--->
-<!--
 	Default rule for all other tags
 -->
 <xsl:template match="@*|node()">

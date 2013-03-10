@@ -35,7 +35,7 @@ int trap_mode_ = 0;
 std::string idstr(const char *cstr);
 char *escape(const char *str);
 void output(const char *begin, const char *end=NULL);
-void parse_output(const char *begin, const char *end=NULL);
+void parse_output(const char *begin, const char *end=NULL, bool do_newline=true);
 void render_definition(const char *wordclass, const char *desc);
 // int macdic_xml_open(std::string path);
 // void macdic_xml_close();
@@ -69,8 +69,11 @@ void cb_macdic_xml(PDICDatafield *datafield) {
   if (!jword) return;
   ///if (!pron) return; /// DEBUG
 
-  //if (!(entry[0] == 'a' || entry[0] == 'A' || strncmp("あ", (const char *)entry, 3)==0)) return;
+//  if (rand() % 100) return; // 1%だけ通す
+//  if (!(entry[0] == '$')) return;
+//  if (!(entry[0] == 'a' || entry[0] == 'A' || strncmp("あ", (const char *)entry, 3)==0)) return;
 //  if (!(entry[0] == 't' || entry[0] == 'T' || strncmp("た", (const char *)entry, 3)==0)) return;
+//  if (!(entry[0] == 'n' || entry[0] == 'N' || strncmp("な", (const char *)entry, 3)==0)) return;
   //if (!strncmp("株式会社", (const char*)entry, 12)==0) return;
   
   if (trap_mode_) {
@@ -258,7 +261,7 @@ void cb_macdic_xml(PDICDatafield *datafield) {
           "<d:index d:value=\"%s\" />",
           escaped_entry);
 #ifdef DEBUG_SPACING
-  fprintf(macdic_xml_fp, "\b");
+  fprintf(macdic_xml_fp, "\n");
 #endif
 
   // ハッシュに格納してある変化形でも引けるようにする
@@ -292,9 +295,11 @@ void cb_macdic_xml(PDICDatafield *datafield) {
   fprintf(macdic_xml_fp, "\t");
 #endif
   fprintf(macdic_xml_fp, "<h1>%s</h1>", escaped_entry);
-#ifdef DEBUG_SPACING
-  fprintf(macdic_xml_fp, "\n");
-#endif
+
+  //#ifdef DEBUG_SPACING
+  fprintf(macdic_xml_fp, "\n"); // これはDEBUGでなくても必要? でないとatag除去が失敗する
+  //#endif
+
   if (pron) {
 #ifdef DEBUG_SPACING
     fprintf(macdic_xml_fp, "\t");
@@ -326,7 +331,7 @@ void cb_macdic_xml(PDICDatafield *datafield) {
     for (int i=0; i<(int)items_to_prepend.size(); ++i) {
       // render_definition(items_to_prepend[i].first.c_str(), items_to_prepend[i].second.c_str());
       fprintf(macdic_xml_fp, "【%s】", items_to_prepend[i].first.c_str());
-      parse_output(items_to_prepend[i].second.c_str());
+      parse_output(items_to_prepend[i].second.c_str(), NULL, false);
 
       /*
       fprintf(macdic_xml_fp, "\n\t"); // DEBUG
@@ -340,6 +345,7 @@ void cb_macdic_xml(PDICDatafield *datafield) {
       */
     }
     fprintf(macdic_xml_fp, "</span>");
+    fprintf(macdic_xml_fp, "<br />");
 #ifdef DEBUG_SPACING
     fprintf(macdic_xml_fp, "\n");
 #endif
@@ -444,7 +450,7 @@ void output(const char *begin, const char *end) {
   fwrite(begin, 1, size, macdic_xml_fp);
 }
 
-void parse_output(const char *begin, const char *end) {
+void parse_output(const char *begin, const char *end, bool do_newline) {
   //int size = (end == NULL)? strlen(begin) : (end - begin);
   if (!end) end = begin + strlen(begin);
   if (trap_mode_) {
@@ -472,8 +478,9 @@ void parse_output(const char *begin, const char *end) {
     begin = qlE + 4;
   }
   */
-  const char *ql = strnstr(begin+1, "→", end-begin);
-  if (ql) {
+  const char *ql = NULL;
+  while ((ql = strnstr(begin+1, "→", end-begin)) != NULL) {
+    // if (ql) {
     bool flag = false;
     const char *endTag = NULL;
 
@@ -503,6 +510,9 @@ void parse_output(const char *begin, const char *end) {
       free(word_buf);
 
       begin = qlE + strlen(endTag);
+    } else {
+      output(begin, ql+3);
+      begin = ql + 3;
     }
   }
 
@@ -545,7 +555,7 @@ void parse_output(const char *begin, const char *end) {
     }
   }
 
-  fprintf(macdic_xml_fp, "<br />"); 
+  if (do_newline) fprintf(macdic_xml_fp, "<br />"); 
 #ifdef DEBUG_SPACING
   fprintf(macdic_xml_fp, "\n");
 #endif
@@ -561,7 +571,6 @@ void render_definition(const char *wordclass, const char *desc) {
   // fprintf(macdic_xml_fp, "\n\t"); // DEBUG
   if (wordclass && strlen(wordclass) > 0) {
     fprintf(macdic_xml_fp, "<span class=\"wordclass\">%s</span>", wordclass);
-    /// fprintf(macdic_xml_fp, "<br />\n");
   }
 
   if (trap_mode_) printf("#   R 1\n");
@@ -583,7 +592,7 @@ void render_definition(const char *wordclass, const char *desc) {
       fprintf(macdic_xml_fp, "\n");
 #endif
     } else {
-      parse_output(p, q);
+      parse_output(p, q, true);
       example_mode = true;
     }
 
@@ -600,7 +609,7 @@ void render_definition(const char *wordclass, const char *desc) {
     fprintf(macdic_xml_fp, "\n");
 #endif
   } else {
-    parse_output(p);
+    parse_output(p, NULL, true);
   }
   /// fprintf(macdic_xml_fp, "<br />\n");
 
