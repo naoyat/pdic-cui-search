@@ -31,6 +31,7 @@
 #include "util/sqlite3_sql.h"
 
 extern int sqlite3_sql_entry_id_;
+extern Dict *_dict;
 
 Shell::Shell() {
 }
@@ -308,7 +309,9 @@ bool Shell::do_command(char *cmdstr) {
     } else {
       sqlite3_sql_entry_id_ = 0;
       traverse(current_dict_ids, current_dict_id) {
-        PDICIndex *index = dicts[*current_dict_id]->index;
+        Dict *dict = dicts[*current_dict_id];
+        _dict = dict;
+        PDICIndex *index = dict->index;
         std::string what_to_dump = cmd[1];
         if (what_to_dump == "header") {
           index->header->dump();
@@ -335,6 +338,7 @@ bool Shell::do_command(char *cmdstr) {
           printf("// [ERROR] I don't know how to dump '%s'...\n",
                  what_to_dump.c_str());
         }
+        _dict = NULL;
       }
     }
   } else if (cmd[0] == "lookup") {

@@ -874,8 +874,10 @@ void render_result(lookup_result fields, RE2 *re) {
 
   if (g_shell->params.ansi_coloring_mode) {
     printf("%s", ANSI_FGCOLOR_BLUE);
-    RE2::GlobalReplace(&entry_str, *re,
-                       ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_BLUE);
+    if (re != NULL) {
+      RE2::GlobalReplace(&entry_str, *re,
+                         ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_BLUE);
+    }
     printf("%s%s%s", ANSI_BOLD_ON, entry_str.c_str(), ANSI_BOLD_OFF);
     if (is_not_empty(fields[F_PRON]))
       printf(" [%s]", reinterpret_cast<char*>(fields[F_PRON]));
@@ -893,7 +895,7 @@ void render_result(lookup_result fields, RE2 *re) {
     std::string jword_str(indent + (const char *)fields[F_JWORD]);
     // RE2::GlobalReplace(&jword, "◆", "\n◆");
     RE2::GlobalReplace(&jword_str, "\n", "\n"+indent);
-    if (g_shell->params.ansi_coloring_mode) {
+    if (re != NULL && g_shell->params.ansi_coloring_mode) {
       RE2::GlobalReplace(&jword_str, *re,
                          ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_DEFAULT);
     }

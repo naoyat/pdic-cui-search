@@ -153,11 +153,16 @@ void cb_dump(PDICDatafield *datafield) {
     datafield->in_utf8(F_EXAMPLE),
     datafield->in_utf8(F_PRON)
   };
-  render_result((lookup_result)fields, datafield->criteria->re2_pattern);
+  /*
+  printf("cb_dump: fields[] = { \"%s\", \"%s\", \"%s\", \"%s\" }, %p\n",
+         (char *)fields[0], (char *)fields[1], (char *)fields[2], (char *)fields[3],
+         datafield->criteria);
+  */
+  render_result((lookup_result)fields,
+                datafield->criteria ? datafield->criteria->re2_pattern : NULL);
 
   int word_id = _dict->word_id_for_pdic_datafield_pos(datafield->start_pos);
   _result_id_set.insert(word_id);
-
   if (++match_count >= g_shell->params.render_count_limit)
     render_count_limit_exceeded = true;
 }
