@@ -16,9 +16,15 @@
 #include "util/utf8.h"
 #include "util/util.h"
 
+int dump_remain_count_ = 0; // ダンプ許容カウント
+int current_dict_id_ = 0; // 現在扱っている辞書のdict_id
+
+#define BELIEVE_INDEX 1
+
 PDICIndex::PDICIndex(byte* filemem) {
   this->filemem = filemem;
   this->header = new PDICHeader(filemem);
+  // this->header->dump();
   header_needs_delete = true;
   load_index();
 }
@@ -26,6 +32,7 @@ PDICIndex::PDICIndex(byte* filemem) {
 PDICIndex::PDICIndex(byte* filemem, PDICHeader* header) {
   this->filemem = filemem;
   this->header = header;
+  // this->header->dump();
   header_needs_delete = false;
   load_index();
 }
@@ -54,6 +61,7 @@ int PDICIndex::load_index() {
 
   int actual_nindex = 0;
   for (int ix = 0, ofs = 0; ix < _nindex && ofs < index_size; ++ix) {
+    //for (int ix = 0, ofs = 0; /*ix < _nindex && */ ofs < index_size; ++ix) {
     int phys_id;
     if (index_blkbit == 0) {
       phys_id = s16val(index_buf + ofs);
@@ -62,7 +70,16 @@ int PDICIndex::load_index() {
       phys_id = s32val(index_buf + ofs);
       ofs += 4;
     }
-
+    /*
+    printf("[ix=%d/%d ofs=%d/%d] [phys_id = %d] ",
+           ix, _nindex,
+           ofs - (2 << index_blkbit), index_size,
+           phys_id);
+    printf("%02x %02x %02x %02x ... ",
+           index_buf[ofs], index_buf[ofs+1], index_buf[ofs+2], index_buf[ofs+3]);
+    bocu1_dump_in_utf8(index_buf + ofs, strlen((const char *)index_buf + ofs));
+    printf("\n");
+    */
     if (ofs >= index_size) break;
 
     byte* entry_word = index_buf + ofs;  // cstr
@@ -87,7 +104,13 @@ unsigned int PDICIndex::datablock_offset(int ix) {
   unsigned int offset =
       header->header_size() + header->extheader() + header->index_size()
       + header->block_size()*phys_ids[ix];
-
+  /*
+  printf("index->datablock_offset(%d) = %d + [%d] + %d + %d*%d = %d\n",
+         ix, 
+         header->header_size(), header->extheader(), header->index_size(),
+         header->block_size(), phys_ids[ix],
+         offset);
+  */
   return offset;
 }
 
@@ -96,6 +119,7 @@ bsearch_result_t PDICIndex::bsearch_in_index(byte* needle, bool exact_match) {
 }
 
 void PDICIndex::dump() {
+  //  printf("!! _nindex = %d\n", _nindex); return;
   for (int ix = 0; ix < _nindex; ++ix) {
     printf("%04d +%d: ", 1+ix, phys_ids[ix]);
 
@@ -120,8 +144,41 @@ void PDICIndex::iterate_datablock(int ix,
 
 void PDICIndex::iterate_all_datablocks(action_proc* action,
                                        Criteria* criteria) {
-  for (int ix = 0; ix < _nindex; ++ix)
+  dump_remain_count_ = INT_MAX;
+#if BELIEVE_INDEX
+  // index情報を使って全データブロックをなめる
+  for (int ix = 0; ix < _nindex; ++ix) {
+    if (dump_remain_count_ == 0) break;
     this->iterate_datablock(ix, action, criteria);
+  }
+#else
+  // index情報を使わずに全データブロックをなめる
+  int nblock = header->nblock(), block_size = header->block_size();
+  unsigned int offset = header->header_size() + header->extheader() + header->index_size();
+  // printf("nblock = %d, block_size = %d; offset = %d\n", nblock, block_size, offset);
+  
+  for (int phys_id = 0; phys_id < nblock; ) {
+    int using_blocks_count = u16val(filemem + offset);
+    if (!using_blocks_count) {
+      // 空きブロック
+      //printf("%d. EMPTY BLOCK.\n", phys_id);
+      ++phys_id;
+      offset += block_size;
+      continue;
+    }
+    // _is4byte = using_blocks_count & 0x8000;
+    using_blocks_count &= 0x7fff;
+    //printf("%d. BLOCK (%d)\n", phys_id, using_blocks_count);
+
+    // this->iterate_datablock(ix, action, criteria);
+    PDICDatablock* datablock = new PDICDatablock(filemem, offset, header);
+    datablock->iterate(action, criteria);
+    delete datablock;
+
+    phys_id += using_blocks_count;
+    offset += using_blocks_count * block_size;
+  }
+#endif
 }
 
 //

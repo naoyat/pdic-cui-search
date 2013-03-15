@@ -104,7 +104,7 @@ unichar *decode_utf8(byte *src_utf8, int src_size, int* dest_length) {
 
   for (int i = 0; i < src_size; ) {
     int a = src_utf8[i++];
-    int codepoint;
+    int codepoint = 0;
     if (a <= 0x7f) {
       // U+00 .. U+7F
       codepoint = a;

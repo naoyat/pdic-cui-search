@@ -1,7 +1,7 @@
 .SUFFIXES:
 .SUFFIXES: .cc .o
 
-CXX = g++
+CXX = llvm-g++
 CXXFLAGS=-Wall -O3 -g -I.
 
 .cc.o: $*.h
@@ -10,7 +10,8 @@ CXXFLAGS=-Wall -O3 -g -I.
 OBJECTS = \
 	obj/pdic/PDICHeader.o obj/pdic/PDICIndex.o obj/pdic/PDICDatablock.o obj/pdic/PDICDatafield.o \
 	obj/pdic/Criteria.o obj/pdic/Dict.o obj/pdic/Dict_callbacks.o obj/pdic/lookup.o \
-	obj/util/bocu1.o obj/util/dump.o obj/util/filemem.o obj/util/macdic_xml.o \
+	obj/util/bocu1.o obj/util/dump.o obj/util/filemem.o \
+	obj/util/macdic_xml.o obj/util/sqlite3_sql.o \
 	obj/util/search.o obj/util/stlutil.o obj/util/timeutil.o obj/util/utf8.o \
 	obj/util/util.o obj/util/Shell.o
 
@@ -20,10 +21,10 @@ TEST_DATA = test/filemem_gtest.dat
 TEST_OUTPUTS = test/filemem_gtest.savemem
 
 pdicsh: main.o $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o pdicsh main.o $(OBJECTS) -liconv -lre2
+	$(CXX) $(CXXFLAGS) -o pdicsh main.o $(OBJECTS) -liconv -lre2 -lcrypto
 
 pdicsh_re2: main.o $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o pdicsh_re2 main.o $(OBJECTS) libre2.a -liconv
+	$(CXX) $(CXXFLAGS) -o pdicsh_re2 main.o $(OBJECTS) libre2.a -liconv -lcrypto
 
 pdic_gtest: gtest_main.o $(OBJECTS) $(TEST_OBJECTS) $(TEST_DATA)
 	$(CXX) $(CXXFLAGS) -o pdic_gtest $(OBJECTS) $(TEST_OBJECTS) -lgtest -lgtest_main -liconv -lre2

@@ -109,7 +109,7 @@ void cb_estimate_buf_size(PDICDatafield *datafield) {
 
   ++_count;
 
-  if (_count & 1000 == 0) {
+  if ((_count & 1000) == 0) {
     for (int f = 0; f < F_COUNT; ++f) {
       printf("%9d ", _dict_buf_size[f]);
     }

@@ -44,6 +44,7 @@ PDICDatafield::PDICDatafield(int start_pos,
     this->entry_word_size = this->entry_index_size = entry_word_size;
   }
   this->entry_word_attrib   = entry_word_attrib;
+  this->entry_word_level    = entry_word_attrib & 0x0f;
   this->charcode            = charcode;
   // printf("[%s (%d), %d], %d\n",
   //        entry_word_utf8(), entry_word_attrib, entry_word_size, charcode);

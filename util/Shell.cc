@@ -9,6 +9,7 @@
 #include <string.h>
 #include <re2/re2.h>
 
+#include <limits>
 #include <map>
 #include <queue>
 #include <set>
@@ -26,6 +27,10 @@
 #include "util/stlutil.h"
 #include "util/timeutil.h"
 #include "util/util.h"
+#include "util/macdic_xml.h"
+#include "util/sqlite3_sql.h"
+
+extern int sqlite3_sql_entry_id_;
 
 Shell::Shell() {
 }
@@ -226,7 +231,7 @@ bool Shell::do_command(char *cmdstr) {
     if (cmd.size() >= 2) {
       std::string filename = cmd[1];
       int dict_id = do_load(filename);
-
+      
       if (dict_id >= 0) {
         char *name = dicts[dict_id]->prefix();
         // printf("+" << name << std::endl;
@@ -264,16 +269,24 @@ bool Shell::do_command(char *cmdstr) {
              join(alias->second, ", ").c_str());
     }
   } else if (cmd[0] == "make") {
-    if (cmd.size() == 2) {
+    if (cmd.size() >= 2) {
       if (cmd[1] == "toc") {
         traverse(current_dict_ids, current_dict_id) {
           Dict *dict = dicts[*current_dict_id];
           dict->make_toc();
         }
-      } else if (cmd[1] == "xml") {
+      } else if (cmd[1] == "macdic") {
         traverse(current_dict_ids, current_dict_id) {
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
           Dict *dict = dicts[*current_dict_id];
-          dict->make_macdic_xml();
+          dict->make_macdic_xml(limit, *current_dict_id);
+        }
+      } else if (cmd[1] == "sql") {
+        sqlite3_sql_entry_id_ = 0;
+        traverse(current_dict_ids, current_dict_id) {
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_sqlite3_sql(limit, *current_dict_id);
         }
       } else if (cmd[1] == "henkakei") {
           // 変化形テーブルを作成。あとで関数名考える
@@ -282,10 +295,10 @@ bool Shell::do_command(char *cmdstr) {
           dict->make_henkakei_table();
         }
       } else {
-        printf("[command] make {toc|xml}\n");
+        printf("[command] make {toc|macdic}\n");
       }
     } else {
-      printf("[command] make {toc|xml}\n");
+      printf("[command] make {toc|macdic}\n");
     }
   } else if (cmd[0] == "dump") {
     if (cmd.size() == 1) {
@@ -293,6 +306,7 @@ bool Shell::do_command(char *cmdstr) {
     } else if (current_dict_ids.size() == 0) {
       printf("// 辞書が選択されていません。\n");
     } else {
+      sqlite3_sql_entry_id_ = 0;
       traverse(current_dict_ids, current_dict_id) {
         PDICIndex *index = dicts[*current_dict_id]->index;
         std::string what_to_dump = cmd[1];
@@ -305,6 +319,14 @@ bool Shell::do_command(char *cmdstr) {
           index->iterate_datablock(ix, &cb_dump_entry, NULL);
         } else if (what_to_dump == "words") {
           index->iterate_all_datablocks(&cb_dump_entry, NULL);
+        } else if (what_to_dump == "macdic") {
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_macdic_xml(limit, *current_dict_id);
+        } else if (what_to_dump == "sql") {
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
+          Dict *dict = dicts[*current_dict_id];
+          dict->make_sqlite3_sql(limit, *current_dict_id);
         } else if (what_to_dump == "all") {
           index->iterate_all_datablocks(&cb_dump, NULL);
           // } else if (what_to_dump == "henkakei") {
@@ -378,7 +400,7 @@ bool Shell::do_use(std::string name) {
 
 void Shell::render_current_result() {
   int keep = params.render_count_limit;
-  params.render_count_limit = INT_MAX;
+  params.render_count_limit = std::numeric_limits<int>::max();
   traverse(current_result_vec, it) {
     render_result(*it, current_pattern);
   }
@@ -387,7 +409,7 @@ void Shell::render_current_result() {
 
 void Shell::render_current_result(const std::set<int>& range) {
   int keep = params.render_count_limit;
-  params.render_count_limit = INT_MAX;
+  params.render_count_limit = std::numeric_limits<int>::max();
   traverse(range, it) {
     render_result(current_result_vec[*it], current_pattern);
   }
@@ -426,11 +448,9 @@ void Shell::render_status() {
   printf("%s", ANSI_FGCOLOR_DEFAULT);
 }
 
-
 #define DEFAULT_RENDER_COUNT_LIMIT 150
 
 ShellParams::ShellParams() {
-  printf("ShellParams()...\n");
   separator_mode       = false;
   verbose_mode         = false;
   direct_dump_mode     = false;
@@ -476,15 +496,15 @@ int ShellParams::set_lookup_mode(const char *mode_str) {
 }
 
 const char *ShellParams::get_lookup_mode() {
-  if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
-                                                | LOOKUP_MATCH_FORWARD)
+  if (default_lookup_flags == (LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                                 | LOOKUP_MATCH_FORWARD))
     return "normal";
-  else if (default_lookup_flags == LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
-                                                     | LOOKUP_EXACT_MATCH)
+  else if (default_lookup_flags == (LOOKUP_PDIC_INDEX | LOOKUP_HENKAKEI
+                                                 | LOOKUP_EXACT_MATCH))
     return "exact";
-  else if (default_lookup_flags == LOOKUP_SARRAY | LOOKUP_HENKAKEI)
+  else if (default_lookup_flags == (LOOKUP_SARRAY | LOOKUP_HENKAKEI))
     return "sarray";
-  else if (default_lookup_flags == LOOKUP_REGEXP | LOOKUP_HENKAKEI)
+  else if (default_lookup_flags == (LOOKUP_REGEXP | LOOKUP_HENKAKEI))
     return "regexp";
   else
     return "all";

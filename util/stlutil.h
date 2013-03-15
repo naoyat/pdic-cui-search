@@ -19,6 +19,8 @@
 #define traverse(c, i)  \
   for (typeof((c).begin()) i = (c).begin(); i != (c).end(); i++)
 
+#define found(c, o)  ((c).find(o) != (c).end())
+
 std::vector<std::string> split(std::string str, int delim=' ');
 std::string join(std::vector<std::string> strs, const std::string &delim="");
 

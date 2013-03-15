@@ -24,6 +24,7 @@
 #include "util/charcode.h"
 #include "util/filemem.h"
 #include "util/macdic_xml.h"
+#include "util/sqlite3_sql.h"
 #include "util/search.h"
 #include "util/stlutil.h"
 #include "util/timeutil.h"
@@ -31,6 +32,9 @@
 #include "util/util.h"
 #include "util/Shell.h"
 #include "util/types.h"
+
+extern int dump_remain_count_;
+extern int current_dict_id_;
 
 const char *sx_buf[F_COUNT] = {
   ".entry", ".trans", ".exmp", ".pron"
@@ -105,10 +109,22 @@ Dict::~Dict() {
   unload_additional_files();
 }
 
-int Dict::make_macdic_xml() {
-  macdic_xml_open(std::string(this->prefix()) + SX_XML);
+int Dict::make_macdic_xml(int limit, int dict_id) {
+  dump_remain_count_ = limit;
+  current_dict_id_ = dict_id;
+  macdic_xml_open(std::string("./macdic/") + std::string(this->prefix()) + SX_XML);
   index->iterate_all_datablocks(&cb_macdic_xml, NULL);
   macdic_xml_close();
+
+  return 0;
+}
+
+int Dict::make_sqlite3_sql(int limit, int dict_id) {
+  dump_remain_count_ = limit;
+  current_dict_id_ = dict_id;
+  sqlite3_sql_open(std::string("./sql/") + std::string(this->prefix()) + SX_SQL);
+  index->iterate_all_datablocks(&cb_sqlite3_sql, NULL);
+  sqlite3_sql_close();
 
   return 0;
 }

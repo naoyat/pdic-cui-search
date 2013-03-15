@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <re2/re2.h>
 
+#include <limits>
 #include <map>
 #include <set>
 #include <string>
@@ -20,8 +21,15 @@ class PDICIndex;
 class PDICDatafield;
 class Criteria;
 
+#define SQL_TABSEP 1
+
 #define SX_TOC   ".toc"
 #define SX_XML   ".xml"
+#ifdef SQL_TABSEP
+# define SX_SQL   ".tab"
+#else
+# define SX_SQL   ".sql"
+#endif
 #define SX_HENKAKEI_BUF  ".hbuf"
 #define SX_HENKAKEI_TOC  ".htoc"
 
@@ -53,7 +61,8 @@ class Dict {
   std::string info() { return name + " " + path; }
   char *prefix() { return _prefix; }
   int   make_toc();
-  int   make_macdic_xml();
+  int   make_macdic_xml(int limit=std::numeric_limits<int>::max(), int dict_id=0);
+  int   make_sqlite3_sql(int limit=std::numeric_limits<int>::max(), int dict_id=0);
   int   make_henkakei_table();
   void  unload_additional_files();
   bool  load_additional_files();

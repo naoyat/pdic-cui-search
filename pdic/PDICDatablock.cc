@@ -17,22 +17,39 @@
 #include "util/types.h"
 #include "util/util.h"
 
+extern int dump_remain_count_;
+
 PDICDatablock::PDICDatablock(byte* filemem, PDICIndex* index, int ix) {
+  // printf("PDICDatablock(filemem=%p, index=%p, ix=%d; offset=%d, header=%p)\n", filemem, index, ix,
+  //                       index->datablock_offset(ix), index->header);
+  init(filemem, index->datablock_offset(ix), index->header);
+}
+
+PDICDatablock::PDICDatablock(byte* filemem, unsigned int datablock_start_offset, PDICHeader *header) {
+  init(filemem, datablock_start_offset, header);
+}
+
+void PDICDatablock::init(byte* filemem, unsigned int datablock_offset, PDICHeader* header) {
+  // printf("PDICDatablock::init(filemem=%p, offset=%d, header=%p)\n", filemem, datablock_offset, header);
   this->filemem = filemem;
-  this->datablock_start = filemem + index->datablock_offset(ix);
+  this->datablock_start = filemem + datablock_offset;
+  this->_header = header;
 
-  _index = index;
-  _ix = ix;
+  // _index = index;
+  // _ix = ix;
 
-  _v6index = (index->header->major_version() >= HYPER6) ? true : false;
-  _isAligned = _index->header->isAligned();
+  // _v6index = (index->header->major_version() >= HYPER6) ? true : false;
+  // _isAligned = _index->header->isAligned();
+  _v6index = (_header->major_version() >= HYPER6) ? true : false;
+  _isAligned = _header->isAligned();
 
   int using_blocks_count = u16val(datablock_start);
   _is4byte = using_blocks_count & 0x8000;
   using_blocks_count &= 0x7fff;
 
   datablock_start += 2;
-  datablock_size = _index->datablock_block_size()*  using_blocks_count - 2;
+  // datablock_size = _index->datablock_block_size()*  using_blocks_count - 2;
+  datablock_size = _header->block_size() * using_blocks_count - 2;
   // printf("使用ブロック数: %d (%d); %d bytes\n",
   //        using_blocks_count, is4byte, datablock_buf_size);
 }
@@ -43,6 +60,7 @@ void PDICDatablock::iterate(action_proc* action, Criteria* criteria) {
 
   for (byte* pos = datablock_start, *endpos = pos + datablock_size;
        pos < endpos; ) {
+    if (dump_remain_count_ == 0) break;
     bool matched = false;
 
     // +0
@@ -95,7 +113,8 @@ void PDICDatablock::iterate(action_proc* action, Criteria* criteria) {
         entry_word,
         compress_length + entry_word_compressed_size,  // entry_word_size
         entry_word_attrib,
-        _index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS,
+        // _index->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS,
+        _header->isBOCU1() ? CHARCODE_BOCU1 : CHARCODE_SHIFTJIS,
         pos,  // data
         static_cast<int>(next_pos - pos),  // datasize
         _v6index,
