@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "pdic/Dict.h"
+#include "pdic/Shell.h"
 #include "util/dump.h"
-#include "util/Shell.h"
 #include "util/util.h"
 
 TEST(EIJIRO, sarray_loookup) {

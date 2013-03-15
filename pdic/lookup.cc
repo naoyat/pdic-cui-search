@@ -14,10 +14,10 @@
 #include <vector>
 
 #include "pdic/Dict.h"
+#include "pdic/Shell.h"
 #include "util/stlutil.h"
 #include "util/types.h"
 #include "util/util.h"
-#include "util/Shell.h"
 
 extern Shell *g_shell;
 extern int dump_remain_count_;

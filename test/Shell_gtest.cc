@@ -9,9 +9,9 @@
 #include <utility>
 
 #include "pdic/Dict.h"
+#include "pdic/Shell.h"
 #include "pdic/lookup.h"
 #include "util/dump.h"
-#include "util/Shell.h"
 #include "util/util.h"
 
 TEST(shell, sarray_lookup) {

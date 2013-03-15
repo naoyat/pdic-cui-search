@@ -10,7 +10,7 @@
 #include "pdic/lookup.h"
 #include "util/ansi_color.h"
 #include "util/dump.h"
-#include "util/Shell.h"
+#include "pdic/Shell.h"
 
 Shell *g_shell = NULL;
 

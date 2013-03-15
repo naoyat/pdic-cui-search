@@ -2,7 +2,7 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "util/Shell.h"
+#include "pdic/Shell.h"
 
 #include <stdio.h>
 #include <stdlib.h>

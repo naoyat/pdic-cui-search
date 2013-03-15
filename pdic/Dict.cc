@@ -18,6 +18,7 @@
 #include "pdic/PDICDatafield.h"
 #include "pdic/PDICHeader.h"
 #include "pdic/PDICIndex.h"
+#include "pdic/Shell.h"
 #include "pdic/lookup.h"
 #include "util/ansi_color.h"
 #include "util/bocu1.h"
@@ -30,7 +31,6 @@
 #include "util/timeutil.h"
 #include "util/utf8.h"
 #include "util/util.h"
-#include "util/Shell.h"
 #include "util/types.h"
 
 extern int dump_remain_count_;
