@@ -146,6 +146,43 @@ void cb_dump_entry(PDICDatafield *datafield) {
     render_count_limit_exceeded = true;
 }
 
+void cb_dump_examples(PDICDatafield *datafield) {
+  puts(reinterpret_cast<char*>(datafield->in_utf8(F_EXAMPLE)));
+
+  if (++match_count >= g_shell->params.render_count_limit)
+    render_count_limit_exceeded = true;
+}
+
+void cb_dump_inline_examples(PDICDatafield *datafield) {
+  // puts(reinterpret_cast<char*>(datafield->in_utf8(F_ENTRY)));
+
+  char *jword = reinterpret_cast<char*>(datafield->in_utf8(F_JWORD));
+  if (jword == NULL) return;
+
+  int i = 0;
+  for (char *p=jword; p != NULL; ) {
+    char *q = strchr(p, 0x0d);
+
+    if (strncmp(p, "・", 3) != 0) goto next;
+
+    // printf("  %d) ", ++i);
+    if (q) {
+      fwrite(p+3, 1, q-(p+3), stdout);
+    } else {
+      fputs(p+3, stdout);
+    }
+    printf("\n");
+ next:
+    if (!q) break;
+    p = q + 1;
+    if (*p == 0x0a) ++p;
+  }
+  //puts(jword);
+
+  if (++match_count >= g_shell->params.render_count_limit)
+    render_count_limit_exceeded = true;
+}
+
 void cb_dump(PDICDatafield *datafield) {
   byte *fields[F_COUNT] = {
     datafield->in_utf8(F_ENTRY),

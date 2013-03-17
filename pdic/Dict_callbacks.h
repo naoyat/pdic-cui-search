@@ -16,6 +16,8 @@ void say_render_count();
 void cb_estimate_buf_size(PDICDatafield *datafield);
 void cb_stock_entry_words(PDICDatafield *datafield);
 void cb_dump_entry(PDICDatafield *datafield);
+void cb_dump_examples(PDICDatafield *datafield);
+void cb_dump_inline_examples(PDICDatafield *datafield);
 void cb_dump(PDICDatafield *datafield);
 void cb_save(PDICDatafield *datafield);
 

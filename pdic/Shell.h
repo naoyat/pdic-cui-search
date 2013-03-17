@@ -50,6 +50,8 @@ class Shell {
   bool do_command(char *cmdstr);
   void render_current_result();
 
+  int run();
+
   ShellParams params;
 
   std::vector<std::string> loadpaths;
