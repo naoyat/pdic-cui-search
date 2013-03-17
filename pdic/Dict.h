@@ -116,11 +116,11 @@ class Dict {
 };
 
 // match count
-void reset_match_count();
-void reset_render_count();
-void lap_match_count();
-void say_match_count();
-void say_render_count();
+// void reset_match_count();
+// void reset_render_count();
+// void lap_match_count();
+// void say_match_count();
+// void say_render_count();
 
 // render
 void render_result(lookup_result result, RE2 *re);

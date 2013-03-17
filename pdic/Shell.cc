@@ -120,6 +120,8 @@ int Shell::run() {
   }
 
   printf("bye!\n");
+
+  return 0;
 }
 
 void Shell::load_rc(const char* rcpath) {

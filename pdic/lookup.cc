@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "pdic/Dict.h"
+#include "pdic/Dict_callbacks.h"
 #include "pdic/Shell.h"
 #include "util/stlutil.h"
 #include "util/types.h"

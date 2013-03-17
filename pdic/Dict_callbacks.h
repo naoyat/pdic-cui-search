@@ -8,9 +8,9 @@
 class PDICDatafield;
 
 void reset_match_count();
+void reset_render_count();
 void lap_match_count();
 void say_match_count();
-void reset_render_count();
 void say_render_count();
 
 void cb_estimate_buf_size(PDICDatafield *datafield);
