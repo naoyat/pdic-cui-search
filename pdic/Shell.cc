@@ -47,7 +47,7 @@ Shell::~Shell() {
 
 int Shell::run() {
   printf(ANSI_UNDERLINE_ON
-         "PDIC CUI Search ver 0.7.2 (c)2012 @naoya_t. All Rights Reserved."
+         "PDIC CUI Search ver 0.8 (c)2012-2013 @naoya_t. All Rights Reserved."
          ANSI_UNDERLINE_OFF "\n");
 
   // printf("読み込み中...\n");
