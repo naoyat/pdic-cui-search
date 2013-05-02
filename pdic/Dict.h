@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "util/types.h"
+#include "pdic/lookup_result.h"
 
 class PDICIndex;
 class PDICDatafield;
@@ -33,14 +34,8 @@ class Criteria;
 #define SX_HENKAKEI_BUF  ".hbuf"
 #define SX_HENKAKEI_TOC  ".htoc"
 
-#define F_COUNT    4
-#define F_ENTRY    0
-#define F_JWORD    1
-#define F_EXAMPLE  2
-#define F_PRON     3
-
-bool lookup_result_asc(const lookup_result& left, const lookup_result& right);
-bool lookup_result_desc(const lookup_result& left, const lookup_result& right);
+bool lookup_result_asc(const lookup_result *left, const lookup_result *right);
+bool lookup_result_desc(const lookup_result *left, const lookup_result *right);
 
 typedef struct {
   int pdic_datafield_pos;  // in filemem (PDICDatablock)
@@ -123,7 +118,7 @@ class Dict {
 // void say_render_count();
 
 // render
-void render_result(lookup_result result, RE2 *re);
+void render_result(lookup_result *result, RE2 *re);
 
 // CALLBACKS
 void cb_dump_entry(PDICDatafield *datafield);

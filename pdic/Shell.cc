@@ -2,11 +2,6 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "pdic/lookup.h"
-#include "util/ansi_color.h"
-#include "util/dump.h"
-#include "pdic/Shell.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,7 +20,9 @@
 #include "pdic/PDICDatafield.h"
 #include "pdic/PDICHeader.h"
 #include "pdic/PDICIndex.h"
+#include "pdic/Shell.h"
 #include "util/ansi_color.h"
+#include "util/dump.h"
 #include "util/filemem.h"
 #include "util/stlutil.h"
 #include "util/timeutil.h"
@@ -315,7 +312,7 @@ bool Shell::do_command(char *cmdstr) {
     if (cmd.size() >= 2) {
       std::string filename = cmd[1];
       int dict_id = do_load(filename);
-      
+
       if (dict_id >= 0) {
         char *name = dicts[dict_id]->prefix();
         // printf("+" << name << std::endl;
@@ -361,14 +358,16 @@ bool Shell::do_command(char *cmdstr) {
         }
       } else if (cmd[1] == "macdic") {
         traverse(current_dict_ids, current_dict_id) {
-          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str())
+                                        : std::numeric_limits<int>::max();
           Dict *dict = dicts[*current_dict_id];
           dict->make_macdic_xml(limit, *current_dict_id);
         }
       } else if (cmd[1] == "sql") {
         sqlite3_sql_entry_id_ = 0;
         traverse(current_dict_ids, current_dict_id) {
-          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str())
+                                        : std::numeric_limits<int>::max();
           Dict *dict = dicts[*current_dict_id];
           dict->make_sqlite3_sql(limit, *current_dict_id);
         }
@@ -410,11 +409,13 @@ bool Shell::do_command(char *cmdstr) {
         } else if (what_to_dump == "inline_examples") {
           index->iterate_all_datablocks(&cb_dump_inline_examples, NULL);
         } else if (what_to_dump == "macdic") {
-          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str())
+                                        : std::numeric_limits<int>::max();
           Dict *dict = dicts[*current_dict_id];
           dict->make_macdic_xml(limit, *current_dict_id);
         } else if (what_to_dump == "sql") {
-          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str()) : std::numeric_limits<int>::max();
+          int limit = (cmd.size() >= 3) ? atoi(cmd[2].c_str())
+                                        : std::numeric_limits<int>::max();
           Dict *dict = dicts[*current_dict_id];
           dict->make_sqlite3_sql(limit, *current_dict_id);
         } else if (what_to_dump == "all") {

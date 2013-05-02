@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "util/types.h"
+#include "pdic/lookup_result.h"
 
 class Dict;
 

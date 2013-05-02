@@ -8,7 +8,7 @@ CXXFLAGS=-Wall -O3 -g -I.
 	$(CXX) $(CXXFLAGS) -c $*.cc
 
 OBJECTS = \
-	obj/pdic/PDICHeader.o obj/pdic/PDICIndex.o obj/pdic/PDICDatablock.o obj/pdic/PDICDatafield.o \
+	obj/pdic/PDICHeader.o obj/pdic/PDICIndex.o obj/pdic/PDICDatablock.o obj/pdic/PDICDatafield.o obj/pdic/lookup_result.o \
 	obj/pdic/Criteria.o obj/pdic/Dict.o obj/pdic/Dict_callbacks.o obj/pdic/lookup.o \
 	obj/util/bocu1.o obj/util/dump.o obj/util/filemem.o \
 	obj/util/macdic_xml.o obj/util/sqlite3_sql.o \

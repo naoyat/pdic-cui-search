@@ -10,6 +10,7 @@
 #include <set>
 
 #include "util/types.h"
+#include "pdic/lookup_result.h"
 
 #define LOOKUP_AUTO               0x0000
 #define LOOKUP_PDIC_INDEX         0x0001

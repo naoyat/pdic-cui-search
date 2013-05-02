@@ -16,11 +16,11 @@ typedef unsigned char byte;
 typedef uint16_t unichar;
 typedef unsigned int uint;
 
-typedef byte* byteptr;
-typedef byteptr* lookup_result;
-typedef lookup_result* lookup_result_ptr;
-typedef std::vector<lookup_result> lookup_result_vec;
-typedef lookup_result_vec (lookup_proc)(byte* needle, int needle_len);
+// typedef byte* byteptr;
+// typedef byteptr* lookup_result;
+// typedef lookup_result* lookup_result_ptr;
+// typedef std::vector<lookup_result> lookup_result_vec;
+// typedef lookup_result_vec (lookup_proc)(byte* needle, int needle_len);
 
 typedef void (action_proc)(PDICDatafield* datafield);
 

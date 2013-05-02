@@ -20,6 +20,7 @@
 #include "pdic/PDICIndex.h"
 #include "pdic/Shell.h"
 #include "pdic/lookup.h"
+#include "pdic/lookup_result.h"
 #include "util/ansi_color.h"
 #include "util/bocu1.h"
 #include "util/charcode.h"
@@ -43,12 +44,12 @@ const char *sx_sarray[F_COUNT] = {
   ".entry.sf", ".trans.sf", ".exmp.sf", ".pron.sf"
 };
 
-bool lookup_result_asc(const lookup_result& left, const lookup_result& right) {
-  return bstrcmp(left[F_ENTRY], right[F_ENTRY]) < 0;
+bool lookup_result_asc(const lookup_result *left, const lookup_result *right) {
+  return bstrcmp(left->entry, right->entry) < 0;
 }
 
-bool lookup_result_desc(const lookup_result& left, const lookup_result& right) {
-  return bstrcmp(left[F_ENTRY], right[F_ENTRY]) > 0;
+bool lookup_result_desc(const lookup_result *left, const lookup_result *right) {
+  return bstrcmp(left->entry, right->entry) > 0;
 }
 
 bool toc_asc(const Toc& left, const Toc& right) {
@@ -445,14 +446,9 @@ std::set<int> Dict::henkakei_lookup_ids(byte *needle, int flags) {
       int word_id = htoc[ix].word_id;
       Toc *t = &toc[word_id];
       if (g_shell->params.direct_dump_mode) {
-        byte *fields[F_COUNT] = {
-          dict_buf[F_ENTRY]   + t->start_pos[F_ENTRY],
-          dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
-          dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
-          dict_buf[F_PRON]    + t->start_pos[F_PRON]
-        };
+        lookup_result result(dict_buf, t->start_pos);
         std::string s("\\b");
-        render_result((lookup_result)fields,
+        render_result(&result,
                       new RE2(s + reinterpret_cast<char*>(needle) + s));
       }
       ids.insert(word_id);
@@ -489,14 +485,9 @@ std::set<int> Dict::search_in_sarray(int field, byte *needle) {
       int word_id = rev(field, offset);
       if (word_id >= 0) {
         Toc *t = &toc[word_id];
-        byte *fields[F_COUNT] = {
-          dict_buf[F_ENTRY]   + t->start_pos[F_ENTRY],
-          dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
-          dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
-          dict_buf[F_PRON]    + t->start_pos[F_PRON]
-        };
+        lookup_result result(dict_buf, t->start_pos);
         if (g_shell->params.direct_dump_mode) {
-          render_result((lookup_result)fields, &pattern);
+          render_result(&result, &pattern);
         }
         matched_offsets.insert(word_id);
       }
@@ -618,13 +609,8 @@ lookup_result_vec Dict::ids_to_result(const std::set<int>& word_ids) {
     if (*word_id < 0) continue;
 
     Toc *t = &toc[*word_id];
-    byte *fields[F_COUNT] = {
-      dict_buf[F_ENTRY]   + t->start_pos[F_ENTRY],
-      dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
-      dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
-      dict_buf[F_PRON]    + t->start_pos[F_PRON]
-    };
-    result_vec.push_back((lookup_result)clone(fields, sizeof(fields[0])*4));
+    lookup_result *result = new lookup_result(dict_buf, t->start_pos);
+    result_vec.push_back(result); // (lookup_result)clone(fields, sizeof(fields[0])*4));
   }
 
   return result_vec;
@@ -641,13 +627,13 @@ lookup_result_vec Dict::ids_to_exact_cs_result(const std::set<int>& word_ids,
     byte *entry_word = dict_buf[F_ENTRY] + t->start_pos[F_ENTRY];
     if (strcmp(reinterpret_cast<char*>(entry_word),
                reinterpret_cast<char*>(needle)) == 0) {
-      byte *fields[F_COUNT] = {
-        entry_word,
-        dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
-        dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
-        dict_buf[F_PRON]    + t->start_pos[F_PRON]
-      };
-      result_vec.push_back((lookup_result)clone(fields, sizeof(fields[0])*4));
+
+      lookup_result *result = new lookup_result(entry_word,
+                                                dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
+                                                dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
+                                                dict_buf[F_PRON]    + t->start_pos[F_PRON]
+                                                );
+      result_vec.push_back(result); // (lookup_result)clone(fields, sizeof(fields[0])*4));
     }
   }
 
@@ -717,25 +703,20 @@ std::set<int> Dict::regexp_lookup_ids(RE2 *re, int flags) {
         break;
       }
     }
-    byte *fields[F_COUNT] = {
-      dict_buf[F_ENTRY]   + toc[word_id].start_pos[F_ENTRY],
-      dict_buf[F_JWORD]   + toc[word_id].start_pos[F_JWORD],
-      dict_buf[F_EXAMPLE] + toc[word_id].start_pos[F_EXAMPLE],
-      dict_buf[F_PRON]    + toc[word_id].start_pos[F_PRON]
-    };
 
-    if (RE2::PartialMatch((const char *)fields[F_ENTRY], *re)
+    lookup_result result(dict_buf, toc[word_id].start_pos);
+
+    if (RE2::PartialMatch((const char *)result.entry, *re)
         || (g_shell->params.full_search_mode
-            && ((fields[F_JWORD][0]
-                 && RE2::PartialMatch((const char *)fields[F_JWORD],
-                                      *re))
-                || (fields[F_EXAMPLE][0]
-                    && RE2::PartialMatch((const char *)fields[F_EXAMPLE],
+            && ((result.jword[0]
+                 && RE2::PartialMatch((const char *)result.jword, *re))
+                || (result.example[0]
+                    && RE2::PartialMatch((const char *)result.example,
                                          *re))
-                || (fields[F_PRON][0]
-                    && RE2::PartialMatch((const char *)fields[F_PRON],
+                || (result.pron[0]
+                    && RE2::PartialMatch((const char *)result.pron,
                                          *re))))) {
-      if (g_shell->params.direct_dump_mode) render_result(fields, re);
+      if (g_shell->params.direct_dump_mode) render_result(&result, re);
       matched_word_ids.insert(word_id);
 
       if (++match_count >= g_shell->params.render_count_limit)
@@ -859,7 +840,7 @@ bool Dict::load_additional_files() {
   return true;
 }
 
-void render_result(lookup_result fields, RE2 *re) {
+void render_result(lookup_result *result, RE2 *re) {
   if (render_count >= g_shell->params.render_count_limit) {
     if (g_shell->params.verbose_mode && !said_that) {
       printf("表示件数(%d)が制限(%d)に達したので表示を中断します。\n",
@@ -870,7 +851,7 @@ void render_result(lookup_result fields, RE2 *re) {
     return;
   }
 
-  std::string entry_str((const char *)fields[F_ENTRY]);
+  std::string entry_str((const char *)result->entry);
 
   if (g_shell->params.ansi_coloring_mode) {
     printf("%s", ANSI_FGCOLOR_BLUE);
@@ -879,20 +860,20 @@ void render_result(lookup_result fields, RE2 *re) {
                          ANSI_FGCOLOR_RED "\\0" ANSI_FGCOLOR_BLUE);
     }
     printf("%s%s%s", ANSI_BOLD_ON, entry_str.c_str(), ANSI_BOLD_OFF);
-    if (is_not_empty(fields[F_PRON]))
-      printf(" [%s]", reinterpret_cast<char*>(fields[F_PRON]));
+    if (is_not_empty(result->pron))
+      printf(" [%s]", reinterpret_cast<char*>(result->pron));
     printf("%s", ANSI_FGCOLOR_DEFAULT);
   } else {
     printf("%s", entry_str.c_str());
-    if (is_not_empty(fields[F_PRON]))
-      printf(" [%s]", reinterpret_cast<char*>(fields[F_PRON]));
+    if (is_not_empty(result->pron))
+      printf(" [%s]", reinterpret_cast<char*>(result->pron));
   }
   printf("\n");
 
   std::string indent = "   ";
 
-  if (is_not_empty(fields[F_JWORD])) {
-    std::string jword_str(indent + (const char *)fields[F_JWORD]);
+  if (is_not_empty(result->jword)) {
+    std::string jword_str(indent + (const char *)result->jword);
     // RE2::GlobalReplace(&jword, "◆", "\n◆");
     RE2::GlobalReplace(&jword_str, "\n", "\n"+indent);
     if (re != NULL && g_shell->params.ansi_coloring_mode) {
@@ -901,10 +882,14 @@ void render_result(lookup_result fields, RE2 *re) {
     }
     printf("%s\n", jword_str.c_str());
   }
-  if (is_not_empty(fields[F_EXAMPLE])) {
-    std::string example_str(indent + (const char *)fields[F_EXAMPLE]);
+  if (is_not_empty(result->example)) {
+    std::string example_str(indent + (const char *)result->example);
     RE2::GlobalReplace(&example_str, "\n", "\n"+indent);
     printf("%s\n", example_str.c_str());
+  }
+
+  if (result->level >= 1) {
+    printf("   【レベル】%d\n", result->level);
   }
 
   if (g_shell->params.more_newline_mode) printf("\n");

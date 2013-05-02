@@ -159,7 +159,7 @@ void cb_dump_inline_examples(PDICDatafield *datafield) {
   char *jword = reinterpret_cast<char*>(datafield->in_utf8(F_JWORD));
   if (jword == NULL) return;
 
-  int i = 0;
+  // int i = 0;
   for (char *p=jword; p != NULL; ) {
     char *q = strchr(p, 0x0d);
 
@@ -184,18 +184,13 @@ void cb_dump_inline_examples(PDICDatafield *datafield) {
 }
 
 void cb_dump(PDICDatafield *datafield) {
-  byte *fields[F_COUNT] = {
-    datafield->in_utf8(F_ENTRY),
-    datafield->in_utf8(F_JWORD),
-    datafield->in_utf8(F_EXAMPLE),
-    datafield->in_utf8(F_PRON)
-  };
+  lookup_result result(datafield);
   /*
   printf("cb_dump: fields[] = { \"%s\", \"%s\", \"%s\", \"%s\" }, %p\n",
          (char *)fields[0], (char *)fields[1], (char *)fields[2], (char *)fields[3],
          datafield->criteria);
   */
-  render_result((lookup_result)fields,
+  render_result(&result,
                 datafield->criteria ? datafield->criteria->re2_pattern : NULL);
 
   int word_id = _dict->word_id_for_pdic_datafield_pos(datafield->start_pos);
