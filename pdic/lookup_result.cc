@@ -5,6 +5,7 @@
 #include "pdic/lookup_result.h"
 #include "pdic/PDICDatafield.h"
 
+/*
 lookup_result::lookup_result(byte *entry,
                              byte *jword,
                              byte *example,
@@ -14,9 +15,9 @@ lookup_result::lookup_result(byte *entry,
   this->jword   = jword;
   this->example = example;
   this->pron    = pron;
-
   this->level   = level;
 }
+*/
 
 lookup_result::lookup_result(PDICDatafield *datafield) {
   entry   = datafield->in_utf8(F_ENTRY);

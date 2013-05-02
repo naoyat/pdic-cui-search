@@ -9,15 +9,14 @@
 #include <string.h>
 #include <openssl/md5.h>
 #include <re2/re2.h>
-//#include <re2/stringpiece.h>
 
+#include <iomanip>  // setfill
 #include <map>
 #include <set>
 #include <string>
 #include <sstream>
-#include <iostream>
-#include <iomanip> // setfill
-// using namespace std;
+#include <utility>
+#include <vector>
 
 #include "pdic/Dict.h"
 #include "pdic/PDICDatafield.h"
@@ -34,8 +33,9 @@ int trap_mode_ = 0;
 // static
 std::string idstr(const char *cstr);
 char *escape(const char *str);
-void output(const char *begin, const char *end=NULL);
-void parse_output(const char *begin, const char *end=NULL, bool do_newline=true);
+void output(const char *begin, const char *end = NULL);
+void parse_output(const char *begin, const char *end = NULL,
+                  bool do_newline = true);
 void render_definition(const char *wordclass, const char *desc);
 // int macdic_xml_open(std::string path);
 // void macdic_xml_close();
@@ -67,21 +67,22 @@ void cb_macdic_xml(PDICDatafield *datafield) {
 
   if (!entry) return;
   if (!jword) return;
-  ///if (!pron) return; /// DEBUG
 
 //  if (rand() % 100) return; // 1%だけ通す
 //  if (!(entry[0] == '$')) return;
-//  if (!(entry[0] == 'a' || entry[0] == 'A' || strncmp("あ", (const char *)entry, 3)==0)) return;
-//  if (!(entry[0] == 't' || entry[0] == 'T' || strncmp("た", (const char *)entry, 3)==0)) return;
-//  if (!(entry[0] == 'n' || entry[0] == 'N' || strncmp("な", (const char *)entry, 3)==0)) return;
-  //if (!strncmp("株式会社", (const char*)entry, 12)==0) return;
-  
+//  if (!(entry[0] == 'a' || entry[0] == 'A'
+//                        || strncmp("あ", (const char *)entry, 3)==0)) return;
+//  if (!(entry[0] == 't' || entry[0] == 'T'
+//                        || strncmp("た", (const char *)entry, 3)==0)) return;
+//  if (!(entry[0] == 'n' || entry[0] == 'N'
+//                        || strncmp("な", (const char *)entry, 3)==0)) return;
+//  if (!strncmp("株式会社", (const char*)entry, 12)==0) return;
+
   if (trap_mode_) {
     printf("# TRAP(%s)(%s)(%s)\n", entry, jword, pron);
   }
   /*
   if (strcmp((const char *)entry,
-    
              "本当に？"
              // "本当に2台も冷蔵庫が必要なのかな？"
              // "本当に,誰かが私に日本の化粧室でのエチケットを教えてくれていたらよかったのにと思います"
@@ -92,27 +93,30 @@ void cb_macdic_xml(PDICDatafield *datafield) {
   macdic_xml_entry_id++;
   --dump_remain_count_;
 
-  int jl = strlen((char *)jword);
+  int jl = strlen(reinterpret_cast<char *>(jword));
   // std::vector<int> items;
   if (trap_mode_) printf("#   jl = %d\n", jl);
 
   // items.push_back(0);
-  //const char *p = (const char *)jword, *q;
-  using namespace std;
-  vector<pair<int, int> > offsets;
+  // const char *p = (const char *)jword, *q;
+  std::vector<std::pair<int, int> > offsets;
 
-  const char *p0 = (const char *)jword, *pE = p0 + jl;
+  const char *p0 = reinterpret_cast<const char *>(jword), *pE = p0 + jl;
   if (trap_mode_) printf("#   (p0, pE) = %p, %p\n", p0, pE);
 
-  for (const char *p=p0; p<pE; ) {
-    if (trap_mode_) printf("#   %d/%d\n", (int)(p-p0), (int)(pE-p0));
+  for (const char *p = p0; p < pE; ) {
+    if (trap_mode_)
+      printf("#   %d/%d\n",
+             static_cast<int>(p - p0),
+             static_cast<int>(pE - p0));
     // printf("..%d/%d", p-p0, jl);
     const char *q1 = strstr(p, "【");
     if (!q1) break;
     if (q1 >= p0+3) {
       // "【" の直前の文字が ◆ や〔 ならスキップ
       if (strncmp(q1-3, "◆", 3) == 0 || strncmp(q1-3, "〔", 3) == 0) {
-        p = q1 + 3; continue;
+        p = q1 + 3;
+        continue;
       }
     }
     const char *q2 = strstr(q1+3, "】");
@@ -125,46 +129,49 @@ void cb_macdic_xml(PDICDatafield *datafield) {
       printf("【】%s\n", tmp);
       delete tmp;
       }*/
-    
-    offsets.push_back(make_pair(q1-p0, (q2+3)-p0));
-    //p = q1 + 9;
+
+    offsets.push_back(std::make_pair(q1-p0, (q2+3)-p0));
     p = q2 + 3;
   }
 
-  int n = (int)offsets.size();
+  int n = static_cast<int>(offsets.size());
   if (trap_mode_) {
     printf("#   n = %d\n", n);
-    cout << "#   " << offsets << endl;
+    printf("#   [");
+    for (int i = 0; i < n; ++i) {
+      printf(" (%d, %d)", offsets[i].first, offsets[i].second);
+    }
+    printf(" ]\n");
   }
 
-  vector<pair<string, string> > items;
-  vector<pair<string, string> > items_to_prepend;
+  std::vector<std::pair<std::string, std::string> > items;
+  std::vector<std::pair<std::string, std::string> > items_to_prepend;
 
-  set<string> conj_forms;
-  // vector<string> conj_forms;
+  std::set<std::string> conj_forms;
 
   if (trap_mode_) printf("#   B %d\n", n);
 
-  //printf("\n");
+  // printf("\n");
   bool prepend_mode = false;
   if (n > 0) {
     if (offsets[0].first > 0) {
-      string s2((const char *)jword, offsets[0].first);
-      items.push_back(make_pair("", s2));
+      std::string s2(reinterpret_cast<const char *>(jword), offsets[0].first);
+      items.push_back(std::make_pair("", s2));
     }
 
     // 【】あり
-    offsets.push_back(make_pair(jl,0));
-    
-    for (int i=0; i<n; i++) {
+    offsets.push_back(std::make_pair(jl, 0));
+
+    for (int i = 0; i < n; ++i) {
       int j1 = offsets[i].first, j2 = offsets[i].second;
       int j1next = offsets[i+1].first;
       if (trap_mode_) printf("#   B/true %d (%d %d) %d\n", i, j1, j2, j1next);
 
       int s1_from = j1 + 3, s1_len = j2 - j1 - 6;
       int s2_from = j2,     s2_len = j1next - j2;
-      if (trap_mode_) printf("#   B/true [%d+%d], [%d+%d]\n", s1_from, s1_len, s2_from, s2_len);
-      
+      if (trap_mode_) printf("#   B/true [%d+%d], [%d+%d]\n",
+                             s1_from, s1_len, s2_from, s2_len);
+
       if (p0[s2_from + s2_len - 2] == 0x0d) s2_len -= 2;
       // if (p0[s2_from + s2_len - 1] == 0x0a) s2_len -= 1;
       // if (p0[s2_from + s2_len - 1] == '\n') --s2_len;
@@ -173,27 +180,27 @@ void cb_macdic_xml(PDICDatafield *datafield) {
       if (strncmp("、", p0 + s2_from + s2_len - 3, 3) == 0) s2_len -= 3;
 
       if (trap_mode_) printf("#   B/true 3\n");
-      
-      string s1(p0 + s1_from, s1_len);
-      string s2(p0 + s2_from, s2_len);
-      
+
+      std::string s1(p0 + s1_from, s1_len);
+      std::string s2(p0 + s2_from, s2_len);
+
       if (trap_mode_) printf("#   B/true 4\n");
 
       if (s1 == "＠" || s1 == "変化" || s1 == "文節") {
         prepend_mode = true;
-        if (s1 == "＠") s1 = string("カナ");
+        if (s1 == "＠") s1 = std::string("カナ");
       }
-      
+
       if (prepend_mode) {
-        items_to_prepend.push_back(make_pair(s1, s2));
+        items_to_prepend.push_back(std::make_pair(s1, s2));
       } else {
-        items.push_back(make_pair(s1, s2));
+        items.push_back(std::make_pair(s1, s2));
       }
 
       if (trap_mode_) printf("#   B/true 5\n");
 
       if (s1 == "変化") {
-        string s2a(s2.begin(), s2.end());
+        std::string s2a(s2.begin(), s2.end());
         // 変化形を分解する
         RE2::GlobalReplace(&s2a, " または ", " | ");
         RE2::GlobalReplace(&s2a, "過去・過分＝", "");
@@ -208,18 +215,18 @@ void cb_macdic_xml(PDICDatafield *datafield) {
         printf("<変化> \"%s\"\n", s2a.c_str());
 #endif
         re2::StringPiece input(s2a);
-        string var;
+        std::string var;
 
         // while (RE2::Consume(&input, "([A-Za-z][-a-z()]*)|", &var)) {
         while (RE2::Consume(&input, "([^|]*)\\|", &var)) {
           if (var == "") continue;
-          string pre, paren, post;
-          if (RE2::FullMatch(var, "([-A-Za-z]*)\\(([^)]*)\\)([-A-Za-z]*)", &pre, &paren, &post)) {
+          std::string pre, paren, post;
+          if (RE2::FullMatch(var, "([-A-Za-z]*)\\(([^)]*)\\)([-A-Za-z]*)",
+                             &pre, &paren, &post)) {
 #ifdef SHOW_HENKA
             printf("  - %s%s%s | %s%s\n",
                    pre.c_str(), paren.c_str(), post.c_str(),
-                   pre.c_str(), post.c_str()
-                   );
+                   pre.c_str(), post.c_str());
 #endif
             conj_forms.insert(pre + paren + post);
             conj_forms.insert(pre + post);
@@ -231,26 +238,26 @@ void cb_macdic_xml(PDICDatafield *datafield) {
           }
         }
       }
-      // printf("#%d: ([%d-%d] %d) %s | %s\n", i, j1, j2, j1next, s1.c_str(), s2.c_str());
     }
   } else {
-    if (trap_mode_) printf("#   B/alt %s %d\n", (const char *)jword, jl);
+    if (trap_mode_) printf("#   B/alt %s %d\n",
+                           reinterpret_cast<const char *>(jword), jl);
     // 【】なし
-    string s2((const char *)jword, jl);
-    items.push_back(make_pair("", s2));
+    std::string s2(reinterpret_cast<const char *>(jword), jl);
+    items.push_back(std::make_pair("", s2));
     // printf("##: ([] %d) --- | %s\n", jl, s2.c_str());
   }
 
   if (trap_mode_) printf("#   C\n");
 
-  std::string id = idstr((const char *)entry);
+  std::string id = idstr(reinterpret_cast<const char *>(entry));
   if (trap_mode_) printf("#   id = \"%s\"\n", id.c_str());
 
 #ifdef DEBUG_SPACING
-  fprintf(macdic_xml_fp, "\n"); // spacing between entries
+  fprintf(macdic_xml_fp, "\n");  // spacing between entries
 #endif
   // entryをescapeしないと (" -> &quot; とか)
-  char *escaped_entry = escape((const char *)entry);
+  char *escaped_entry = escape(reinterpret_cast<const char *>(entry));
   fprintf(macdic_xml_fp,
           "<d:entry id=\"%s\" d:title=\"%s\">",
           id.c_str(), escaped_entry);
@@ -268,12 +275,14 @@ void cb_macdic_xml(PDICDatafield *datafield) {
   if (conj_forms.size() > 0) {
     // sort(conj_forms.begin(), conj_forms.end());
 
-    for (typeof(conj_forms.begin()) it=conj_forms.begin(); it!=conj_forms.end(); ++it) {
-      // for (int i=0; i<(int)conj_forms.size(); ++i) {
+    for (typeof(conj_forms.begin()) it = conj_forms.begin();
+         it != conj_forms.end();
+         ++it) {
+      // for (int i=0; i<static_cast<int>(conj_forms.size(); ++i) {
       // const char *elem = conj_forms[i].c_str();
       const char *elem = it->c_str();
       // if (elem == entry) continue;
-      if (strcmp(elem, (const char *)entry) == 0) continue;
+      if (strcmp(elem, reinterpret_cast<const char *>(entry)) == 0) continue;
 
 #ifdef DEBUG_SPACING
       fprintf(macdic_xml_fp, "\t");
@@ -289,16 +298,15 @@ void cb_macdic_xml(PDICDatafield *datafield) {
   }
 
   if (trap_mode_) printf("#   H1= %s\n", escaped_entry);
-  
+
   // H1= entry
 #ifdef DEBUG_SPACING
   fprintf(macdic_xml_fp, "\t");
 #endif
   fprintf(macdic_xml_fp, "<h1>%s</h1>", escaped_entry);
 
-  //#ifdef DEBUG_SPACING
-  fprintf(macdic_xml_fp, "\n"); // これはDEBUGでなくても必要? でないとatag除去が失敗する
-  //#endif
+  fprintf(macdic_xml_fp, "\n");
+  // これはDEBUGでなくても必要? でないとatag除去が失敗する
 
   if (pron) {
 #ifdef DEBUG_SPACING
@@ -319,24 +327,25 @@ void cb_macdic_xml(PDICDatafield *datafield) {
   fprintf(macdic_xml_fp, "<p>");
 
   if (level > 0) {
-    // fprintf(macdic_xml_fp, "<span class=\"wordclass\">レベル</span>%d<br />\n", level);
-    stringstream ss;
+    std::stringstream ss;
     ss << level;
-    items_to_prepend.push_back(make_pair("レベル", ss.str()));
+    items_to_prepend.push_back(std::make_pair("レベル", ss.str()));
   }
 
-  // cout << "P:" << items_to_prepend << endl;
   if (items_to_prepend.size() > 0) {
     fprintf(macdic_xml_fp, "<span class=\"prepend\">");
-    for (int i=0; i<(int)items_to_prepend.size(); ++i) {
-      // render_definition(items_to_prepend[i].first.c_str(), items_to_prepend[i].second.c_str());
+    for (int i = 0; i < static_cast<int>(items_to_prepend.size()); ++i) {
+      // render_definition(items_to_prepend[i].first.c_str(),
+      //                   items_to_prepend[i].second.c_str());
       fprintf(macdic_xml_fp, "【%s】", items_to_prepend[i].first.c_str());
       parse_output(items_to_prepend[i].second.c_str(), NULL, false);
 
       /*
       fprintf(macdic_xml_fp, "\n\t"); // DEBUG
-      //fprintf(macdic_xml_fp, "<span class=\"wordclass\">%s</span><br />", items_to_prepend[i].first.c_str());
-      //fprintf(macdic_xml_fp, "%s<br />", items_to_prepend[i].second.c_str());
+      // fprintf(macdic_xml_fp, "<span class=\"wordclass\">%s</span><br />",
+      //         items_to_prepend[i].first.c_str());
+      // fprintf(macdic_xml_fp, "%s<br />",
+      //         items_to_prepend[i].second.c_str());
       fprintf(macdic_xml_fp,
               "<span class=\"wordclass\">%s</span>",
               items_to_prepend[i].first.c_str());
@@ -355,8 +364,7 @@ void cb_macdic_xml(PDICDatafield *datafield) {
 
   if (trap_mode_) printf("#   rendering...\n");
 
-  // cout << "I:" << items << endl;
-  for (int i=0; i<(int)items.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(items.size()); ++i) {
     render_definition(items[i].first.c_str(), items[i].second.c_str());
   }
 
@@ -377,21 +385,21 @@ std::string idstr(const char *cstr) {
   std::stringstream ss;
 
   unsigned char digest[16];
-  //MD5((const unsigned char *)cstr, len, digest);
+  // MD5((const unsigned char *)cstr, len, digest);
   MD5_CTX ctx;
   MD5_Init(&ctx);
-  MD5_Update(&ctx, (const unsigned char *)cstr, len);
+  MD5_Update(&ctx, reinterpret_cast<const unsigned char *>(cstr), len);
   MD5_Final(digest, &ctx);
   /*
   for (int i = 0; i < len; ++i) {
-    ss << std::hex << std::setw(2) << std::setfill('0') << (int)cstr[i];
+    ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(cstr[i];
   }
   */
   ss << '_';
   ss << std::hex << std::setw(2) << std::setfill('0');
   ss << current_dict_id_ << '.';
   for (int i = 0; i < 16; ++i) {
-    ss << (int)digest[i];
+    ss << static_cast<int>(digest[i]);
   }
   return ss.str();
 }
@@ -399,38 +407,46 @@ std::string idstr(const char *cstr) {
 char *escape(const char *str) {
   int len = strlen(str);
   int cnt[256];
-  for (int i=0; i<256; ++i) cnt[i] = 0;
+  for (int i = 0; i < 256; ++i) cnt[i] = 0;
 
   int bufsize = len;
-  for (int i=0; i<len; ++i) {
+  for (int i = 0; i < len; ++i) {
     switch (str[i]) {
-      case '&': // -> "&amp;" (+4)
-        bufsize += 4; break;
-      case '"': // -> "&quot;" (+5)
-        bufsize += 5; break;
-      case '<': // -> "&lt;" (+3)
-        bufsize += 3; break;
-      case '>': // -> "&gt;" (+3)
-        bufsize += 3; break;
+      case '&':  // -> "&amp;" (+4)
+        bufsize += 4;
+        break;
+      case '"':  // -> "&quot;" (+5)
+        bufsize += 5;
+        break;
+      case '<':  // -> "&lt;" (+3)
+        bufsize += 3;
+        break;
+      case '>':  // -> "&gt;" (+3)
+        bufsize += 3;
+        break;
       default:
         break;
     }
   }
-  char *buf = (char *)malloc(bufsize + 1);
-  for (int i=0, j=0; i<len; ++i) {
+  char *buf = reinterpret_cast<char *>(malloc(bufsize + 1));
+  for (int i = 0, j = 0; i < len; ++i) {
     switch (str[i]) {
       case '&':
         memcpy(buf+j, "&amp;", 5);
-        j += 5; break;
+        j += 5;
+        break;
       case '"':
         memcpy(buf+j, "&quot;", 6);
-        j += 6; break;
+        j += 6;
+        break;
       case '<':
         memcpy(buf+j, "&lt;", 4);
-        j += 4; break;
+        j += 4;
+        break;
       case '>':
         memcpy(buf+j, "&gt;", 4);
-        j += 4; break;
+        j += 4;
+        break;
       default:
         buf[j++] = str[i];
         break;
@@ -451,10 +467,10 @@ void output(const char *begin, const char *end) {
 }
 
 void parse_output(const char *begin, const char *end, bool do_newline) {
-  //int size = (end == NULL)? strlen(begin) : (end - begin);
+  // int size = (end == NULL)? strlen(begin) : (end - begin);
   if (!end) end = begin + strlen(begin);
   if (trap_mode_) {
-    printf("#   parse_output: size=%d, ", (int)(end - begin));
+    printf("#   parse_output: size=%d, ", static_cast<int>(end - begin));
     int len = end ? (end - begin) : strlen(begin);
     fwrite(begin, 1, len, stdout);
     printf("\n");
@@ -465,7 +481,7 @@ void parse_output(const char *begin, const char *end, bool do_newline) {
   if (ql) {
     const char *qlE = strnstr(ql+7, "&gt;", end-(ql+7));
     // ql+7 ... qlE
-    int word_len = (int)(qlE - (ql+7));
+    int word_len = static_cast<int>((qlE - (ql+7));
     char *word_buf = (char *)malloc(word_len + 1);
     memcpy(word_buf, ql+7, word_len);
     word_buf[word_len] = 0;
@@ -480,7 +496,6 @@ void parse_output(const char *begin, const char *end, bool do_newline) {
   */
   const char *ql = NULL;
   while ((ql = strnstr(begin+1, "→", end-begin)) != NULL) {
-    // if (ql) {
     bool flag = false;
     const char *endTag = NULL;
 
@@ -497,11 +512,11 @@ void parse_output(const char *begin, const char *end, bool do_newline) {
     }
 
     if (flag) {
-      const char *qlE = strnstr(ql+3, endTag, end-(ql+3));
+      const char *qlE = strnstr(ql + 3, endTag, end - (ql + 3));
       // ql+3 ... qlE
-      int word_len = (int)(qlE - (ql+3));
-      char *word_buf = (char *)malloc(word_len + 1);
-      memcpy(word_buf, ql+3, word_len);
+      int word_len = static_cast<int>(qlE - (ql + 3));
+      char *word_buf = reinterpret_cast<char *>(malloc(word_len + 1));
+      memcpy(word_buf, ql + 3, word_len);
       word_buf[word_len] = 0;
       fprintf(macdic_xml_fp,
               "&lt;→<a href=\"x-dictionary:r:%s\">%s</a>&gt;",
@@ -511,13 +526,13 @@ void parse_output(const char *begin, const char *end, bool do_newline) {
 
       begin = qlE + strlen(endTag);
     } else {
-      output(begin, ql+3);
+      output(begin, ql + 3);
       begin = ql + 3;
     }
   }
 
-  const char *qf = strnstr(begin, "◆file:", end-begin);
-  //const char *qf = strstr(begin, "◆file");
+  const char *qf = strnstr(begin, "◆file:", end - begin);
+  // const char *qf = strstr(begin, "◆file");
   // printf("qf: %p\n", qf);
   if (trap_mode_) printf("#   P 1\n");
 
@@ -526,27 +541,29 @@ void parse_output(const char *begin, const char *end, bool do_newline) {
   } else {
     output(begin, qf);
 
-    qf += 8; // 8 = strlen("◆file:");
-    //const char *qE = strnstr(qf, ".TXT", end-qf);
+    qf += 8;  // 8 = strlen("◆file:");
+    // const char *qE = strnstr(qf, ".TXT", end-qf);
     const char *qE = strnstr(qf, ".TXT", 12);
-    if (qE) qE += 4;
-    else {
-      //qE = strnstr(qf, ".HTM", end-qf);
+    if (qE) {
+      qE += 4;
+    } else {
+      // qE = strnstr(qf, ".HTM", end-qf);
       qE = strnstr(qf, ".HTM", 12);
-      if (qE) qE += 4;
-      else {
+      if (qE) {
+        qE += 4;
+      } else {
         qE = end;
         printf("** file:%s\n", qf);
       }
     }
- 
+
     char fname_buf[100];
     memcpy(fname_buf, qf, qE-qf);
     fname_buf[qE-qf] = 0;
     if (trap_mode_) printf("#   F %s\n", fname_buf);
     fprintf(macdic_xml_fp,
             "◆<a href=\"x-dictionary:r:f.%s\">file:%s</a>",
-            fname_buf, // id
+            fname_buf,  // id
             fname_buf);
     // output(qf, qE-qf);
     // fprintf(macdic_xml_fp, "</a>");
@@ -555,7 +572,7 @@ void parse_output(const char *begin, const char *end, bool do_newline) {
     }
   }
 
-  if (do_newline) fprintf(macdic_xml_fp, "<br />"); 
+  if (do_newline) fprintf(macdic_xml_fp, "<br />");
 #ifdef DEBUG_SPACING
   fprintf(macdic_xml_fp, "\n");
 #endif
@@ -567,7 +584,7 @@ void render_definition(const char *wordclass, const char *desc) {
   if (trap_mode_) {
     printf("#   render_definition: %s | %s\n", wordclass, desc);
   }
-  
+
   // fprintf(macdic_xml_fp, "\n\t"); // DEBUG
   if (wordclass && strlen(wordclass) > 0) {
     fprintf(macdic_xml_fp, "<span class=\"wordclass\">%s</span>", wordclass);
@@ -584,7 +601,7 @@ void render_definition(const char *wordclass, const char *desc) {
     if (!q) break;
 
     if (example_mode) {
-      //fprintf(macdic_xml_fp, "\t<span class=\"example\">・");
+      // fprintf(macdic_xml_fp, "\t<span class=\"example\">・");
       fprintf(macdic_xml_fp, "<span class=\"example\">・");
       output(p, q);
       fprintf(macdic_xml_fp, "</span><br />");
@@ -596,7 +613,7 @@ void render_definition(const char *wordclass, const char *desc) {
       example_mode = true;
     }
 
-    p = q + 5; // strlen("\r\n・");
+    p = q + 5;  // strlen("\r\n・");
   }
 
   if (trap_mode_) printf("#   R 2\n");
@@ -604,7 +621,7 @@ void render_definition(const char *wordclass, const char *desc) {
   if (example_mode) {
     // printf("・");
     fprintf(macdic_xml_fp, "<span class=\"example\">・%s</span><br />", p);
-    //fprintf(macdic_xml_fp, "\t<span class=\"example\">・%s</span><br />", p);
+    // fprintf(macdic_xml_fp, "\t<span class=\"example\">・%s</span><br />", p);
 #ifdef DEBUG_SPACING
     fprintf(macdic_xml_fp, "\n");
 #endif

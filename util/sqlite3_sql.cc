@@ -10,13 +10,13 @@
 #include <re2/re2.h>
 #include <re2/stringpiece.h>
 
+#include <iomanip>  // setfill
 #include <map>
 #include <set>
 #include <string>
 #include <sstream>
-#include <iostream>
-#include <iomanip> // setfill
-// using namespace std;
+#include <utility>
+#include <vector>
 
 #include "pdic/Dict.h"
 #include "pdic/PDICDatafield.h"
@@ -32,7 +32,7 @@ std::map<int, std::string> aliases;
 
 // static
 char *sql_escape(const char *str);
-void sql_parse_output(const char *begin, const char *end=NULL);
+void sql_parse_output(const char *begin, const char *end = NULL);
 void sql_render_definition(int id, const char *wordclass, const char *desc);
 
 int sqlite3_sql_open(std::string path) {
@@ -59,7 +59,9 @@ void sqlite3_sql_close() {
     }
 #else
     fprintf(sqlite3_sql_fp,
-            "INSERT INTO aliases (from_id, to_phrase, to_id) VALUES (%d, '%s', ",
+            "INSERT INTO aliases "
+            "(from_id, to_phrase, to_id) "
+            "VALUES (%d, '%s', ",
             it->first,
             it->second.c_str());
     if (found(revs, it->second)) {
@@ -74,7 +76,9 @@ void sqlite3_sql_close() {
   sqlite3_sql_fp = NULL;
 
   printf(" sqlite3_sql_entry_id = %d\n", sqlite3_sql_entry_id_);
-  printf("   revs: %d, aliases: %d\n", (int)revs.size(), (int)aliases.size());
+  printf("   revs: %d, aliases: %d\n",
+         static_cast<int>(revs.size()),
+         static_cast<int>(aliases.size()));
 }
 
 void cb_sqlite3_sql(PDICDatafield *datafield) {
@@ -87,52 +91,53 @@ void cb_sqlite3_sql(PDICDatafield *datafield) {
   if (!entry) return;
   if (!jword) return;
 
-  // if (!(entry[0] == 'a' || entry[0] == 'A' || strncmp("あ", (const char *)entry, 3)==0)) return;
+  // if (!(entry[0] == 'a' || entry[0] == 'A' ||
+  //    strncmp("あ", (const char *)entry, 3)==0)) return;
   // if (!strcmp("走る", (const char *)entry)==0) return;
 
   sqlite3_sql_entry_id_++;
   --dump_remain_count_;
 
-  int jl = strlen((char *)jword);
+  int jl = strlen(reinterpret_cast<char *>(jword));
 
-  using namespace std;
-  vector<pair<int, int> > offsets;
+  std::vector<std::pair<int, int> > offsets;
 
-  const char *p0 = (const char *)jword, *pE = p0 + jl;
+  const char *p0 = reinterpret_cast<const char *>(jword), *pE = p0 + jl;
 
-  for (const char *p=p0; p<pE; ) {
+  for (const char *p = p0; p < pE; ) {
     // printf("..%d/%d", p-p0, jl);
     const char *q1 = strstr(p, "【");
     if (!q1) break;
     if (q1 >= p0+3) {
       // "【" の直前の文字が ◆ や〔 ならスキップ
       if (strncmp(q1-3, "◆", 3) == 0 || strncmp(q1-3, "〔", 3) == 0) {
-        p = q1 + 3; continue;
+        p = q1 + 3;
+        continue;
       }
     }
     const char *q2 = strstr(q1+3, "】");
     if (!q2) break;
 
-    offsets.push_back(make_pair(q1-p0, (q2+3)-p0));
+    offsets.push_back(std::make_pair(q1-p0, (q2+3)-p0));
     p = q2 + 3;
   }
 
-  int n = (int)offsets.size();
+  int n = static_cast<int>(offsets.size());
 
-  vector<pair<string, string> > items;
+  std::vector<std::pair<std::string, std::string> > items;
 
-  set<string> conj_forms;
+  std::set<std::string> conj_forms;
 
   if (n > 0) {
     if (offsets[0].first > 0) {
-      string s2((const char *)jword, offsets[0].first);
-      items.push_back(make_pair("", s2));
+      std::string s2(reinterpret_cast<const char *>(jword), offsets[0].first);
+      items.push_back(std::make_pair("", s2));
     }
 
     // 【】あり
-    offsets.push_back(make_pair(jl,0));
+    offsets.push_back(std::make_pair(jl, 0));
 
-    for (int i=0; i<n; i++) {
+    for (int i = 0; i < n; ++i) {
       int j1 = offsets[i].first, j2 = offsets[i].second;
       int j1next = offsets[i+1].first;
 
@@ -146,8 +151,8 @@ void cb_sqlite3_sql(PDICDatafield *datafield) {
       // 末尾の「、」を切り捨てる
       if (strncmp("、", p0 + s2_from + s2_len - 3, 3) == 0) s2_len -= 3;
 
-      string s1(p0 + s1_from, s1_len);
-      string s2(p0 + s2_from, s2_len);
+      std::string s1(p0 + s1_from, s1_len);
+      std::string s2(p0 + s2_from, s2_len);
 
       /*
       if (s1 == "＠" || s1 == "変化" || s1 == "文節") {
@@ -156,10 +161,10 @@ void cb_sqlite3_sql(PDICDatafield *datafield) {
       }
       */
 
-      items.push_back(make_pair(s1, s2));
+      items.push_back(std::make_pair(s1, s2));
 
       if (s1 == "変化") {
-        string s2a(s2.begin(), s2.end());
+        std::string s2a(s2.begin(), s2.end());
         // 変化形を分解する
         RE2::GlobalReplace(&s2a, " または ", " | ");
         RE2::GlobalReplace(&s2a, "過去・過分＝", "");
@@ -174,18 +179,18 @@ void cb_sqlite3_sql(PDICDatafield *datafield) {
         printf("<変化> \"%s\"\n", s2a.c_str());
 #endif
         re2::StringPiece input(s2a);
-        string var;
-        
+        std::string var;
+
         // while (RE2::Consume(&input, "([A-Za-z][-a-z()]*)|", &var)) {
         while (RE2::Consume(&input, "([^|]*)\\|", &var)) {
           if (var == "") continue;
-          string pre, paren, post;
-          if (RE2::FullMatch(var, "([-A-Za-z]*)\\(([^)]*)\\)([-A-Za-z]*)", &pre, &paren, &post)) {
+          std::string pre, paren, post;
+          if (RE2::FullMatch(var, "([-A-Za-z]*)\\(([^)]*)\\)([-A-Za-z]*)",
+                             &pre, &paren, &post)) {
 #ifdef SHOW_HENKA
             printf("  - %s%s%s | %s%s\n",
                    pre.c_str(), paren.c_str(), post.c_str(),
-                   pre.c_str(), post.c_str()
-                   );
+                   pre.c_str(), post.c_str());
 #endif
             conj_forms.insert(pre + paren + post);
             conj_forms.insert(pre + post);
@@ -197,20 +202,18 @@ void cb_sqlite3_sql(PDICDatafield *datafield) {
           }
         }
       }
-      // printf("#%d: ([%d-%d] %d) %s | %s\n", i, j1, j2, j1next, s1.c_str(), s2.c_str());
     }
   } else {
     // 【】なし
-    string s2((const char *)jword, jl);
-    items.push_back(make_pair("", s2));
-    // printf("##: ([] %d) --- | %s\n", jl, s2.c_str());
+    std::string s2(reinterpret_cast<const char *>(jword), jl);
+    items.push_back(std::make_pair("", s2));
   }
-  
+
   // entryをescapeしないと (" -> &quot; とか)
 
 #ifdef SQL_TABSEP
   // "<d:entry id=\"%s\" d:title=\"%s\">",
-  revs[(const char *)entry] = sqlite3_sql_entry_id_;
+  revs[reinterpret_cast<const char *>(entry)] = sqlite3_sql_entry_id_;
 
   fprintf(sqlite3_sql_fp, "entries\t%d\t%s\t%d\t",
           sqlite3_sql_entry_id_, entry, level);
@@ -220,12 +223,14 @@ void cb_sqlite3_sql(PDICDatafield *datafield) {
     fprintf(sqlite3_sql_fp, "\n");
   }
 #else
-  char *escaped_entry = sql_escape((const char *)entry);
+  char *escaped_entry = sql_escape(reinterpret_cast<const char *>(entry));
   // "<d:entry id=\"%s\" d:title=\"%s\">",
   revs[escaped_entry] = sqlite3_sql_entry_id_;
 
   fprintf(sqlite3_sql_fp,
-          "INSERT INTO entries (id, entry, level, pron) VALUES (%d, '%s', %d, );\n",
+          "INSERT INTO entries "
+          "(id, entry, level, pron) "
+          "VALUES (%d, '%s', %d, );\n",
           sqlite3_sql_entry_id_,
           escaped_entry,
           level);
@@ -238,28 +243,31 @@ void cb_sqlite3_sql(PDICDatafield *datafield) {
 
   // ハッシュに格納してある変化形でも引けるようにする
   if (conj_forms.size() > 0) {
-    for (typeof(conj_forms.begin()) it=conj_forms.begin(); it!=conj_forms.end(); ++it) {
+    for (typeof(conj_forms.begin()) it = conj_forms.begin();
+         it != conj_forms.end();
+         ++it) {
       const char *elem = it->c_str();
-      if (strcmp(elem, (const char *)entry) == 0) continue;
+      if (strcmp(elem, reinterpret_cast<const char *>(entry)) == 0) continue;
 
 #ifdef SQL_TABSEP
       // "<d:index d:value=\"%s\" " "d:title=\"%s (%s)\" />",
-      fprintf(sqlite3_sql_fp, "surfaces\t%s\t%d\n", elem, sqlite3_sql_entry_id_);
+      fprintf(sqlite3_sql_fp, "surfaces\t%s\t%d\n",
+              elem, sqlite3_sql_entry_id_);
 #else
-      char *escaped_elem = sql_escape((const char *)elem);
+      char *escaped_elem = sql_escape(reinterpret_cast<const char *>(elem));
       // "<d:index d:value=\"%s\" " "d:title=\"%s (%s)\" />",
       fprintf(sqlite3_sql_fp,
               "INSERT INTO surfaces (surface, entry_id) VALUES ('%s', %d);\n",
               escaped_elem,
               sqlite3_sql_entry_id_);
-      free((void *)escaped_elem);
+      free(reinterpret_cast<void *>(escaped_elem));
 #endif
     }
   }
 
-  // cout << "I:" << items << endl;
   for (int i = 0, c = items.size(); i < c; ++i) {
-    sql_render_definition(sqlite3_sql_entry_id_, items[i].first.c_str(), items[i].second.c_str());
+    sql_render_definition(sqlite3_sql_entry_id_, items[i].first.c_str(),
+                          items[i].second.c_str());
   }
 
   fflush(sqlite3_sql_fp);
@@ -272,23 +280,24 @@ void cb_sqlite3_sql(PDICDatafield *datafield) {
 char *sql_escape(const char *str) {
   int len = strlen(str);
   int cnt[256];
-  for (int i=0; i<256; ++i) cnt[i] = 0;
+  for (int i = 0; i < 256; ++i) cnt[i] = 0;
 
   int bufsize = len;
-  for (int i=0; i<len; ++i) {
+  for (int i = 0; i < len; ++i) {
     switch (str[i]) {
-      case '\'': // -> "\'" (+1)
-        bufsize += 1; break;
+      case '\'':  // -> "\'" (+1)
+        bufsize += 1;
+        break;
       default:
         break;
     }
   }
-  char *buf = (char *)malloc(bufsize + 1);
-  for (int i=0, j=0; i<len; ++i) {
+  char *buf = reinterpret_cast<char *>(malloc(bufsize + 1));
+  for (int i = 0, j = 0; i < len; ++i) {
     switch (str[i]) {
       case '\'':
-        memcpy(buf+j, "''", 2); // Pascal style
-        j += 2; break;
+        memcpy(buf+j, "''", 2);  // Pascal style
+        j += 2;
         break;
       default:
         buf[j++] = str[i];
@@ -300,24 +309,24 @@ char *sql_escape(const char *str) {
 }
 
 void sql_parse_output(const char *begin, const char *end) {
-  //int size = (end == NULL)? strlen(begin) : (end - begin);
+  // int size = (end == NULL)? strlen(begin) : (end - begin);
   if (!end) end = begin + strlen(begin);
 
   std::string s(begin, end-begin);
   re2::StringPiece input(s);
-  //RE2 re("(.*)<→([^>]*)>");
+  // RE2 re("(.*)<→([^>]*)>");
   RE2 re("<→ *([^>]*) *>");
   std::string /*pre,*/ other_entry;
   bool said = false;
-  //while (re2::RE2::FindAndConsume(&input, re, &pre, &other_entry)) {
+  // while (re2::RE2::FindAndConsume(&input, re, &pre, &other_entry)) {
   while (re2::RE2::FindAndConsume(&input, re, &other_entry)) {
     if (!said) {
 #ifdef SQL_TABSEP
-      //fprintf(sqlite3_sql_fp, "%s\n", pre.c_str());
+      // fprintf(sqlite3_sql_fp, "%s\n", pre.c_str());
 #else
-      //fprintf(sqlite3_sql_fp, "'%s');\n", pre.c_str());
+      // fprintf(sqlite3_sql_fp, "'%s');\n", pre.c_str());
 #endif
-      //said = true;
+      // said = true;
     }
     aliases[sqlite3_sql_entry_id_] = other_entry;
   }
@@ -341,7 +350,8 @@ void sql_render_definition(int id, const char *wordclass, const char *desc) {
     std::string txt(wordclass);
     std::string a, b, c;
     if (RE2::FullMatch(txt, "(([1-9][0-9]*)-)?([^0-9]+)(-([1-9][0-9]*))?",
-                       (void*)NULL, &a, &b, (void*)NULL, &c)) {
+                       reinterpret_cast<void *>(NULL), &a, &b,
+                       reinterpret_cast<void *>(NULL), &c)) {
       /*
       printf("// %s -> (%s) (%s) (%s)\n",
              wordclass,
@@ -349,10 +359,13 @@ void sql_render_definition(int id, const char *wordclass, const char *desc) {
       */
       int an = atoi(a.c_str()), cn = atoi(c.c_str());
 #ifdef SQL_TABSEP
-      fprintf(sqlite3_sql_fp, "definitions\t%d\t%d\t%s\t%d\t", id, an, b.c_str(), cn);
+      fprintf(sqlite3_sql_fp, "definitions\t%d\t%d\t%s\t%d\t",
+              id, an, b.c_str(), cn);
 #else
       fprintf(sqlite3_sql_fp,
-              "INSERT INTO definitions (entry_id, sub_id, wordclass, item_id, value) VALUES (%d, %d, '%s', %d, ",
+              "INSERT INTO definitions "
+              "(entry_id, sub_id, wordclass, item_id, value) "
+              "VALUES (%d, %d, '%s', %d, ",
               id, an, b.c_str(), cn);
 #endif
     } else {
@@ -360,23 +373,23 @@ void sql_render_definition(int id, const char *wordclass, const char *desc) {
       fprintf(sqlite3_sql_fp, "definitions\t%d\t\t%s\t\t", id, b.c_str());
 #else
       fprintf(sqlite3_sql_fp,
-              "INSERT INTO definitions (entry_id, wordclass, value) VALUES (%d, '%s', ",
+              "INSERT INTO definitions "
+              "(entry_id, wordclass, value) "
+              "VALUES (%d, '%s', ",
               id, b.c_str());
 #endif
     }
   } else {
-    //    printf("// %s\n", desc);
+    // printf("// %s\n", desc);
 #ifdef SQL_TABSEP
     fprintf(sqlite3_sql_fp, "definitions\t%d\t\t\t\t", id);
 #else
     fprintf(sqlite3_sql_fp,
             "INSERT INTO definitions (entry_id, value) VALUES (%d, ", id);
 #endif
-    //return;
   }
 
-  using namespace std;
-  vector<string> examples;
+  std::vector<std::string> examples;
 
   bool example_mode = false;
 #ifdef SQL_TABSEP
@@ -391,20 +404,20 @@ void sql_render_definition(int id, const char *wordclass, const char *desc) {
     const char *q = strstr(p, "\r\n・");
     if (!q) break;
 
-    string s(p, q-p);
+    std::string s(p, q-p);
     if (example_mode) {
-      //fprintf(sqlite3_sql_fp, "\t<span class=\"example\">・");
-      // string s(p, q-p);
+      // fprintf(sqlite3_sql_fp, "\t<span class=\"example\">・");
+      // std::string s(p, q-p);
       examples.push_back(s);
     } else {
       sql_parse_output(p, q);
       example_mode = true;
     }
 
-    p = q + 5; // strlen("\r\n・");
+    p = q + 5;  // strlen("\r\n・");
   }
 
-  string s(p);
+  std::string s(p);
   if (example_mode) {
     // fprintf(sqlite3_sql_fp, "<span class=\"example\">・%s</span><br />", p);
     examples.push_back(s);
@@ -414,10 +427,13 @@ void sql_render_definition(int id, const char *wordclass, const char *desc) {
 
   for (int i = 0, c = examples.size(); i < c; ++i) {
 #ifdef SQL_TABSEP
-    fprintf(sqlite3_sql_fp, "definitions\t%d\t%d\t%s\t%d\t%s\n", id, 0, "example", 1+i, examples[i].c_str());
+    fprintf(sqlite3_sql_fp, "definitions\t%d\t%d\t%s\t%d\t%s\n",
+            id, 0, "example", 1+i, examples[i].c_str());
 #else
     fprintf(sqlite3_sql_fp,
-            "INSERT INTO definitions (entry_id, sub_id, wordclass, item_id, value) VALUES (%d, %d, '%s', %d, '%s');\n",
+            "INSERT INTO definitions "
+            "(entry_id, sub_id, wordclass, item_id, value) "
+            "VALUES (%d, %d, '%s', %d, '%s');\n",
             id, 0, "example", 1+i, examples[i].c_str());
 #endif
   }

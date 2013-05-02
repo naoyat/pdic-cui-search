@@ -113,7 +113,8 @@ Dict::~Dict() {
 int Dict::make_macdic_xml(int limit, int dict_id) {
   dump_remain_count_ = limit;
   current_dict_id_ = dict_id;
-  macdic_xml_open(std::string("./macdic/") + std::string(this->prefix()) + SX_XML);
+  macdic_xml_open(std::string("./macdic/") + std::string(this->prefix())
+                                           + SX_XML);
   index->iterate_all_datablocks(&cb_macdic_xml, NULL);
   macdic_xml_close();
 
@@ -123,7 +124,8 @@ int Dict::make_macdic_xml(int limit, int dict_id) {
 int Dict::make_sqlite3_sql(int limit, int dict_id) {
   dump_remain_count_ = limit;
   current_dict_id_ = dict_id;
-  sqlite3_sql_open(std::string("./sql/") + std::string(this->prefix()) + SX_SQL);
+  sqlite3_sql_open(std::string("./sql/") + std::string(this->prefix())
+                                         + SX_SQL);
   index->iterate_all_datablocks(&cb_sqlite3_sql, NULL);
   sqlite3_sql_close();
 
@@ -610,7 +612,7 @@ lookup_result_vec Dict::ids_to_result(const std::set<int>& word_ids) {
 
     Toc *t = &toc[*word_id];
     lookup_result *result = new lookup_result(dict_buf, t->start_pos);
-    result_vec.push_back(result); // (lookup_result)clone(fields, sizeof(fields[0])*4));
+    result_vec.push_back(result);
   }
 
   return result_vec;
@@ -627,13 +629,8 @@ lookup_result_vec Dict::ids_to_exact_cs_result(const std::set<int>& word_ids,
     byte *entry_word = dict_buf[F_ENTRY] + t->start_pos[F_ENTRY];
     if (strcmp(reinterpret_cast<char*>(entry_word),
                reinterpret_cast<char*>(needle)) == 0) {
-
-      lookup_result *result = new lookup_result(entry_word,
-                                                dict_buf[F_JWORD]   + t->start_pos[F_JWORD],
-                                                dict_buf[F_EXAMPLE] + t->start_pos[F_EXAMPLE],
-                                                dict_buf[F_PRON]    + t->start_pos[F_PRON]
-                                                );
-      result_vec.push_back(result); // (lookup_result)clone(fields, sizeof(fields[0])*4));
+      lookup_result *result = new lookup_result(dict_buf, t->start_pos);
+      result_vec.push_back(result);
     }
   }
 

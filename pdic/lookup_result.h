@@ -13,9 +13,13 @@ class PDICDatafield;
 
 class lookup_result {
  public:
-           lookup_result(byte *entry, byte *jword,
-                         byte *example, byte *pron,
-                         int level=-1);
+  /*
+           lookup_result(byte* entry,
+                         byte* jword,
+                         byte* example,
+                         byte* pron,
+                         int   level=-1);
+  */
   explicit lookup_result(PDICDatafield* datafield);
            lookup_result(byte* dict_buf[], int start_pos[], int level=-1);
   ~lookup_result();

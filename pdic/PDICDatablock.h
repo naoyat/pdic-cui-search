@@ -15,12 +15,18 @@ class PDICIndex;
 
 class PDICDatablock {
  public:
-  PDICDatablock(byte* filemem, PDICIndex* index, int ix);
-  PDICDatablock(byte* filemem, unsigned int datablock_start_offset, PDICHeader *header);
+  PDICDatablock(byte*         filemem,
+                PDICIndex*    index,
+                int           ix);
+  PDICDatablock(byte*         filemem,
+                unsigned int  datablock_start_offset,
+                PDICHeader*   header);
   ~PDICDatablock() {}
 
  private:
-  void init(byte* filemem, unsigned int datablock_start_offset, PDICHeader* header);
+  void init(byte*         filemem,
+            unsigned int  datablock_start_offset,
+            PDICHeader*   header);
 
  public:
   void iterate(action_proc* action, Criteria* criteria = NULL);

@@ -16,8 +16,8 @@
 #include "util/utf8.h"
 #include "util/util.h"
 
-int dump_remain_count_ = 0; // ダンプ許容カウント
-int current_dict_id_ = 0; // 現在扱っている辞書のdict_id
+int dump_remain_count_ = 0;  // ダンプ許容カウント
+int current_dict_id_ = 0;  // 現在扱っている辞書のdict_id
 
 #define BELIEVE_INDEX 1
 
@@ -61,7 +61,6 @@ int PDICIndex::load_index() {
 
   int actual_nindex = 0;
   for (int ix = 0, ofs = 0; ix < _nindex && ofs < index_size; ++ix) {
-    //for (int ix = 0, ofs = 0; /*ix < _nindex && */ ofs < index_size; ++ix) {
     int phys_id;
     if (index_blkbit == 0) {
       phys_id = s16val(index_buf + ofs);
@@ -154,21 +153,23 @@ void PDICIndex::iterate_all_datablocks(action_proc* action,
 #else
   // index情報を使わずに全データブロックをなめる
   int nblock = header->nblock(), block_size = header->block_size();
-  unsigned int offset = header->header_size() + header->extheader() + header->index_size();
-  // printf("nblock = %d, block_size = %d; offset = %d\n", nblock, block_size, offset);
-  
+  unsigned int offset = header->header_size() + header->extheader()
+                                              + header->index_size();
+  // printf("nblock = %d, block_size = %d; offset = %d\n",
+  //        nblock, block_size, offset);
+
   for (int phys_id = 0; phys_id < nblock; ) {
     int using_blocks_count = u16val(filemem + offset);
     if (!using_blocks_count) {
       // 空きブロック
-      //printf("%d. EMPTY BLOCK.\n", phys_id);
+      // printf("%d. EMPTY BLOCK.\n", phys_id);
       ++phys_id;
       offset += block_size;
       continue;
     }
     // _is4byte = using_blocks_count & 0x8000;
     using_blocks_count &= 0x7fff;
-    //printf("%d. BLOCK (%d)\n", phys_id, using_blocks_count);
+    // printf("%d. BLOCK (%d)\n", phys_id, using_blocks_count);
 
     // this->iterate_datablock(ix, action, criteria);
     PDICDatablock* datablock = new PDICDatablock(filemem, offset, header);

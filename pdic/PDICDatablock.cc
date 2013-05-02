@@ -20,17 +20,18 @@
 extern int dump_remain_count_;
 
 PDICDatablock::PDICDatablock(byte* filemem, PDICIndex* index, int ix) {
-  // printf("PDICDatablock(filemem=%p, index=%p, ix=%d; offset=%d, header=%p)\n", filemem, index, ix,
-  //                       index->datablock_offset(ix), index->header);
   init(filemem, index->datablock_offset(ix), index->header);
 }
 
-PDICDatablock::PDICDatablock(byte* filemem, unsigned int datablock_start_offset, PDICHeader *header) {
+PDICDatablock::PDICDatablock(byte* filemem,
+                             unsigned int datablock_start_offset,
+                             PDICHeader *header) {
   init(filemem, datablock_start_offset, header);
 }
 
-void PDICDatablock::init(byte* filemem, unsigned int datablock_offset, PDICHeader* header) {
-  // printf("PDICDatablock::init(filemem=%p, offset=%d, header=%p)\n", filemem, datablock_offset, header);
+void PDICDatablock::init(byte* filemem,
+                         unsigned int datablock_offset,
+                         PDICHeader* header) {
   this->filemem = filemem;
   this->datablock_start = filemem + datablock_offset;
   this->_header = header;

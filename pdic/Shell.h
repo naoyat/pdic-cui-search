@@ -2,8 +2,8 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#ifndef UTIL_SHELL_H_
-#define UTIL_SHELL_H_
+#ifndef PDIC_SHELL_H_
+#define PDIC_SHELL_H_
 
 #include <re2/re2.h>
 
@@ -78,4 +78,4 @@ class Shell {
   void render_status();
 };
 
-#endif  // UTIL_SHELL_H_
+#endif  // PDIC_SHELL_H_
