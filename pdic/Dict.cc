@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "Shell.h"
+#include "./Shell.h"
 #include "pdic/Criteria.h"
 #include "pdic/Dict_callbacks.h"
 #include "pdic/PDICDatablock.h"

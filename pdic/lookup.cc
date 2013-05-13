@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "Shell.h"
+#include "./Shell.h"
 #include "pdic/Dict.h"
 #include "pdic/Dict_callbacks.h"
 #include "util/stlutil.h"
