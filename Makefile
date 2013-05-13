@@ -13,7 +13,7 @@ OBJECTS = \
 	obj/util/bocu1.o obj/util/dump.o obj/util/filemem.o \
 	obj/util/macdic_xml.o obj/util/sqlite3_sql.o \
 	obj/util/search.o obj/util/stlutil.o obj/util/timeutil.o obj/util/utf8.o \
-	obj/util/util.o obj/pdic/Shell.o
+	obj/util/util.o obj/Shell.o
 
 TEST_OBJECTS = test/filemem_gtest.o test/search_gtest.o \
                test/utf8_gtest.o test/util_gtest.o test/shell_gtest.o

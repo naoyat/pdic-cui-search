@@ -14,13 +14,13 @@
 #include <string>
 #include <vector>
 
+#include "Shell.h"
 #include "pdic/Dict.h"
 #include "pdic/Dict_callbacks.h"
 #include "pdic/lookup.h"
 #include "pdic/PDICDatafield.h"
 #include "pdic/PDICHeader.h"
 #include "pdic/PDICIndex.h"
-#include "pdic/Shell.h"
 #include "util/ansi_color.h"
 #include "util/dump.h"
 #include "util/filemem.h"

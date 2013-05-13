@@ -11,10 +11,10 @@
 #include <utility>
 #include <vector>
 
+#include "Shell.h"
 #include "pdic/Criteria.h"
 #include "pdic/Dict.h"
 #include "pdic/PDICDatafield.h"
-#include "pdic/Shell.h"
 #include "util/ansi_color.h"
 #include "util/types.h"
 #include "util/stlutil.h"

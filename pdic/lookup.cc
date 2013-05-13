@@ -13,9 +13,9 @@
 #include <utility>
 #include <vector>
 
+#include "Shell.h"
 #include "pdic/Dict.h"
 #include "pdic/Dict_callbacks.h"
-#include "pdic/Shell.h"
 #include "util/stlutil.h"
 #include "util/types.h"
 #include "util/util.h"

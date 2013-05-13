@@ -12,13 +12,13 @@
 #include <string>
 #include <vector>
 
+#include "Shell.h"
 #include "pdic/Criteria.h"
 #include "pdic/Dict_callbacks.h"
 #include "pdic/PDICDatablock.h"
 #include "pdic/PDICDatafield.h"
 #include "pdic/PDICHeader.h"
 #include "pdic/PDICIndex.h"
-#include "pdic/Shell.h"
 #include "pdic/lookup.h"
 #include "pdic/lookup_result.h"
 #include "util/ansi_color.h"

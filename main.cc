@@ -2,7 +2,7 @@
 // Use of this source code is governed by a LGPL-style
 // license that can be found in the COPYING file.
 
-#include "pdic/Shell.h"
+#include "Shell.h"
 
 int main(int argc, char **argv) {
   Shell shell;
