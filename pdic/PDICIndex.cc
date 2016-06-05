@@ -104,8 +104,8 @@ unsigned int PDICIndex::datablock_offset(int ix) {
       header->header_size() + header->extheader() + header->index_size()
       + header->block_size()*phys_ids[ix];
   /*
-  printf("index->datablock_offset(%d) = %d + [%d] + %d + %d*%d = %d\n",
-         ix, 
+  printf("# index->datablock_offset(%d) = %d + [%d] + %d + %d*%d = %d\n",
+         ix,
          header->header_size(), header->extheader(), header->index_size(),
          header->block_size(), phys_ids[ix],
          offset);

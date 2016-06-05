@@ -36,6 +36,7 @@ class ShellParams {
   bool stop_on_limit_mode;
   int  default_lookup_flags;
   int  debug_flags;
+  bool drop_hiragana_times_mode;
 };
 
 
@@ -50,7 +51,8 @@ class Shell {
   bool do_command(char *cmdstr);
   void render_current_result();
 
-  int run();
+  int run(char *word_to_lookup = NULL);
+  int execute(char *line);
 
   ShellParams params;
 
@@ -64,6 +66,7 @@ class Shell {
   lookup_result_vec current_result_vec;
   RE2* current_pattern;
   std::pair<std::string, std::string> current_query;
+  std::vector<std::string> query_history;
 
 
  private:

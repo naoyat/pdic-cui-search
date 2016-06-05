@@ -4,6 +4,7 @@
 
 #include "./timeutil.h"
 
+#include <stdio.h>
 #include <stdint.h>
 #include <sys/time.h>
 #include <time.h>
@@ -33,6 +34,5 @@ std::pair<int, int> time_usec() {
         static_cast<int64_t>(clock_end - _clock_start)
         * 1000000 / CLOCKS_PER_SEC);
   }
-
   return std::make_pair(timeval_usec, clock_usec);
 }

@@ -2,7 +2,7 @@
 .SUFFIXES: .cc .o
 
 CXX = g++ #llvm-g++
-CXXFLAGS=-Wall -O3 -g -I.
+CXXFLAGS=-Wall -O3 -g -I. -I/usr/local/include -L/usr/local/lib
 
 .cc.o: $*.h
 	$(CXX) $(CXXFLAGS) -c $*.cc

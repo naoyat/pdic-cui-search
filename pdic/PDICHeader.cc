@@ -68,10 +68,11 @@ int PDICHeader::block_size() {
 }
 
 int PDICHeader::index_block() {
-  if (_major_version >= HYPER4)
-    return s16val(filemem + OFS_INDEX_BLOCK);
-  else  // NEWDIC, NEWDIC2
+  if (_major_version >= HYPER4) {
+    return u16val(filemem + OFS_INDEX_BLOCK);
+  } else {  // NEWDIC, NEWDIC2
     return 2048 * s16val(filemem + OFS_INDEX_BLOCK);
+  }
 }
 
 int PDICHeader::header_size() {
@@ -81,10 +82,11 @@ int PDICHeader::header_size() {
 }
 
 int PDICHeader::index_size() {
-  if (_major_version >= HYPER4)
+  if (_major_version >= HYPER4) {
     return index_block() * block_size();
-  else  // NEWDIC, NEWDIC2
+  } else {  // NEWDIC, NEWDIC2
     return s16val(filemem + OFS_INDEX_SIZE);  // { 2048, 10240, 20480, 40960 }
+  }
 }
 
 int PDICHeader::empty_block() {

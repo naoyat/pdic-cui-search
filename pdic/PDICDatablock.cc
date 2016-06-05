@@ -56,7 +56,8 @@ void PDICDatablock::init(byte* filemem,
 }
 
 void PDICDatablock::iterate(action_proc* action, Criteria* criteria) {
-  byte entry_word[1024];
+//  byte entry_word[1024];
+  byte entry_word[4096];
   // （圧縮見出し語の伸長用）見出し語バッファ。Ver6でlword=1024なの
 
   for (byte* pos = datablock_start, *endpos = pos + datablock_size;

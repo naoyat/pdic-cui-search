@@ -5,8 +5,10 @@
 #include "pdic/Dict.h"
 
 #include <libgen.h>
+#include <string.h>
 #include <strings.h>
 #include <re2/re2.h>
+#include <sys/stat.h>
 
 #include <algorithm>
 #include <string>
@@ -113,6 +115,8 @@ Dict::~Dict() {
 int Dict::make_macdic_xml(int limit, int dict_id) {
   dump_remain_count_ = limit;
   current_dict_id_ = dict_id;
+
+  mkdir("macdic", 0755);
   macdic_xml_open(std::string("./macdic/") + std::string(this->prefix())
                                            + SX_XML);
   index->iterate_all_datablocks(&cb_macdic_xml, NULL);
@@ -326,7 +330,7 @@ int Dict::word_id_for_pdic_datafield_pos(int pdic_datafield_pos) {
       != revmap_pdic_datafield_pos.end()) {  // if found
     return revmap_pdic_datafield_pos[pdic_datafield_pos];
   }
-  if (pdic_datafield_pos < toc[0].pdic_datafield_pos
+  if (this->toc_length == 0 || pdic_datafield_pos < toc[0].pdic_datafield_pos
       || toc[this->toc_length-1].pdic_datafield_pos < pdic_datafield_pos) {
     return -1;
   }
@@ -846,6 +850,14 @@ void render_result(lookup_result *result, RE2 *re) {
     }
     render_count_limit_exceeded = true;
     return;
+  }
+
+  if (g_shell->params.drop_hiragana_times_mode) {
+    if (is_not_empty(result->jword) &&
+        strstr(reinterpret_cast<const char*>(result->jword), "Hiragana Times") != NULL) {
+      // printf("[!Hiragana Times detected] %s\n", result->entry);
+      return;
+    }
   }
 
   std::string entry_str((const char *)result->entry);

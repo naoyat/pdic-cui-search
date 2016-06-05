@@ -45,31 +45,8 @@ Shell::~Shell() {
   traverse(dicts, dict) delete *dict;
 }
 
-int Shell::run() {
-  printf(ANSI_UNDERLINE_ON
-         "PDIC CUI Search ver 0.8 (c)2012-2013 @naoya_t. All Rights Reserved."
-         ANSI_UNDERLINE_OFF "\n");
-
-  // printf("読み込み中...\n");
-  g_shell->load_rc();
-
-  // if (argc >= 2) {
-  //   std::string filename = argv[1];
-  //   g_shell->do_load(filename);
-  // }
-
-  // REPL
-  for (bool looping = true; looping; ) {
-    printf("%s> ", g_shell->current_dict_name.c_str());
-    char line[256];
-    if (!fgets(line, 256, stdin)) {
-      printf("\n");
-      break;
-    }
+int Shell::execute(char *line) {
     int linelen = strlen(line);
-    line[--linelen] = 0;
-    if (linelen == 0) continue;
-
     int head = line[0], tail = line[linelen-1];
     switch (head) {
       case '?':  // reserved (help)
@@ -81,7 +58,8 @@ int Shell::run() {
 
       case '.':  // command mode
         if (linelen > 1) {
-          looping = g_shell->do_command(line+1);
+          bool looping = g_shell->do_command(line+1);
+          if (!looping) return -1;
         }
         break;
 
@@ -91,10 +69,28 @@ int Shell::run() {
         }
         break;
 
+      case '<':  // say
+        if (linelen == 1) {
+          if (query_history.size() > 0) {
+              const char *s = query_history.back().c_str();
+              char saybuf[4 + strlen(s) + 1];
+              sprintf(saybuf, "say %s", s);
+              system(saybuf);
+          }
+        } else {
+            char saybuf[linelen + 4 + 1];
+            sprintf(saybuf, "say %s", line+1);
+            system(saybuf);
+        }
+        break;
+
       case '*':
         if (linelen > 1) {
           lookup(reinterpret_cast<byte*>(line)+1, LOOKUP_SARRAY);
         }
+        break;
+
+      case ' ':
         break;
 
       case '/':
@@ -106,14 +102,58 @@ int Shell::run() {
         // else fall thru
 
       default:
-        int flags = g_shell->params.default_lookup_flags;
+      int flags = g_shell->params.default_lookup_flags;
         if (tail == '*') {
           line[linelen-1] = '\0';
           flags &= ~LOOKUP_MATCH_BACKWARD;
         }
+        query_history.push_back(std::string(line));
         lookup(reinterpret_cast<byte*>(line), flags);
         break;
     }
+    return 0;
+}
+
+int Shell::run(char *word_to_lookup) {
+  if (word_to_lookup == NULL) {
+    printf(ANSI_UNDERLINE_ON
+         "PDIC CUI Search ver 0.8 (c)2012-2013 @naoya_t. All Rights Reserved."
+         ANSI_UNDERLINE_OFF "\n");
+  }
+
+  // printf("読み込み中...\n");
+  g_shell->load_rc();
+
+  // if (argc >= 2) {
+  //   std::string filename = argv[1];
+  //   g_shell->do_load(filename);
+  // }
+
+  if (word_to_lookup != NULL) {
+      // printf("(%s)\n", word_to_lookup);
+      // execute(word_to_lookup);
+      int flags = g_shell->params.default_lookup_flags;
+      g_shell->params.verbose_mode = false;
+      lookup(reinterpret_cast<byte*>(word_to_lookup), flags);
+      return 0;
+  }
+
+  query_history.clear();
+
+  // REPL
+  while (true) {
+    printf("%s> ", g_shell->current_dict_name.c_str());
+    char line[256];
+    if (!fgets(line, 256, stdin)) {
+      printf("\n");
+      break;
+    }
+
+    int linelen = strlen(line);
+    line[--linelen] = 0;  // rstrip()
+    // if (linelen == 0) break;
+
+    if (execute(line) == -1) break;
   }
 
   printf("bye!\n");
@@ -253,6 +293,9 @@ bool Shell::do_command(char *cmdstr) {
         } else if (cmd[1] == "stop_on_limit") {
           params.stop_on_limit_mode = onoff;
           mode_name = "stop on limit";
+        } else if (cmd[1] == "drop_hiragana_times") {
+          params.drop_hiragana_times_mode = onoff;
+          mode_name = "drop hiragana times";
         } else {
           mode_name = NULL;
           value_str[0] = '\0';

@@ -23,7 +23,7 @@
 extern Shell *g_shell;
 extern int dump_remain_count_;
 
-const int kMaxNeedlePatternSize = 1000;
+// const int kMaxNeedlePatternSize = 1000;
 
 lookup_result_vec _pdic_match_forward_lookup(byte *needle, int flags) {
   g_shell->current_query =
@@ -160,5 +160,6 @@ void lookup(byte *needle, int flags) {
   g_shell->current_result_vec.assign(result_vec.begin(), result_vec.end());
   lap_match_count();
   if (!g_shell->params.direct_dump_mode) g_shell->render_current_result();
-  say_match_count();
+
+  if (g_shell->params.verbose_mode) say_match_count();
 }
